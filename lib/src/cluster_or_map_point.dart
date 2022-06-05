@@ -1,60 +1,33 @@
-import 'package:supercluster/src/cluster.dart';
-import 'package:supercluster/src/map_point.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class ClusterOrMapPoint {
-  final Cluster? cluster;
-  final MapPoint? mapPoint;
+part 'cluster_or_map_point.freezed.dart';
 
-  ClusterOrMapPoint.cluster(this.cluster) : mapPoint = null;
+@unfreezed
+class ClusterOrMapPoint<T> with _$ClusterOrMapPoint<T> {
+  static const _maxInt = 9007199254740992; // 2^53
 
-  ClusterOrMapPoint.mapPoint(this.mapPoint) : cluster = null;
+  ClusterOrMapPoint._();
 
-  T handle<T>({
-    required T Function(Cluster) cluster,
-    required T Function(MapPoint) mapPoint,
-  }) {
-    return this.cluster != null
-        ? cluster(this.cluster!)
-        : mapPoint(this.mapPoint!);
-  }
+  factory ClusterOrMapPoint.cluster({
+    required final double x,
+    required final double y,
+    @Default(ClusterOrMapPoint._maxInt) int zoom,
+    required int id,
+    @Default(-1) int parentId,
+    required int numPoints,
+  }) = Cluster;
 
-  double get x => handle(
-        cluster: (cluster) => cluster.x,
-        mapPoint: (mapPoint) => mapPoint.x,
-      );
+  factory ClusterOrMapPoint.mapPoint({
+    required final T data,
+    required final double x,
+    required final double y,
+    required final int index,
+    @Default(-1) int parentId,
+    @Default(ClusterOrMapPoint._maxInt) int zoom,
+  }) = MapPoint;
 
-  double get y => handle(
-        cluster: (cluster) => cluster.y,
-        mapPoint: (mapPoint) => mapPoint.y,
-      );
-
-  int get parentId => handle(
-        cluster: (cluster) => cluster.parentId,
-        mapPoint: (mapPoint) => mapPoint.parentId,
-      );
-
-  int get zoom => handle(
-        cluster: (cluster) => cluster.zoom,
-        mapPoint: (mapPoint) => mapPoint.zoom,
-      );
-
-  set zoom(int newZoom) {
-    if (cluster != null) {
-      cluster!.zoom = newZoom;
-    } else {
-      mapPoint!.zoom = newZoom;
-    }
-  }
-
-  set parentId(int newParentId) {
-    if (cluster != null) {
-      cluster!.parentId = newParentId;
-    } else {
-      mapPoint!.parentId = newParentId;
-    }
-  }
-
-  int get numPoints => cluster?.numPoints ?? 1;
+  int get numPoints =>
+      map(cluster: (cluster) => cluster.numPoints, mapPoint: (mapPoint) => 1);
 
   static double getX(ClusterOrMapPoint clusterOrMapPoint) =>
       clusterOrMapPoint.x;
