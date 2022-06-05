@@ -1,39 +1,22 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
-
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
-
-## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+A port of [MapBox's javascript supercluster library](https://github.com/mapbox/supercluster) for fast marker clustering.
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
-
 ```dart
-const like = 'sample';
+  final supercluster = Supercluster<CustomMapPoint>(
+    getX: (p) => p.x,
+    getY: (p) => p.y,
+  );
+  supercluster.load([
+    Point(1.5, 46),
+    Point(0.9, 46.4),
+    Point(19, 45),
+  ]);
+
+  // Returns the first two points.
+  supercluster.getClustersAndPoints(0.0, 43, 8, 47, 10);
+
+  // Returns a cluster.
+  supercluster.getClustersAndPoints(0.0, 43, 8, 47, 5);
+}
 ```
-
-## Additional information
-
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
