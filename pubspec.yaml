@@ -1,6 +1,6 @@
 name: supercluster
 description: A port of MapBox's javascript supercluster library for fast marker clustering.
-version: 0.0.1
+version: 0.0.1+1
 homepage: https://github.com/rorystephenson/supercluster_dart.dart
 
 environment:
