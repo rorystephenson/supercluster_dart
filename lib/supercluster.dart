@@ -3,6 +3,5 @@
 /// More dartdocs go here.
 library supercluster;
 
+export 'src/cluster_or_map_point.dart';
 export 'src/supercluster.dart';
-
-// TODO: Export any libraries intended for clients of this package.
