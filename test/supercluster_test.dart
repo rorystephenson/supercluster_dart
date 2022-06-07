@@ -13,8 +13,12 @@ void main() {
       loadFixture('places.json')['features']);
 
   Supercluster<Map<String, dynamic>> supercluster(
-          {int? radius, int? extent, int? maxZoom}) =>
+          List<Map<String, dynamic>> points,
+          {int? radius,
+          int? extent,
+          int? maxZoom}) =>
       Supercluster<Map<String, dynamic>>(
+        points: points,
         getX: (json) {
           return json['geometry']?['coordinates'][0].toDouble();
         },
@@ -27,13 +31,13 @@ void main() {
       );
 
   test('returns children of a cluster', () {
-    final index = supercluster()..load(features);
+    final index = supercluster(features);
     final childCounts = index.getChildren(164).map((p) => p.numPoints);
     expect(childCounts, equals([6, 7, 2, 1]));
   });
 
   test('returns leaves of a cluster', () {
-    final index = supercluster()..load(features);
+    final index = supercluster(features);
 
     final leafNames = index
         .getLeaves(164, limit: 10, offset: 5)
@@ -59,7 +63,7 @@ void main() {
   });
 
   test('returns cluster expansion zoom', () {
-    final index = supercluster()..load(features);
+    final index = supercluster(features);
     expect(index.getClusterExpansionZoom(164), 1);
     expect(index.getClusterExpansionZoom(196), 1);
     expect(index.getClusterExpansionZoom(581), 2);
@@ -69,50 +73,51 @@ void main() {
 
   test('returns cluster expansion zoom for maxZoom', () {
     final index = supercluster(
+      features,
       radius: 60,
       extent: 256,
       maxZoom: 4,
-    )..load(features);
+    );
 
     expect(index.getClusterExpansionZoom(2504), 5);
   });
 
   test('returns clusters when query crosses international dateline', () {
-    final index = supercluster()
-      ..load([
-        {
-          'type': 'Feature',
-          'properties': null,
-          'geometry': {
-            'type': 'Point',
-            'coordinates': [-178.989, 0]
-          }
-        },
-        {
-          'type': 'Feature',
-          'properties': null,
-          'geometry': {
-            'type': 'Point',
-            'coordinates': [-178.990, 0]
-          }
-        },
-        {
-          'type': 'Feature',
-          'properties': null,
-          'geometry': {
-            'type': 'Point',
-            'coordinates': [-178.991, 0]
-          }
-        },
-        {
-          'type': 'Feature',
-          'properties': null,
-          'geometry': {
-            'type': 'Point',
-            'coordinates': [-178.992, 0]
-          }
-        },
-      ]);
+    final index = supercluster([
+      {
+        'type': 'Feature',
+        'properties': null,
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [-178.989, 0]
+        }
+      },
+      {
+        'type': 'Feature',
+        'properties': null,
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [-178.990, 0]
+        }
+      },
+      {
+        'type': 'Feature',
+        'properties': null,
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [-178.991, 0]
+        }
+      },
+      {
+        'type': 'Feature',
+        'properties': null,
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [-178.992, 0]
+        }
+      },
+    ]);
+
     final nonCrossing = index.getClustersAndPoints(-179, -10, -177, 10, 1);
     final crossing = index.getClustersAndPoints(179, -10, -177, 10, 1);
 
@@ -122,7 +127,7 @@ void main() {
   });
 
   test('does not crash on weird bbox values', () {
-    final index = supercluster()..load(features);
+    final index = supercluster(features);
     expect(
         index
             .getClustersAndPoints(
@@ -163,23 +168,22 @@ void main() {
   });
 
   test('makes sure same-location points are clustered', () {
-    final index = supercluster(maxZoom: 20, extent: 8192, radius: 16)
-      ..load([
-        {
-          'type': 'Feature',
-          'geometry': {
-            'type': 'Point',
-            'coordinates': [-1.426798, 53.943034]
-          }
-        },
-        {
-          'type': 'Feature',
-          'geometry': {
-            'type': 'Point',
-            'coordinates': [-1.426798, 53.943034]
-          }
+    final index = supercluster([
+      {
+        'type': 'Feature',
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [-1.426798, 53.943034]
         }
-      ]);
+      },
+      {
+        'type': 'Feature',
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [-1.426798, 53.943034]
+        }
+      }
+    ], maxZoom: 20, extent: 8192, radius: 16);
 
     expect(index.trees[20]!.length, 1);
   });

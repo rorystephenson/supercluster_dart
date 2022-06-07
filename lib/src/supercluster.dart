@@ -4,6 +4,8 @@ import 'package:kdbush/kdbush.dart';
 import 'package:supercluster/src/cluster_or_map_point.dart';
 import 'package:supercluster/src/util.dart' as util;
 
+import 'cluster_data_base.dart';
+
 class Supercluster<T> {
   final double? Function(T) getX;
   final double? Function(T) getY;
@@ -15,12 +17,13 @@ class Supercluster<T> {
   final int extent;
   final int nodeSize;
 
-  //final bool generateId;
-  //final int Function(int accumulated, dynamic props)? reduce;
+  final ClusterDataBase Function(T point)? extractClusterData;
+
   final List<KDBush<ClusterOrMapPoint<T>, double>?> trees;
   List<T>? points;
 
   Supercluster({
+    required List<T> points,
     required this.getX,
     required this.getY,
     int? minZoom,
@@ -29,15 +32,18 @@ class Supercluster<T> {
     int? radius,
     int? extent,
     int? nodeSize,
+    this.extractClusterData,
   })  : minZoom = minZoom ?? 0,
         maxZoom = maxZoom ?? 16,
         minPoints = minPoints ?? 2,
         radius = radius ?? 40,
         extent = extent ?? 512,
         nodeSize = nodeSize ?? 64,
-        trees = List.filled((maxZoom ?? 16) + 2, null);
+        trees = List.filled((maxZoom ?? 16) + 2, null) {
+    _load(points);
+  }
 
-  void load(List<T> points) {
+  void _load(List<T> points) {
     this.points = points;
 
     // generate a cluster object for each point and index input points into a KD-tree
@@ -49,10 +55,11 @@ class Supercluster<T> {
       if (x == null || y == null) continue;
       clusters.add(
         ClusterOrMapPoint<T>.mapPoint(
-          data: point,
+          originalPoint: point,
           x: util.lngX(x),
           y: util.latY(y),
           index: i,
+          clusterData: extractClusterData?.call(point),
         ),
       );
     }
@@ -116,9 +123,9 @@ class Supercluster<T> {
     return clusters;
   }
 
-  List<ClusterOrMapPoint<T>> getChildren(clusterId) {
+  List<ClusterOrMapPoint<T>> getChildren(int clusterId) {
     final originId = _getOriginId(clusterId);
-    final originZoom = _getOriginZoom(clusterId);
+    final originZoom = getOriginZoom(clusterId);
     final errorMsg = 'No cluster with the specified id.';
 
     final index = trees[originZoom];
@@ -150,7 +157,7 @@ class Supercluster<T> {
   }
 
   int getClusterExpansionZoom(int clusterId) {
-    var expansionZoom = _getOriginZoom(clusterId) - 1;
+    var expansionZoom = getOriginZoom(clusterId) - 1;
     while (expansionZoom <= maxZoom) {
       final children = getChildren(clusterId);
       expansionZoom++;
@@ -158,6 +165,21 @@ class Supercluster<T> {
       clusterId = (children[0] as Cluster).id;
     }
     return expansionZoom;
+  }
+
+  Cluster<T>? parentOf(ClusterOrMapPoint<T> clusterOrMapPoint) {
+    if (clusterOrMapPoint.parentId == -1) return null;
+
+    final parentZoom = getOriginZoom(clusterOrMapPoint.parentId) - 1;
+
+    return trees[parentZoom]!.points.firstWhere(
+          (e) => e is Cluster<T> && e.id == clusterOrMapPoint.parentId,
+        ) as Cluster<T>;
+  }
+
+  /// Returns the zoom level at which the cluster with the given id appears
+  int getOriginZoom(int clusterId) {
+    return (clusterId - points!.length) % 32;
   }
 
   int _appendLeaves(List<MapPoint<T>> result, int clusterId, int limit,
@@ -195,7 +217,9 @@ class Supercluster<T> {
   }
 
   List<ClusterOrMapPoint<T>> _cluster(
-      List<ClusterOrMapPoint<T>> points, int zoom) {
+    List<ClusterOrMapPoint<T>> points,
+    int zoom,
+  ) {
     final clusters = <ClusterOrMapPoint<T>>[];
     final r = radius / (extent * pow(2, zoom));
 
@@ -225,6 +249,9 @@ class Supercluster<T> {
         var wx = p.x * numPointsOrigin;
         var wy = p.y * numPointsOrigin;
 
+        var clusterData = p.clusterData ??
+            (extractClusterData != null ? _extractClusterData(p) : null);
+
         // encode both zoom and point index on which the cluster originated -- offset by total length of features
         final id = (i << 5) + (zoom + 1) + this.points!.length;
 
@@ -240,14 +267,20 @@ class Supercluster<T> {
           wy += b.y * numPoints2;
 
           b.parentId = id;
+
+          if (extractClusterData != null) {
+            clusterData ??= _extractClusterData(p);
+            clusterData = clusterData.combine(_extractClusterData(b));
+          }
         }
 
         p.parentId = id;
         clusters.add(
           ClusterOrMapPoint.cluster(
+            clusterData: clusterData,
+            id: id,
             x: wx / numPoints,
             y: wy / numPoints,
-            id: id,
             numPoints: numPoints,
           ),
         );
@@ -269,16 +302,32 @@ class Supercluster<T> {
     return clusters;
   }
 
+  ClusterDataBase _extractClusterData(ClusterOrMapPoint<T> clusterOrMapPoint) {
+    return clusterOrMapPoint.map(
+        cluster: (cluster) => cluster.clusterData!,
+        mapPoint: (mapPoint) => extractClusterData!(mapPoint.originalPoint));
+    // if (clusterOrMapPoint is Cluster<T>) {
+    //   return clone
+    //       ? extend({}, clusterOrMapPoint.data)
+    //       : clusterOrMapPoint.data;
+    // }
+    // clusterOrMapPoint as MapPoint<T>;
+
+    // final original = clusterOrMapPoint.originalPoint;
+    // final result = extractClusterData!(original);
+    // return clone && result == original ? extractClusterData!(original) : result;
+  }
+
   // get index of the point from which the cluster originated
-  _getOriginId(clusterId) {
+  int _getOriginId(int clusterId) {
     return (clusterId - points!.length) >> 5;
   }
 
-  // get zoom of the point from which the cluster originated
-  _getOriginZoom(clusterId) {
-    return (clusterId - points!.length) % 32;
+  Map<String, dynamic> extend(
+      Map<String, dynamic> dest, Map<String, dynamic> src) {
+    for (final id in src.keys) {
+      dest[id] = src[id];
+    }
+    return dest;
   }
-
-  /// ////////////////
-
 }

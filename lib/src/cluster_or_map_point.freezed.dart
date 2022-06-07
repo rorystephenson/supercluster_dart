@@ -18,37 +18,39 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$ClusterOrMapPoint<T> {
   double get x => throw _privateConstructorUsedError;
   double get y => throw _privateConstructorUsedError;
+  ClusterDataBase? get clusterData => throw _privateConstructorUsedError;
+  set clusterData(ClusterDataBase? value) => throw _privateConstructorUsedError;
   int get zoom => throw _privateConstructorUsedError;
   set zoom(int value) => throw _privateConstructorUsedError;
   int get parentId => throw _privateConstructorUsedError;
   set parentId(int value) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(
-            double x, double y, int zoom, int id, int parentId, int numPoints)
+    required TResult Function(double x, double y, int numPoints, int id,
+            ClusterDataBase? clusterData, int zoom, int parentId)
         cluster,
-    required TResult Function(
-            T data, double x, double y, int index, int parentId, int zoom)
+    required TResult Function(T originalPoint, double x, double y, int index,
+            ClusterDataBase? clusterData, int parentId, int zoom)
         mapPoint,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(
-            double x, double y, int zoom, int id, int parentId, int numPoints)?
+    TResult Function(double x, double y, int numPoints, int id,
+            ClusterDataBase? clusterData, int zoom, int parentId)?
         cluster,
-    TResult Function(
-            T data, double x, double y, int index, int parentId, int zoom)?
+    TResult Function(T originalPoint, double x, double y, int index,
+            ClusterDataBase? clusterData, int parentId, int zoom)?
         mapPoint,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(
-            double x, double y, int zoom, int id, int parentId, int numPoints)?
+    TResult Function(double x, double y, int numPoints, int id,
+            ClusterDataBase? clusterData, int zoom, int parentId)?
         cluster,
-    TResult Function(
-            T data, double x, double y, int index, int parentId, int zoom)?
+    TResult Function(T originalPoint, double x, double y, int index,
+            ClusterDataBase? clusterData, int parentId, int zoom)?
         mapPoint,
     required TResult orElse(),
   }) =>
@@ -83,7 +85,12 @@ abstract class $ClusterOrMapPointCopyWith<T, $Res> {
   factory $ClusterOrMapPointCopyWith(ClusterOrMapPoint<T> value,
           $Res Function(ClusterOrMapPoint<T>) then) =
       _$ClusterOrMapPointCopyWithImpl<T, $Res>;
-  $Res call({double x, double y, int zoom, int parentId});
+  $Res call(
+      {double x,
+      double y,
+      ClusterDataBase? clusterData,
+      int zoom,
+      int parentId});
 }
 
 /// @nodoc
@@ -99,6 +106,7 @@ class _$ClusterOrMapPointCopyWithImpl<T, $Res>
   $Res call({
     Object? x = freezed,
     Object? y = freezed,
+    Object? clusterData = freezed,
     Object? zoom = freezed,
     Object? parentId = freezed,
   }) {
@@ -111,6 +119,10 @@ class _$ClusterOrMapPointCopyWithImpl<T, $Res>
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
               as double,
+      clusterData: clusterData == freezed
+          ? _value.clusterData
+          : clusterData // ignore: cast_nullable_to_non_nullable
+              as ClusterDataBase?,
       zoom: zoom == freezed
           ? _value.zoom
           : zoom // ignore: cast_nullable_to_non_nullable
@@ -131,7 +143,13 @@ abstract class _$$ClusterCopyWith<T, $Res>
       __$$ClusterCopyWithImpl<T, $Res>;
   @override
   $Res call(
-      {double x, double y, int zoom, int id, int parentId, int numPoints});
+      {double x,
+      double y,
+      int numPoints,
+      int id,
+      ClusterDataBase? clusterData,
+      int zoom,
+      int parentId});
 }
 
 /// @nodoc
@@ -149,10 +167,11 @@ class __$$ClusterCopyWithImpl<T, $Res>
   $Res call({
     Object? x = freezed,
     Object? y = freezed,
-    Object? zoom = freezed,
-    Object? id = freezed,
-    Object? parentId = freezed,
     Object? numPoints = freezed,
+    Object? id = freezed,
+    Object? clusterData = freezed,
+    Object? zoom = freezed,
+    Object? parentId = freezed,
   }) {
     return _then(_$Cluster<T>(
       x: x == freezed
@@ -163,21 +182,25 @@ class __$$ClusterCopyWithImpl<T, $Res>
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
               as double,
-      zoom: zoom == freezed
-          ? _value.zoom
-          : zoom // ignore: cast_nullable_to_non_nullable
+      numPoints: numPoints == freezed
+          ? _value.numPoints
+          : numPoints // ignore: cast_nullable_to_non_nullable
               as int,
       id: id == freezed
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as int,
+      clusterData: clusterData == freezed
+          ? _value.clusterData
+          : clusterData // ignore: cast_nullable_to_non_nullable
+              as ClusterDataBase?,
+      zoom: zoom == freezed
+          ? _value.zoom
+          : zoom // ignore: cast_nullable_to_non_nullable
+              as int,
       parentId: parentId == freezed
           ? _value.parentId
           : parentId // ignore: cast_nullable_to_non_nullable
-              as int,
-      numPoints: numPoints == freezed
-          ? _value.numPoints
-          : numPoints // ignore: cast_nullable_to_non_nullable
               as int,
     ));
   }
@@ -189,10 +212,11 @@ class _$Cluster<T> extends Cluster<T> {
   _$Cluster(
       {required this.x,
       required this.y,
-      this.zoom = ClusterOrMapPoint._maxInt,
+      required this.numPoints,
       required this.id,
-      this.parentId = -1,
-      required this.numPoints})
+      this.clusterData,
+      this.zoom = ClusterOrMapPoint._maxInt,
+      this.parentId = -1})
       : super._();
 
   @override
@@ -200,19 +224,21 @@ class _$Cluster<T> extends Cluster<T> {
   @override
   final double y;
   @override
+  final int numPoints;
+  @override
+  final int id;
+  @override
+  ClusterDataBase? clusterData;
+  @override
   @JsonKey()
   int zoom;
   @override
-  int id;
-  @override
   @JsonKey()
   int parentId;
-  @override
-  int numPoints;
 
   @override
   String toString() {
-    return 'ClusterOrMapPoint<$T>.cluster(x: $x, y: $y, zoom: $zoom, id: $id, parentId: $parentId, numPoints: $numPoints)';
+    return 'ClusterOrMapPoint<$T>.cluster(x: $x, y: $y, numPoints: $numPoints, id: $id, clusterData: $clusterData, zoom: $zoom, parentId: $parentId)';
   }
 
   @JsonKey(ignore: true)
@@ -223,42 +249,42 @@ class _$Cluster<T> extends Cluster<T> {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(
-            double x, double y, int zoom, int id, int parentId, int numPoints)
+    required TResult Function(double x, double y, int numPoints, int id,
+            ClusterDataBase? clusterData, int zoom, int parentId)
         cluster,
-    required TResult Function(
-            T data, double x, double y, int index, int parentId, int zoom)
+    required TResult Function(T originalPoint, double x, double y, int index,
+            ClusterDataBase? clusterData, int parentId, int zoom)
         mapPoint,
   }) {
-    return cluster(x, y, zoom, id, parentId, numPoints);
+    return cluster(x, y, numPoints, id, clusterData, zoom, parentId);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(
-            double x, double y, int zoom, int id, int parentId, int numPoints)?
+    TResult Function(double x, double y, int numPoints, int id,
+            ClusterDataBase? clusterData, int zoom, int parentId)?
         cluster,
-    TResult Function(
-            T data, double x, double y, int index, int parentId, int zoom)?
+    TResult Function(T originalPoint, double x, double y, int index,
+            ClusterDataBase? clusterData, int parentId, int zoom)?
         mapPoint,
   }) {
-    return cluster?.call(x, y, zoom, id, parentId, numPoints);
+    return cluster?.call(x, y, numPoints, id, clusterData, zoom, parentId);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(
-            double x, double y, int zoom, int id, int parentId, int numPoints)?
+    TResult Function(double x, double y, int numPoints, int id,
+            ClusterDataBase? clusterData, int zoom, int parentId)?
         cluster,
-    TResult Function(
-            T data, double x, double y, int index, int parentId, int zoom)?
+    TResult Function(T originalPoint, double x, double y, int index,
+            ClusterDataBase? clusterData, int parentId, int zoom)?
         mapPoint,
     required TResult orElse(),
   }) {
     if (cluster != null) {
-      return cluster(x, y, zoom, id, parentId, numPoints);
+      return cluster(x, y, numPoints, id, clusterData, zoom, parentId);
     }
     return orElse();
   }
@@ -299,22 +325,25 @@ abstract class Cluster<T> extends ClusterOrMapPoint<T> {
   factory Cluster(
       {required final double x,
       required final double y,
+      required final int numPoints,
+      required final int id,
+      ClusterDataBase? clusterData,
       int zoom,
-      required int id,
-      int parentId,
-      required int numPoints}) = _$Cluster<T>;
+      int parentId}) = _$Cluster<T>;
   Cluster._() : super._();
 
   @override
   double get x => throw _privateConstructorUsedError;
   @override
   double get y => throw _privateConstructorUsedError;
-  @override
-  int get zoom => throw _privateConstructorUsedError;
+  int get numPoints => throw _privateConstructorUsedError;
   int get id => throw _privateConstructorUsedError;
   @override
+  ClusterDataBase? get clusterData => throw _privateConstructorUsedError;
+  @override
+  int get zoom => throw _privateConstructorUsedError;
+  @override
   int get parentId => throw _privateConstructorUsedError;
-  int get numPoints => throw _privateConstructorUsedError;
   @override
   @JsonKey(ignore: true)
   _$$ClusterCopyWith<T, _$Cluster<T>> get copyWith =>
@@ -328,7 +357,14 @@ abstract class _$$MapPointCopyWith<T, $Res>
           _$MapPoint<T> value, $Res Function(_$MapPoint<T>) then) =
       __$$MapPointCopyWithImpl<T, $Res>;
   @override
-  $Res call({T data, double x, double y, int index, int parentId, int zoom});
+  $Res call(
+      {T originalPoint,
+      double x,
+      double y,
+      int index,
+      ClusterDataBase? clusterData,
+      int parentId,
+      int zoom});
 }
 
 /// @nodoc
@@ -344,17 +380,18 @@ class __$$MapPointCopyWithImpl<T, $Res>
 
   @override
   $Res call({
-    Object? data = freezed,
+    Object? originalPoint = freezed,
     Object? x = freezed,
     Object? y = freezed,
     Object? index = freezed,
+    Object? clusterData = freezed,
     Object? parentId = freezed,
     Object? zoom = freezed,
   }) {
     return _then(_$MapPoint<T>(
-      data: data == freezed
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
+      originalPoint: originalPoint == freezed
+          ? _value.originalPoint
+          : originalPoint // ignore: cast_nullable_to_non_nullable
               as T,
       x: x == freezed
           ? _value.x
@@ -368,6 +405,10 @@ class __$$MapPointCopyWithImpl<T, $Res>
           ? _value.index
           : index // ignore: cast_nullable_to_non_nullable
               as int,
+      clusterData: clusterData == freezed
+          ? _value.clusterData
+          : clusterData // ignore: cast_nullable_to_non_nullable
+              as ClusterDataBase?,
       parentId: parentId == freezed
           ? _value.parentId
           : parentId // ignore: cast_nullable_to_non_nullable
@@ -384,22 +425,25 @@ class __$$MapPointCopyWithImpl<T, $Res>
 
 class _$MapPoint<T> extends MapPoint<T> {
   _$MapPoint(
-      {required this.data,
+      {required this.originalPoint,
       required this.x,
       required this.y,
       required this.index,
+      this.clusterData,
       this.parentId = -1,
       this.zoom = ClusterOrMapPoint._maxInt})
       : super._();
 
   @override
-  final T data;
+  final T originalPoint;
   @override
   final double x;
   @override
   final double y;
   @override
   final int index;
+  @override
+  ClusterDataBase? clusterData;
   @override
   @JsonKey()
   int parentId;
@@ -409,7 +453,7 @@ class _$MapPoint<T> extends MapPoint<T> {
 
   @override
   String toString() {
-    return 'ClusterOrMapPoint<$T>.mapPoint(data: $data, x: $x, y: $y, index: $index, parentId: $parentId, zoom: $zoom)';
+    return 'ClusterOrMapPoint<$T>.mapPoint(originalPoint: $originalPoint, x: $x, y: $y, index: $index, clusterData: $clusterData, parentId: $parentId, zoom: $zoom)';
   }
 
   @JsonKey(ignore: true)
@@ -420,42 +464,43 @@ class _$MapPoint<T> extends MapPoint<T> {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(
-            double x, double y, int zoom, int id, int parentId, int numPoints)
+    required TResult Function(double x, double y, int numPoints, int id,
+            ClusterDataBase? clusterData, int zoom, int parentId)
         cluster,
-    required TResult Function(
-            T data, double x, double y, int index, int parentId, int zoom)
+    required TResult Function(T originalPoint, double x, double y, int index,
+            ClusterDataBase? clusterData, int parentId, int zoom)
         mapPoint,
   }) {
-    return mapPoint(data, x, y, index, parentId, zoom);
+    return mapPoint(originalPoint, x, y, index, clusterData, parentId, zoom);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(
-            double x, double y, int zoom, int id, int parentId, int numPoints)?
+    TResult Function(double x, double y, int numPoints, int id,
+            ClusterDataBase? clusterData, int zoom, int parentId)?
         cluster,
-    TResult Function(
-            T data, double x, double y, int index, int parentId, int zoom)?
+    TResult Function(T originalPoint, double x, double y, int index,
+            ClusterDataBase? clusterData, int parentId, int zoom)?
         mapPoint,
   }) {
-    return mapPoint?.call(data, x, y, index, parentId, zoom);
+    return mapPoint?.call(
+        originalPoint, x, y, index, clusterData, parentId, zoom);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(
-            double x, double y, int zoom, int id, int parentId, int numPoints)?
+    TResult Function(double x, double y, int numPoints, int id,
+            ClusterDataBase? clusterData, int zoom, int parentId)?
         cluster,
-    TResult Function(
-            T data, double x, double y, int index, int parentId, int zoom)?
+    TResult Function(T originalPoint, double x, double y, int index,
+            ClusterDataBase? clusterData, int parentId, int zoom)?
         mapPoint,
     required TResult orElse(),
   }) {
     if (mapPoint != null) {
-      return mapPoint(data, x, y, index, parentId, zoom);
+      return mapPoint(originalPoint, x, y, index, clusterData, parentId, zoom);
     }
     return orElse();
   }
@@ -494,20 +539,23 @@ class _$MapPoint<T> extends MapPoint<T> {
 
 abstract class MapPoint<T> extends ClusterOrMapPoint<T> {
   factory MapPoint(
-      {required final T data,
+      {required final T originalPoint,
       required final double x,
       required final double y,
       required final int index,
+      ClusterDataBase? clusterData,
       int parentId,
       int zoom}) = _$MapPoint<T>;
   MapPoint._() : super._();
 
-  T get data => throw _privateConstructorUsedError;
+  T get originalPoint => throw _privateConstructorUsedError;
   @override
   double get x => throw _privateConstructorUsedError;
   @override
   double get y => throw _privateConstructorUsedError;
   int get index => throw _privateConstructorUsedError;
+  @override
+  ClusterDataBase? get clusterData => throw _privateConstructorUsedError;
   @override
   int get parentId => throw _privateConstructorUsedError;
   @override
