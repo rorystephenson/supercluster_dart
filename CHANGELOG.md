@@ -1,3 +1,7 @@
+## 0.1.0
+
+- Add the ability to aggregate map point data in clusters.
+
 ## 0.0.2
 
 - Export Cluster, MapPoint and ClusterOrMapPoint
