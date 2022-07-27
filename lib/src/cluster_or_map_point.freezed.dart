@@ -333,17 +333,20 @@ abstract class Cluster<T> extends ClusterOrMapPoint<T> {
   Cluster._() : super._();
 
   @override
-  double get x => throw _privateConstructorUsedError;
+  double get x;
   @override
-  double get y => throw _privateConstructorUsedError;
-  int get numPoints => throw _privateConstructorUsedError;
-  int get id => throw _privateConstructorUsedError;
+  double get y;
+  int get numPoints;
+  int get id;
   @override
-  ClusterDataBase? get clusterData => throw _privateConstructorUsedError;
+  ClusterDataBase? get clusterData;
+  set clusterData(ClusterDataBase? value);
   @override
-  int get zoom => throw _privateConstructorUsedError;
+  int get zoom;
+  set zoom(int value);
   @override
-  int get parentId => throw _privateConstructorUsedError;
+  int get parentId;
+  set parentId(int value);
   @override
   @JsonKey(ignore: true)
   _$$ClusterCopyWith<T, _$Cluster<T>> get copyWith =>
@@ -548,18 +551,21 @@ abstract class MapPoint<T> extends ClusterOrMapPoint<T> {
       int zoom}) = _$MapPoint<T>;
   MapPoint._() : super._();
 
-  T get originalPoint => throw _privateConstructorUsedError;
+  T get originalPoint;
   @override
-  double get x => throw _privateConstructorUsedError;
+  double get x;
   @override
-  double get y => throw _privateConstructorUsedError;
-  int get index => throw _privateConstructorUsedError;
+  double get y;
+  int get index;
   @override
-  ClusterDataBase? get clusterData => throw _privateConstructorUsedError;
+  ClusterDataBase? get clusterData;
+  set clusterData(ClusterDataBase? value);
   @override
-  int get parentId => throw _privateConstructorUsedError;
+  int get parentId;
+  set parentId(int value);
   @override
-  int get zoom => throw _privateConstructorUsedError;
+  int get zoom;
+  set zoom(int value);
   @override
   @JsonKey(ignore: true)
   _$$MapPointCopyWith<T, _$MapPoint<T>> get copyWith =>

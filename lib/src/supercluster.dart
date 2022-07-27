@@ -1,10 +1,10 @@
 import 'dart:math';
 
-import 'package:kdbush/kdbush.dart';
 import 'package:supercluster/src/cluster_or_map_point.dart';
 import 'package:supercluster/src/util.dart' as util;
 
 import 'cluster_data_base.dart';
+import 'point_tree.dart';
 
 class Supercluster<T> {
   final double? Function(T) getX;
@@ -19,7 +19,7 @@ class Supercluster<T> {
 
   final ClusterDataBase Function(T point)? extractClusterData;
 
-  final List<KDBush<ClusterOrMapPoint<T>, double>?> trees;
+  final List<PointTree<T>> trees;
   List<T>? points;
 
   Supercluster({
@@ -39,7 +39,14 @@ class Supercluster<T> {
         radius = radius ?? 40,
         extent = extent ?? 512,
         nodeSize = nodeSize ?? 64,
-        trees = List.filled((maxZoom ?? 16) + 2, null) {
+        trees = List.generate(
+          (maxZoom ?? 16) + 2,
+          (_) => KDBushPointTree<T>(
+            getX: getX,
+            getY: getY,
+            nodeSize: nodeSize ?? 64,
+          ),
+        ) {
     _load(points);
   }
 
@@ -64,24 +71,14 @@ class Supercluster<T> {
       );
     }
 
-    trees[maxZoom + 1] = KDBush<ClusterOrMapPoint<T>, double>(
-      points: clusters,
-      getX: ClusterOrMapPoint.getX,
-      getY: ClusterOrMapPoint.getY,
-      nodeSize: nodeSize,
-    );
+    trees[maxZoom + 1].initialize(clusters);
 
     // cluster points on max zoom, then cluster the results on previous zoom, etc.;
     // results in a cluster hierarchy across zoom levels
     for (var z = maxZoom; z >= minZoom; z--) {
       // create a new set of clusters for the zoom and index them with a KD-tree
       clusters = _cluster(clusters, z);
-      trees[z] = KDBush<ClusterOrMapPoint<T>, double>(
-        points: clusters,
-        getX: ClusterOrMapPoint.getX,
-        getY: ClusterOrMapPoint.getY,
-        nodeSize: nodeSize,
-      );
+      trees[z].initialize(clusters);
     }
   }
 
@@ -109,7 +106,7 @@ class Supercluster<T> {
       return easternHem..addAll(westernHem);
     }
 
-    final tree = trees[_limitZoom(zoom)]!;
+    final tree = trees[_limitZoom(zoom)];
     final ids = tree.withinBounds(
       util.lngX(minLng),
       util.latY(maxLat),
@@ -118,7 +115,7 @@ class Supercluster<T> {
     );
     final clusters = <ClusterOrMapPoint<T>>[];
     for (final id in ids) {
-      clusters.add(tree.points[id]);
+      clusters.add(tree.point(id));
     }
     return clusters;
   }
@@ -129,16 +126,15 @@ class Supercluster<T> {
     final errorMsg = 'No cluster with the specified id.';
 
     final index = trees[originZoom];
-    if (index == null) throw errorMsg;
 
-    if (originId >= index.points.length) throw errorMsg;
-    final origin = index.points[originId];
+    if (originId >= index.size) throw errorMsg;
+    final origin = index.point(originId);
 
     final r = radius / (extent * pow(2, originZoom - 1));
-    final ids = index.withinRadius(origin.x, origin.y, r);
+    final ids = index.idsWithinRadius(origin.x, origin.y, r);
     final children = <ClusterOrMapPoint<T>>[];
     for (final id in ids) {
-      final c = index.points[id];
+      final c = index.point(id);
       if (c.parentId == clusterId) {
         children.add(c);
       }
@@ -172,9 +168,9 @@ class Supercluster<T> {
 
     final parentZoom = getOriginZoom(clusterOrMapPoint.parentId) - 1;
 
-    return trees[parentZoom]!.points.firstWhere(
-          (e) => e is Cluster<T> && e.id == clusterOrMapPoint.parentId,
-        ) as Cluster<T>;
+    return trees[parentZoom].firstPointWhere(
+      (e) => e is Cluster<T> && e.id == clusterOrMapPoint.parentId,
+    ) as Cluster<T>;
   }
 
   /// Returns the zoom level at which the cluster with the given id appears
@@ -231,15 +227,15 @@ class Supercluster<T> {
       p.zoom = zoom;
 
       // find all nearby points
-      final tree = trees[zoom + 1]!;
-      final neighborIds = tree.withinRadius(p.x, p.y, r);
+      final tree = trees[zoom + 1];
+      final neighborIds = tree.idsWithinRadius(p.x, p.y, r);
 
       final numPointsOrigin = p.numPoints;
       var numPoints = numPointsOrigin;
 
       // count the number of points in a potential cluster
       for (final neighborId in neighborIds) {
-        final b = tree.points[neighborId];
+        final b = tree.point(neighborId);
         // filter out neighbors that are already processed
         if (b.zoom > zoom) numPoints += b.numPoints;
       }
@@ -256,7 +252,7 @@ class Supercluster<T> {
         final id = (i << 5) + (zoom + 1) + this.points!.length;
 
         for (final neighborId in neighborIds) {
-          final b = tree.points[neighborId];
+          final b = tree.point(neighborId);
 
           if (b.zoom <= zoom) continue;
           b.zoom = zoom; // save the zoom (so it doesn't get processed twice)
@@ -290,7 +286,7 @@ class Supercluster<T> {
 
         if (numPoints > 1) {
           for (final neighborId in neighborIds) {
-            final b = tree.points[neighborId];
+            final b = tree.point(neighborId);
             if (b.zoom <= zoom) continue;
             b.zoom = zoom;
             clusters.add(b);
