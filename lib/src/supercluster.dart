@@ -4,6 +4,7 @@ import 'package:supercluster/src/cluster_or_map_point.dart';
 import 'package:supercluster/src/util.dart' as util;
 
 import 'cluster_data_base.dart';
+import 'kdbush_point_tree.dart';
 import 'point_tree.dart';
 
 class Supercluster<T> {
