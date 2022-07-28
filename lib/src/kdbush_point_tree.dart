@@ -4,6 +4,8 @@ import 'cluster_or_map_point.dart';
 import 'point_tree.dart';
 
 class KDBushPointTree<T> extends PointTree<T> {
+  late KDBush<ClusterOrMapPoint<T>, double> _innerTree;
+
   final double? Function(T) getX;
   final double? Function(T) getY;
   final int nodeSize;
@@ -13,8 +15,6 @@ class KDBushPointTree<T> extends PointTree<T> {
     required this.getY,
     required this.nodeSize,
   });
-
-  late KDBush<ClusterOrMapPoint<T>, double> _innerTree;
 
   @override
   void initialize(List<ClusterOrMapPoint<T>> clusters) {
@@ -30,7 +30,7 @@ class KDBushPointTree<T> extends PointTree<T> {
   int get size => _innerTree.points.length;
 
   @override
-  ClusterOrMapPoint<T> point(int id) => _innerTree.points[id];
+  ClusterOrMapPoint<T> pointWithId(int id) => _innerTree.points[id];
 
   @override
   ClusterOrMapPoint<T> firstPointWhere(
@@ -39,11 +39,18 @@ class KDBushPointTree<T> extends PointTree<T> {
   }
 
   @override
-  List<int> withinBounds(double minX, double minY, double maxX, double maxY) =>
-      _innerTree.withinBounds(minX, minY, maxX, maxY);
+  List<ClusterOrMapPoint<T>> withinBounds(
+          double minX, double minY, double maxX, double maxY) =>
+      _innerTree
+          .withinBounds(minX, minY, maxX, maxY)
+          .map((e) => _innerTree.points[e])
+          .toList();
 
   @override
-  List<int> idsWithinRadius(double x, double y, double radius) {
-    return _innerTree.withinRadius(x, y, radius);
+  List<ClusterOrMapPoint<T>> withinRadius(double x, double y, double radius) {
+    return _innerTree
+        .withinRadius(x, y, radius)
+        .map((e) => _innerTree.points[e])
+        .toList();
   }
 }
