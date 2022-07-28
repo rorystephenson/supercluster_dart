@@ -185,6 +185,6 @@ void main() {
       }
     ], maxZoom: 20, extent: 8192, radius: 16);
 
-    expect(index.trees[20]!.length, 1);
+    expect(index.trees[20].size, 1);
   });
 }
