@@ -6,8 +6,6 @@ part 'cluster_or_map_point.freezed.dart';
 
 @unfreezed
 class ClusterOrMapPoint<T> with _$ClusterOrMapPoint<T> {
-  static const _maxInt = 9007199254740992; // 2^53
-
   ClusterOrMapPoint._();
 
   factory ClusterOrMapPoint.cluster({
@@ -16,7 +14,7 @@ class ClusterOrMapPoint<T> with _$ClusterOrMapPoint<T> {
     required final int numPoints,
     required final int id,
     ClusterDataBase? clusterData,
-    @Default(ClusterOrMapPoint._maxInt) int zoom,
+    @Default(util.maxInt) int zoom,
     @Default(-1) int parentId,
   }) = Cluster<T>;
 
@@ -27,7 +25,7 @@ class ClusterOrMapPoint<T> with _$ClusterOrMapPoint<T> {
     required final int index,
     ClusterDataBase? clusterData,
     @Default(-1) int parentId,
-    @Default(ClusterOrMapPoint._maxInt) int zoom,
+    @Default(util.maxInt) int zoom,
   }) = MapPoint<T>;
 
   int get numPoints =>

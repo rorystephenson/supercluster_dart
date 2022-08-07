@@ -306,16 +306,6 @@ class Supercluster<T> {
     return clusterOrMapPoint.map(
         cluster: (cluster) => cluster.clusterData!,
         mapPoint: (mapPoint) => extractClusterData!(mapPoint.originalPoint));
-    // if (clusterOrMapPoint is Cluster<T>) {
-    //   return clone
-    //       ? extend({}, clusterOrMapPoint.data)
-    //       : clusterOrMapPoint.data;
-    // }
-    // clusterOrMapPoint as MapPoint<T>;
-
-    // final original = clusterOrMapPoint.originalPoint;
-    // final result = extractClusterData!(original);
-    // return clone && result == original ? extractClusterData!(original) : result;
   }
 
   // get index of the point from which the cluster originated

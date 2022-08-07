@@ -24,37 +24,93 @@ mixin _$MutableClusterOrPoint<T> {
   set wX(double value) => throw _privateConstructorUsedError;
   double get wY => throw _privateConstructorUsedError;
   set wY(double value) => throw _privateConstructorUsedError;
-  ClusterDataBase? get clusterData => throw _privateConstructorUsedError;
-  set clusterData(ClusterDataBase? value) => throw _privateConstructorUsedError;
+  MutableClusterDataBase? get clusterData => throw _privateConstructorUsedError;
+  set clusterData(MutableClusterDataBase? value) =>
+      throw _privateConstructorUsedError;
   int get zoom => throw _privateConstructorUsedError;
   set zoom(int value) => throw _privateConstructorUsedError;
+  int get lowestZoom => throw _privateConstructorUsedError;
+  set lowestZoom(int value) => throw _privateConstructorUsedError;
+  String? get parentUuid => throw _privateConstructorUsedError;
+  set parentUuid(String? value) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(double x, double y, double wX, double wY,
-            List<T> originalPoints, ClusterDataBase? clusterData, int zoom)
+    required TResult Function(
+            String uuid,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            List<T> originalPoints,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)
         cluster,
-    required TResult Function(T originalPoint, double x, double y, double wX,
-            double wY, ClusterDataBase? clusterData, int zoom)
+    required TResult Function(
+            T originalPoint,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)
         point,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(double x, double y, double wX, double wY,
-            List<T> originalPoints, ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            String uuid,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            List<T> originalPoints,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         cluster,
-    TResult Function(T originalPoint, double x, double y, double wX, double wY,
-            ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            T originalPoint,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         point,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(double x, double y, double wX, double wY,
-            List<T> originalPoints, ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            String uuid,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            List<T> originalPoints,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         cluster,
-    TResult Function(T originalPoint, double x, double y, double wX, double wY,
-            ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            T originalPoint,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         point,
     required TResult orElse(),
   }) =>
@@ -94,8 +150,10 @@ abstract class $MutableClusterOrPointCopyWith<T, $Res> {
       double y,
       double wX,
       double wY,
-      ClusterDataBase? clusterData,
-      int zoom});
+      MutableClusterDataBase? clusterData,
+      int zoom,
+      int lowestZoom,
+      String? parentUuid});
 }
 
 /// @nodoc
@@ -115,6 +173,8 @@ class _$MutableClusterOrPointCopyWithImpl<T, $Res>
     Object? wY = freezed,
     Object? clusterData = freezed,
     Object? zoom = freezed,
+    Object? lowestZoom = freezed,
+    Object? parentUuid = freezed,
   }) {
     return _then(_value.copyWith(
       x: x == freezed
@@ -136,11 +196,19 @@ class _$MutableClusterOrPointCopyWithImpl<T, $Res>
       clusterData: clusterData == freezed
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
-              as ClusterDataBase?,
+              as MutableClusterDataBase?,
       zoom: zoom == freezed
           ? _value.zoom
           : zoom // ignore: cast_nullable_to_non_nullable
               as int,
+      lowestZoom: lowestZoom == freezed
+          ? _value.lowestZoom
+          : lowestZoom // ignore: cast_nullable_to_non_nullable
+              as int,
+      parentUuid: parentUuid == freezed
+          ? _value.parentUuid
+          : parentUuid // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -153,13 +221,16 @@ abstract class _$$MutableClusterCopyWith<T, $Res>
       __$$MutableClusterCopyWithImpl<T, $Res>;
   @override
   $Res call(
-      {double x,
+      {String uuid,
+      double x,
       double y,
       double wX,
       double wY,
       List<T> originalPoints,
-      ClusterDataBase? clusterData,
-      int zoom});
+      MutableClusterDataBase? clusterData,
+      int zoom,
+      int lowestZoom,
+      String? parentUuid});
 }
 
 /// @nodoc
@@ -175,6 +246,7 @@ class __$$MutableClusterCopyWithImpl<T, $Res>
 
   @override
   $Res call({
+    Object? uuid = freezed,
     Object? x = freezed,
     Object? y = freezed,
     Object? wX = freezed,
@@ -182,8 +254,14 @@ class __$$MutableClusterCopyWithImpl<T, $Res>
     Object? originalPoints = freezed,
     Object? clusterData = freezed,
     Object? zoom = freezed,
+    Object? lowestZoom = freezed,
+    Object? parentUuid = freezed,
   }) {
     return _then(_$MutableCluster<T>(
+      uuid: uuid == freezed
+          ? _value.uuid
+          : uuid // ignore: cast_nullable_to_non_nullable
+              as String,
       x: x == freezed
           ? _value.x
           : x // ignore: cast_nullable_to_non_nullable
@@ -207,11 +285,19 @@ class __$$MutableClusterCopyWithImpl<T, $Res>
       clusterData: clusterData == freezed
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
-              as ClusterDataBase?,
+              as MutableClusterDataBase?,
       zoom: zoom == freezed
           ? _value.zoom
           : zoom // ignore: cast_nullable_to_non_nullable
               as int,
+      lowestZoom: lowestZoom == freezed
+          ? _value.lowestZoom
+          : lowestZoom // ignore: cast_nullable_to_non_nullable
+              as int,
+      parentUuid: parentUuid == freezed
+          ? _value.parentUuid
+          : parentUuid // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -220,15 +306,20 @@ class __$$MutableClusterCopyWithImpl<T, $Res>
 
 class _$MutableCluster<T> extends MutableCluster<T> {
   _$MutableCluster(
-      {required this.x,
+      {required this.uuid,
+      required this.x,
       required this.y,
       required this.wX,
       required this.wY,
       required this.originalPoints,
       this.clusterData,
-      this.zoom = MutableClusterOrPoint._maxInt})
+      this.zoom = util.maxInt,
+      this.lowestZoom = util.maxInt,
+      this.parentUuid})
       : super._();
 
+  @override
+  String uuid;
   @override
   double x;
   @override
@@ -240,14 +331,19 @@ class _$MutableCluster<T> extends MutableCluster<T> {
   @override
   List<T> originalPoints;
   @override
-  ClusterDataBase? clusterData;
+  MutableClusterDataBase? clusterData;
   @override
   @JsonKey()
   int zoom;
+  @override
+  @JsonKey()
+  int lowestZoom;
+  @override
+  String? parentUuid;
 
   @override
   String toString() {
-    return 'MutableClusterOrPoint<$T>.cluster(x: $x, y: $y, wX: $wX, wY: $wY, originalPoints: $originalPoints, clusterData: $clusterData, zoom: $zoom)';
+    return 'MutableClusterOrPoint<$T>.cluster(uuid: $uuid, x: $x, y: $y, wX: $wX, wY: $wY, originalPoints: $originalPoints, clusterData: $clusterData, zoom: $zoom, lowestZoom: $lowestZoom, parentUuid: $parentUuid)';
   }
 
   @JsonKey(ignore: true)
@@ -258,42 +354,96 @@ class _$MutableCluster<T> extends MutableCluster<T> {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(double x, double y, double wX, double wY,
-            List<T> originalPoints, ClusterDataBase? clusterData, int zoom)
+    required TResult Function(
+            String uuid,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            List<T> originalPoints,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)
         cluster,
-    required TResult Function(T originalPoint, double x, double y, double wX,
-            double wY, ClusterDataBase? clusterData, int zoom)
+    required TResult Function(
+            T originalPoint,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)
         point,
   }) {
-    return cluster(x, y, wX, wY, originalPoints, clusterData, zoom);
+    return cluster(uuid, x, y, wX, wY, originalPoints, clusterData, zoom,
+        lowestZoom, parentUuid);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(double x, double y, double wX, double wY,
-            List<T> originalPoints, ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            String uuid,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            List<T> originalPoints,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         cluster,
-    TResult Function(T originalPoint, double x, double y, double wX, double wY,
-            ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            T originalPoint,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         point,
   }) {
-    return cluster?.call(x, y, wX, wY, originalPoints, clusterData, zoom);
+    return cluster?.call(uuid, x, y, wX, wY, originalPoints, clusterData, zoom,
+        lowestZoom, parentUuid);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(double x, double y, double wX, double wY,
-            List<T> originalPoints, ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            String uuid,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            List<T> originalPoints,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         cluster,
-    TResult Function(T originalPoint, double x, double y, double wX, double wY,
-            ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            T originalPoint,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         point,
     required TResult orElse(),
   }) {
     if (cluster != null) {
-      return cluster(x, y, wX, wY, originalPoints, clusterData, zoom);
+      return cluster(uuid, x, y, wX, wY, originalPoints, clusterData, zoom,
+          lowestZoom, parentUuid);
     }
     return orElse();
   }
@@ -332,15 +482,20 @@ class _$MutableCluster<T> extends MutableCluster<T> {
 
 abstract class MutableCluster<T> extends MutableClusterOrPoint<T> {
   factory MutableCluster(
-      {required double x,
+      {required String uuid,
+      required double x,
       required double y,
       required double wX,
       required double wY,
       required List<T> originalPoints,
-      ClusterDataBase? clusterData,
-      int zoom}) = _$MutableCluster<T>;
+      MutableClusterDataBase? clusterData,
+      int zoom,
+      int lowestZoom,
+      String? parentUuid}) = _$MutableCluster<T>;
   MutableCluster._() : super._();
 
+  String get uuid;
+  set uuid(String value);
   @override
   double get x;
   set x(double value);
@@ -356,11 +511,17 @@ abstract class MutableCluster<T> extends MutableClusterOrPoint<T> {
   List<T> get originalPoints;
   set originalPoints(List<T> value);
   @override
-  ClusterDataBase? get clusterData;
-  set clusterData(ClusterDataBase? value);
+  MutableClusterDataBase? get clusterData;
+  set clusterData(MutableClusterDataBase? value);
   @override
   int get zoom;
   set zoom(int value);
+  @override
+  int get lowestZoom;
+  set lowestZoom(int value);
+  @override
+  String? get parentUuid;
+  set parentUuid(String? value);
   @override
   @JsonKey(ignore: true)
   _$$MutableClusterCopyWith<T, _$MutableCluster<T>> get copyWith =>
@@ -380,8 +541,10 @@ abstract class _$$MutablePointCopyWith<T, $Res>
       double y,
       double wX,
       double wY,
-      ClusterDataBase? clusterData,
-      int zoom});
+      MutableClusterDataBase? clusterData,
+      int zoom,
+      int lowestZoom,
+      String? parentUuid});
 }
 
 /// @nodoc
@@ -404,6 +567,8 @@ class __$$MutablePointCopyWithImpl<T, $Res>
     Object? wY = freezed,
     Object? clusterData = freezed,
     Object? zoom = freezed,
+    Object? lowestZoom = freezed,
+    Object? parentUuid = freezed,
   }) {
     return _then(_$MutablePoint<T>(
       originalPoint: originalPoint == freezed
@@ -429,11 +594,19 @@ class __$$MutablePointCopyWithImpl<T, $Res>
       clusterData: clusterData == freezed
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
-              as ClusterDataBase?,
+              as MutableClusterDataBase?,
       zoom: zoom == freezed
           ? _value.zoom
           : zoom // ignore: cast_nullable_to_non_nullable
               as int,
+      lowestZoom: lowestZoom == freezed
+          ? _value.lowestZoom
+          : lowestZoom // ignore: cast_nullable_to_non_nullable
+              as int,
+      parentUuid: parentUuid == freezed
+          ? _value.parentUuid
+          : parentUuid // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -448,7 +621,9 @@ class _$MutablePoint<T> extends MutablePoint<T> {
       required this.wX,
       required this.wY,
       this.clusterData,
-      this.zoom = MutableClusterOrPoint._maxInt})
+      this.zoom = util.maxInt,
+      this.lowestZoom = util.maxInt,
+      this.parentUuid})
       : super._();
 
   @override
@@ -462,14 +637,19 @@ class _$MutablePoint<T> extends MutablePoint<T> {
   @override
   double wY;
   @override
-  ClusterDataBase? clusterData;
+  MutableClusterDataBase? clusterData;
   @override
   @JsonKey()
   int zoom;
+  @override
+  @JsonKey()
+  int lowestZoom;
+  @override
+  String? parentUuid;
 
   @override
   String toString() {
-    return 'MutableClusterOrPoint<$T>.point(originalPoint: $originalPoint, x: $x, y: $y, wX: $wX, wY: $wY, clusterData: $clusterData, zoom: $zoom)';
+    return 'MutableClusterOrPoint<$T>.point(originalPoint: $originalPoint, x: $x, y: $y, wX: $wX, wY: $wY, clusterData: $clusterData, zoom: $zoom, lowestZoom: $lowestZoom, parentUuid: $parentUuid)';
   }
 
   @JsonKey(ignore: true)
@@ -480,42 +660,96 @@ class _$MutablePoint<T> extends MutablePoint<T> {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(double x, double y, double wX, double wY,
-            List<T> originalPoints, ClusterDataBase? clusterData, int zoom)
+    required TResult Function(
+            String uuid,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            List<T> originalPoints,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)
         cluster,
-    required TResult Function(T originalPoint, double x, double y, double wX,
-            double wY, ClusterDataBase? clusterData, int zoom)
+    required TResult Function(
+            T originalPoint,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)
         point,
   }) {
-    return point(originalPoint, x, y, wX, wY, clusterData, zoom);
+    return point(
+        originalPoint, x, y, wX, wY, clusterData, zoom, lowestZoom, parentUuid);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(double x, double y, double wX, double wY,
-            List<T> originalPoints, ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            String uuid,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            List<T> originalPoints,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         cluster,
-    TResult Function(T originalPoint, double x, double y, double wX, double wY,
-            ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            T originalPoint,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         point,
   }) {
-    return point?.call(originalPoint, x, y, wX, wY, clusterData, zoom);
+    return point?.call(
+        originalPoint, x, y, wX, wY, clusterData, zoom, lowestZoom, parentUuid);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(double x, double y, double wX, double wY,
-            List<T> originalPoints, ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            String uuid,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            List<T> originalPoints,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         cluster,
-    TResult Function(T originalPoint, double x, double y, double wX, double wY,
-            ClusterDataBase? clusterData, int zoom)?
+    TResult Function(
+            T originalPoint,
+            double x,
+            double y,
+            double wX,
+            double wY,
+            MutableClusterDataBase? clusterData,
+            int zoom,
+            int lowestZoom,
+            String? parentUuid)?
         point,
     required TResult orElse(),
   }) {
     if (point != null) {
-      return point(originalPoint, x, y, wX, wY, clusterData, zoom);
+      return point(originalPoint, x, y, wX, wY, clusterData, zoom, lowestZoom,
+          parentUuid);
     }
     return orElse();
   }
@@ -559,8 +793,10 @@ abstract class MutablePoint<T> extends MutableClusterOrPoint<T> {
       required double y,
       required double wX,
       required double wY,
-      ClusterDataBase? clusterData,
-      int zoom}) = _$MutablePoint<T>;
+      MutableClusterDataBase? clusterData,
+      int zoom,
+      int lowestZoom,
+      String? parentUuid}) = _$MutablePoint<T>;
   MutablePoint._() : super._();
 
   T get originalPoint;
@@ -577,11 +813,17 @@ abstract class MutablePoint<T> extends MutableClusterOrPoint<T> {
   double get wY;
   set wY(double value);
   @override
-  ClusterDataBase? get clusterData;
-  set clusterData(ClusterDataBase? value);
+  MutableClusterDataBase? get clusterData;
+  set clusterData(MutableClusterDataBase? value);
   @override
   int get zoom;
   set zoom(int value);
+  @override
+  int get lowestZoom;
+  set lowestZoom(int value);
+  @override
+  String? get parentUuid;
+  set parentUuid(String? value);
   @override
   @JsonKey(ignore: true)
   _$$MutablePointCopyWith<T, _$MutablePoint<T>> get copyWith =>

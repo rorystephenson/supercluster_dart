@@ -86,28 +86,30 @@ void main() {
   test('insertion', () {
     final index = supercluster(features);
     index.remove(features[10]);
+    var pointsPerZoom = index.trees.map((e) => e.allPoints()).toList();
+    expect(Set.from(pointsPerZoom.map((e) => e.length)).single, 161);
     index.insert(features[10]);
-    final pointCountsAtZooms = index.trees.map((e) => e.size).toList();
-    expect(pointCountsAtZooms, [
-      32,
-      62,
-      100,
-      137,
-      149,
-      159,
-      162,
-      162,
-      162,
-      162,
-      162,
-      162,
-      162,
-      162,
-      162,
-      162,
-      162,
-      162
-    ]);
+    pointsPerZoom = index.trees.map((e) => e.allPoints()).toList();
+    expect(Set.from(pointsPerZoom.map((e) => e.length)).single, 162);
+
+    final featuresSorted = List.from(features)
+      ..sort((a, b) => jsonEncode(a).compareTo(jsonEncode(b)));
+
+    for (int i = 0; i < pointsPerZoom.length; i++) {
+      expect(
+        pointsPerZoom[i].length,
+        features.length,
+        reason: 'Points at zoom $i should match the original points',
+      );
+
+      final sortedPoints = List.from(pointsPerZoom[i])
+        ..sort((a, b) => jsonEncode(a).compareTo(jsonEncode(b)));
+      expect(
+        sortedPoints,
+        featuresSorted,
+        reason: 'Points at zoom $i should match the original points',
+      );
+    }
   });
 
 /*

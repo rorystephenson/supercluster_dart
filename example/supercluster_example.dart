@@ -1,4 +1,3 @@
-import 'package:supercluster/src/cluster_data_base.dart';
 import 'package:supercluster/supercluster.dart';
 
 void main() {
