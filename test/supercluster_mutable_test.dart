@@ -62,7 +62,7 @@ void main() {
     index.remove(features[10]);
     final pointCountsAtZooms = index.trees.map((e) => e.size).toList();
     expect(pointCountsAtZooms, [
-      32,
+      33,
       62,
       99,
       136,
@@ -81,6 +81,15 @@ void main() {
       161,
       161
     ]);
+
+    print(index.trees.map((e) => '${e.zoom}: ${e.numPoints}').join(', '));
+    for (final tree in index.trees) {
+      expect(
+        tree.numPoints,
+        161,
+        reason: 'Zoom ${tree.zoom} contains ${tree.numPoints}/162 points',
+      );
+    }
   });
 
   test('insertion', () {
