@@ -162,23 +162,10 @@ class ClusterRBush<T> {
     for (final newClusterOrPoint in List.from(modification.added)) {
       newClusterOrPoint.zoom = zoom;
 
-      final neighborsInThisZoom = search(RBushBox(
-        minX: newClusterOrPoint.wX - searchRadius,
-        minY: newClusterOrPoint.wY - searchRadius,
-        maxX: newClusterOrPoint.wX + searchRadius,
-        maxY: newClusterOrPoint.wY + searchRadius,
-      ));
+      final existingNearbyClusterElement = _nearbyCluster(newClusterOrPoint);
 
-      final existingNearbyClusterIndex = neighborsInThisZoom.indexWhere(
-          (element) =>
-              element.data is MutableCluster<T> &&
-              element.data != newClusterOrPoint);
-
-      if (existingNearbyClusterIndex != -1) {
+      if (existingNearbyClusterElement != null) {
         // Found a cluster to add this point to.
-        final existingNearbyClusterElement =
-            neighborsInThisZoom[existingNearbyClusterIndex];
-
         _innerTree.remove(existingNearbyClusterElement);
         rbushModification.removed.add(existingNearbyClusterElement.data);
 
@@ -245,7 +232,21 @@ class ClusterRBush<T> {
     return rbushModification;
   }
 
-  MutableCluster<T>? _nearbyCluster() {}
+  RBushElement<MutableClusterOrPoint<T>>? _nearbyCluster(
+      MutableClusterOrPoint<T> point) {
+    final neighborsInThisZoom = _innerTree.search(RBushBox(
+      minX: point.wX - searchRadius,
+      minY: point.wY - searchRadius,
+      maxX: point.wX + searchRadius,
+      maxY: point.wY + searchRadius,
+    ));
+
+    final nearbyClusterIndex = neighborsInThisZoom
+        .indexWhere((element) => element.data is MutableCluster<T>);
+    return nearbyClusterIndex == -1
+        ? null
+        : neighborsInThisZoom[nearbyClusterIndex];
+  }
 
   @visibleForTesting
   int get numPoints => _innerTree.all().fold(
