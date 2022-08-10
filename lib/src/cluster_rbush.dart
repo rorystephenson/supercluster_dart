@@ -159,7 +159,7 @@ class ClusterRBush<T> {
     ////////////////////////////////////////////////////////////////////////////
     // Re-clustering                                                          //
     ////////////////////////////////////////////////////////////////////////////
-    for (final newClusterOrPoint in List.from(modification.added)) {
+    for (final newClusterOrPoint in modification.added) {
       newClusterOrPoint.zoom = zoom;
 
       final existingNearbyClusterElement = _nearbyCluster(newClusterOrPoint);
@@ -180,26 +180,19 @@ class ClusterRBush<T> {
         rbushModification.added.add(newCluster);
       } else {
         // No nearby cluster, see if there are nearby points to cluster.
-        final bboxNeighbors = modification.zoomCluster.search(RBushBox(
-          minX: newClusterOrPoint.wX - searchRadius,
-          minY: newClusterOrPoint.wY - searchRadius,
-          maxX: newClusterOrPoint.wX + searchRadius,
-          maxY: newClusterOrPoint.wY + searchRadius,
-        ));
 
-        final higherZoomNeighborsNotInCluster = bboxNeighbors.where((element) =>
-            element.data != newClusterOrPoint &&
-            (element.data.parentUuid == null ||
-                element.data.lowestZoom > zoom));
-
-        if (higherZoomNeighborsNotInCluster.isEmpty) {
+        final higherZoomClusterableNeighbors = _higherZoomClusterableNeighbors(
+          modification.zoomCluster,
+          newClusterOrPoint,
+        );
+        if (higherZoomClusterableNeighbors.isEmpty) {
           // No nearby points, add this one to this layer.
           _innerTree.insert(newClusterOrPoint.toRBushPoint());
           rbushModification.added.add(newClusterOrPoint);
         } else {
           // One or more nearby points found, create a new cluster.
           final pointsGettingClustered =
-              higherZoomNeighborsNotInCluster.map((e) => e.data).toList();
+              higherZoomClusterableNeighbors.map((e) => e.data).toList();
           final newCluster = _createCluster(
             newClusterOrPoint,
             pointsGettingClustered,
@@ -246,6 +239,23 @@ class ClusterRBush<T> {
     return nearbyClusterIndex == -1
         ? null
         : neighborsInThisZoom[nearbyClusterIndex];
+  }
+
+  Iterable<RBushElement<MutableClusterOrPoint<T>>>
+      _higherZoomClusterableNeighbors(
+    ClusterRBush<T> higherZoom,
+    MutableClusterOrPoint<T> point,
+  ) {
+    final higherZoomNeighbors = higherZoom._innerTree.search(RBushBox(
+      minX: point.wX - searchRadius,
+      minY: point.wY - searchRadius,
+      maxX: point.wX + searchRadius,
+      maxY: point.wY + searchRadius,
+    ));
+
+    return higherZoomNeighbors.where((element) =>
+        element.data != point &&
+        (element.data.parentUuid == null || element.data.lowestZoom > zoom));
   }
 
   @visibleForTesting
