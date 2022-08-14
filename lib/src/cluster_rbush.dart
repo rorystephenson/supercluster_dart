@@ -77,22 +77,48 @@ class ClusterRBush<T> {
     return searchResults[index].data as MutablePoint<T>;
   }
 
-  RBushModification<T> recluster(RBushModification<T> modification) {
+  RBushModification<T> recluster(RBushModification<T> previousModification) {
     int? numPointsBeforeRecluster;
     assert((numPointsBeforeRecluster = numPoints) > 0);
 
-    final rbushModification = RBushModification<T>(
+    final currentModification = RBushModification<T>(
       zoomCluster: this,
-      added: List.from(modification.added),
+      added: List.from(previousModification.added),
       removed: [],
     );
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Removal                                                                //
-    ////////////////////////////////////////////////////////////////////////////
+    _performRemoval(previousModification, currentModification);
+    final newClusterOrPoints =
+        _recluster(previousModification, currentModification);
+    _insert(previousModification, currentModification, newClusterOrPoints);
 
-    if (modification.removed.isNotEmpty) {
-      final removalBounds = _boundary(modification.removed);
+    var debug = false;
+    assert(debug = true);
+    if (debug) {
+      // Ensure the number of points has changed as expected
+      final numPointsAfter = numPoints;
+      final expectedDifference = previousModification.numPointsChange;
+      final expectedNumPointsAfter =
+          numPointsBeforeRecluster! + expectedDifference;
+      assert(
+        numPointsAfter == expectedNumPointsAfter,
+        'zoom $zoom has $numPointsAfter instead of $expectedNumPointsAfter points after clustering',
+      );
+
+      // Ensure the modification of this layer matches the higher zoom layer.
+      assert(
+        previousModification.numPointsChange ==
+            currentModification.numPointsChange,
+        "This change of numPoints (${currentModification.numPointsChange}) in this zoom ($zoom) should match the previous layer (${previousModification.numPointsChange})",
+      );
+    }
+    return currentModification;
+  }
+
+  void _performRemoval(RBushModification<T> previousModification,
+      RBushModification<T> currentModification) {
+    if (previousModification.removed.isNotEmpty) {
+      final removalBounds = _boundary(previousModification.removed);
       removalBounds.minX -= searchRadius;
       removalBounds.minY -= searchRadius;
       removalBounds.maxX += searchRadius;
@@ -102,7 +128,7 @@ class ClusterRBush<T> {
       Map<RBushElement<MutableClusterOrPoint<T>>,
           List<MutableClusterOrPoint<T>>> clusterToRemovals = {};
 
-      for (final removedClusterOrPoint in modification.removed) {
+      for (final removedClusterOrPoint in previousModification.removed) {
         bool removed = false;
 
         for (final elementWithinRemovalBounds in elementsWithinRemovalBounds) {
@@ -110,7 +136,7 @@ class ClusterRBush<T> {
           if (elementData.uuid == removedClusterOrPoint.uuid) {
             removed = true;
             _innerTree.remove(elementWithinRemovalBounds);
-            rbushModification.remove(elementData);
+            currentModification.remove(elementData);
 
             break;
           } else if (elementData is MutableCluster<T> &&
@@ -142,9 +168,9 @@ class ClusterRBush<T> {
         _innerTree.remove(clusterElement);
         final cluster = clusterElement.data as MutableCluster<T>;
 
-        rbushModification.remove(cluster);
+        currentModification.remove(cluster);
 
-        final children = modification.zoomCluster
+        final children = previousModification.zoomCluster
             .search(
               RBushBox(
                 minX: cluster.x - searchRadius,
@@ -160,9 +186,9 @@ class ClusterRBush<T> {
         if (children.length == 1) {
           // Must split cluster
           final childData = children.single.data;
-          if (!rbushModification.added
+          if (!currentModification.added
               .any((element) => element.uuid == childData.uuid)) {
-            rbushModification.insert(childData);
+            currentModification.insert(childData);
           }
           childData.parentUuid = cluster.parentUuid;
         } else {
@@ -180,23 +206,20 @@ class ClusterRBush<T> {
           );
           newCluster.parentUuid = cluster.parentUuid;
 
-          rbushModification.insert(newCluster);
+          currentModification.insert(newCluster);
         }
       });
     }
+  }
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Re-clustering                                                          //
-    ////////////////////////////////////////////////////////////////////////////
-
+  List<MutableClusterOrPoint<T>> _recluster(
+      RBushModification<T> previousModification,
+      RBushModification<T> currentModification) {
     // Add to existing clusters where possible.
     Map<MutableCluster<T>, List<MutableClusterOrPoint<T>>> clusterToNewPoints =
         {};
-    //final newClusterOrPoints = SplayTreeSet<MutableClusterOrPoint<T>>(
-    //    (a, b) => a.uuid.compareTo(b.uuid))
-    //  ..addAll(rbushModification.added);
     final newClusterOrPoints =
-        Set<MutableClusterOrPoint<T>>.from(rbushModification.added);
+        Set<MutableClusterOrPoint<T>>.from(currentModification.added);
 
     for (final newClusterOrPoint in newClusterOrPoints) {
       final existingNearbyClusterElement = _nearbyCluster(newClusterOrPoint);
@@ -211,31 +234,38 @@ class ClusterRBush<T> {
 
     clusterToNewPoints.forEach((cluster, points) {
       for (var element in points) {
-        rbushModification.added
+        currentModification.added
             .removeWhere((added) => element.uuid == added.uuid);
       }
       newClusterOrPoints.removeAll(points);
-      rbushModification.remove(cluster);
+      currentModification.remove(cluster);
       _innerTree.remove(cluster.toRBushPoint());
 
       final newCluster =
-          _addToCluster(modification.zoomCluster, cluster, points);
+          _addToCluster(previousModification.zoomCluster, cluster, points);
       _innerTree.insert(newCluster.toRBushPoint());
-      rbushModification.insert(newCluster);
+      currentModification.insert(newCluster);
     });
 
+    return newClusterOrPoints.toList();
+  }
+
+  void _insert(
+      RBushModification<T> previousModification,
+      RBushModification currentModification,
+      List<MutableClusterOrPoint<T>> newClusterOrPoints) {
     // Try to create new clusters or just add the points if it is not possible
     // to add to an existing cluster.
     for (final newClusterOrPoint in newClusterOrPoints) {
-      if (newClusterOrPoint.zoom <= zoom) continue;
       newClusterOrPoint.zoom = zoom;
 
       // Find nearby points in the child layer whose parent uuid is not in this
       // layer.
       final neighborUuids =
           _neighbors(newClusterOrPoint).map((e) => e.uuid).toList();
-      final childLayerNeighbors =
-          modification.zoomCluster._neighbors(newClusterOrPoint).toList();
+      final childLayerNeighbors = previousModification.zoomCluster
+          ._neighbors(newClusterOrPoint)
+          .toList();
       childLayerNeighbors
           .removeWhere((e) => neighborUuids.contains(e.parentUuid));
 
@@ -244,7 +274,7 @@ class ClusterRBush<T> {
           newClusterOrPoint,
           ...childLayerNeighbors
         ]) {
-          rbushModification.remove(clusteredPoint);
+          currentModification.remove(clusteredPoint);
           _innerTree.remove(clusteredPoint.toRBushPoint());
         }
 
@@ -253,35 +283,14 @@ class ClusterRBush<T> {
           childLayerNeighbors,
         );
 
-        rbushModification.insert(newCluster);
+        currentModification.insert(newCluster);
         _innerTree.insert(newCluster.toRBushPoint());
       } else {
         _innerTree.insert(newClusterOrPoint.toRBushPoint());
-        rbushModification.insert(newClusterOrPoint);
+        currentModification.insert(newClusterOrPoint);
         newClusterOrPoint.parentUuid = null;
       }
     }
-
-    var debug = false;
-    assert(debug = true);
-    if (debug) {
-      // Ensure the number of points has changed as expected
-      final numPointsAfter = numPoints;
-      final expectedDifference = modification.numPointsChange;
-      final expectedNumPointsAfter =
-          numPointsBeforeRecluster! + expectedDifference;
-      assert(
-        numPointsAfter == expectedNumPointsAfter,
-        'zoom $zoom has $numPointsAfter instead of $expectedNumPointsAfter points after clustering',
-      );
-
-      // Ensure the modification of this layer matches the higher zoom layer.
-      assert(
-        modification.numPointsChange == rbushModification.numPointsChange,
-        "This change of numPoints (${rbushModification.numPointsChange}) in this zoom ($zoom) should match the previous layer (${modification.numPointsChange})",
-      );
-    }
-    return rbushModification;
   }
 
   RBushElement<MutableClusterOrPoint<T>>? _nearbyCluster(
@@ -415,8 +424,8 @@ class ClusterRBush<T> {
       );
 
   @visibleForTesting
-  List<T> allPoints() {
-    return _innerTree.all().map((e) => e.data.points).expand((e) => e).toList();
+  List<MutableClusterOrPoint<T>> all() {
+    return _innerTree.all().map((e) => e.data).toList();
   }
 
   RBushBox _boundary(List<MutableClusterOrPoint<T>> clusterOrPoints) {

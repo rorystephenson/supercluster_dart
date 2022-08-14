@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:supercluster/src/mutable_cluster_or_point.dart';
 import 'package:supercluster/src/supercluster_mutable.dart';
 import 'package:test/test.dart';
 
@@ -34,7 +35,7 @@ void main() {
 
   test('returns children of a cluster', () {
     final index = supercluster(features);
-    final pointCountsAtZooms = index.trees.map((e) => e.size).toList();
+    final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
     expect(pointCountsAtZooms, [
       32,
       62,
@@ -60,7 +61,7 @@ void main() {
   test('removal', () {
     final index = supercluster(features);
     index.remove(features[10]);
-    final pointCountsAtZooms = index.trees.map((e) => e.size).toList();
+    final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
     expect(pointCountsAtZooms, [
       32,
       61,
@@ -95,28 +96,81 @@ void main() {
   test('insertion', () {
     final index = supercluster(features);
     index.remove(features[10]);
-    var pointsPerZoom = index.trees.map((e) => e.allPoints()).toList();
-    expect(Set.from(pointsPerZoom.map((e) => e.length)).single, 161);
+    var pointsPerZoom = index.trees.map((e) => e.numPoints).toList();
+    expect(Set.from(pointsPerZoom).single, 161);
     index.insert(features[10]);
-    pointsPerZoom = index.trees.map((e) => e.allPoints()).toList();
-    expect(Set.from(pointsPerZoom.map((e) => e.length)).single, 162);
+    pointsPerZoom = index.trees.map((e) => e.numPoints).toList();
+    expect(Set.from(pointsPerZoom).single, 162);
 
     final featuresSorted = List.from(features)
       ..sort((a, b) => jsonEncode(a).compareTo(jsonEncode(b)));
 
-    for (int i = 0; i < pointsPerZoom.length; i++) {
+    for (int i = 0; i < index.trees.length; i++) {
       expect(
-        pointsPerZoom[i].length,
+        index.trees[i].numPoints,
         features.length,
         reason: 'Points at zoom $i should match the original points',
       );
 
-      final sortedPoints = List.from(pointsPerZoom[i])
+      final sortedPoints = List.from(index.trees[index.maxZoom + 1]
+          .all()
+          .map((e) => (e as MutablePoint).originalPoint))
         ..sort((a, b) => jsonEncode(a).compareTo(jsonEncode(b)));
       expect(
         sortedPoints,
         featuresSorted,
         reason: 'Points at zoom $i should match the original points',
+      );
+    }
+  });
+
+  test('multiple removals and insertions', () {
+    final index = supercluster(features);
+
+    final start = features.length ~/ 3;
+    final removalTotal = features.length ~/ 2;
+
+    for (int i = start; i < start + removalTotal; i++) {
+      print("Performing removal number ${start - i + 1}");
+
+      index.remove(features[i]);
+      expect(index.trees.map((e) => e.numPoints).toSet().single,
+          features.length - (i - start + 1));
+    }
+    for (int i = start; i < start + removalTotal; i++) {
+      index.insert(features[i]);
+      expect(index.trees.map((e) => e.numPoints).toSet().single,
+          features.length - removalTotal + (i - start + 1));
+    }
+    index.remove(features[10]);
+    final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
+    expect(pointCountsAtZooms, [
+      32,
+      61,
+      99,
+      136,
+      148,
+      158,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161
+    ]);
+
+    print(index.trees.map((e) => '${e.zoom}: ${e.numPoints}').join(', '));
+    for (final tree in index.trees) {
+      expect(
+        tree.numPoints,
+        161,
+        reason: 'Zoom ${tree.zoom} contains ${tree.numPoints}/162 points',
       );
     }
   });

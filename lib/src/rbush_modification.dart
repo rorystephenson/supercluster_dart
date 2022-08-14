@@ -29,4 +29,8 @@ class RBushModification<T> {
           0, (previousValue, element) => previousValue + element.numPoints) -
       removed.fold<int>(
           0, (previousValue, element) => previousValue + element.numPoints);
+
+  String get summary =>
+      "Add ${added.map((e) => "${e.uuid} (${e.parentUuid})").join(',')}\n"
+      "Remove ${removed.map((e) => "${e.uuid} (${e.parentUuid})").join(',')}";
 }
