@@ -2,11 +2,12 @@ import 'dart:math';
 
 import 'package:rbush/rbush.dart';
 import 'package:supercluster/src/cluster_rbush.dart';
-import 'package:uuid/uuid.dart';
 
 import './util.dart' as util;
 import 'cluster_data_base.dart';
 import 'mutable_cluster_or_point.dart';
+import 'rbush_modification.dart';
+import 'uuid_stub.dart';
 
 class SuperclusterMutable<T> {
   final double Function(T) getX;
@@ -96,8 +97,9 @@ class SuperclusterMutable<T> {
   }
 
   void remove(T point) {
-    final mutablePoint = trees[maxZoom + 1].removePoint(point);
+    final mutablePoint = trees[maxZoom + 1].removePointWithoutClustering(point);
     if (mutablePoint == null) return;
+
     var rbushModification = RBushModification<T>(
       zoomCluster: trees[maxZoom + 1],
       removed: [mutablePoint],
@@ -110,12 +112,16 @@ class SuperclusterMutable<T> {
   }
 
   void insert(T point) {
-    trees[maxZoom + 1].addWithoutClustering(point);
-    final x = util.lngX(getX(point));
-    final y = util.latY(getY(point));
+    final mutablePoint = trees[maxZoom + 1].addPointWithoutClustering(point);
+
+    var rbushModification = RBushModification<T>(
+      zoomCluster: trees[maxZoom + 1],
+      removed: [],
+      added: [mutablePoint],
+    );
 
     for (int z = maxZoom; z >= minZoom; z--) {
-      trees[z].update(trees[z + 1], x, y);
+      rbushModification = trees[z].recluster(rbushModification);
     }
   }
 
@@ -132,6 +138,37 @@ class SuperclusterMutable<T> {
         .where((element) => element.data.parentUuid == cluster.uuid)
         .map((e) => e.data)
         .toList();
+  }
+
+  List<MutableClusterOrPoint<T>> descendants(MutableCluster<T> cluster) {
+    var tree = trees[cluster.zoom];
+
+    var searchResults = tree
+        .search(RBushBox(
+          minX: cluster.x - tree.searchRadius,
+          minY: cluster.y - tree.searchRadius,
+          maxX: cluster.x + tree.searchRadius,
+          maxY: cluster.y + tree.searchRadius,
+        ))
+        .where((element) =>
+            element.data.parentUuid == cluster.uuid ||
+            element.data.uuid == cluster.uuid);
+
+    while (searchResults.length == 1) {
+      tree = trees[tree.zoom + 1];
+      searchResults = tree
+          .search(RBushBox(
+            minX: cluster.x - tree.searchRadius,
+            minY: cluster.y - tree.searchRadius,
+            maxX: cluster.x + tree.searchRadius,
+            maxY: cluster.y + tree.searchRadius,
+          ))
+          .where((element) =>
+              element.data.parentUuid == cluster.uuid ||
+              element.data.uuid == cluster.uuid);
+    }
+
+    return searchResults.map((e) => e.data).toList();
   }
 
   int _limitZoom(int zoom) {
@@ -162,7 +199,7 @@ class SuperclusterMutable<T> {
       var wx = p.wX * numPoints;
       var wy = p.wY * numPoints;
       MutableClusterDataBase? clusterData;
-      final potentialClusterUuid = Uuid().v4();
+      final potentialClusterUuid = UuidStub.v4(); // TODO Uuid().v4();
 
       for (var j = 0; j < bboxNeighbors.length; j++) {
         var b = bboxNeighbors[j].data;

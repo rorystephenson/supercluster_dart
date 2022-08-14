@@ -16,6 +16,8 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$MutableClusterOrPoint<T> {
+  String get uuid => throw _privateConstructorUsedError;
+  set uuid(String value) => throw _privateConstructorUsedError;
   double get x => throw _privateConstructorUsedError;
   set x(double value) => throw _privateConstructorUsedError;
   double get y => throw _privateConstructorUsedError;
@@ -48,6 +50,7 @@ mixin _$MutableClusterOrPoint<T> {
             String? parentUuid)
         cluster,
     required TResult Function(
+            String uuid,
             T originalPoint,
             double x,
             double y,
@@ -75,6 +78,7 @@ mixin _$MutableClusterOrPoint<T> {
             String? parentUuid)?
         cluster,
     TResult Function(
+            String uuid,
             T originalPoint,
             double x,
             double y,
@@ -102,6 +106,7 @@ mixin _$MutableClusterOrPoint<T> {
             String? parentUuid)?
         cluster,
     TResult Function(
+            String uuid,
             T originalPoint,
             double x,
             double y,
@@ -146,7 +151,8 @@ abstract class $MutableClusterOrPointCopyWith<T, $Res> {
           $Res Function(MutableClusterOrPoint<T>) then) =
       _$MutableClusterOrPointCopyWithImpl<T, $Res>;
   $Res call(
-      {double x,
+      {String uuid,
+      double x,
       double y,
       double wX,
       double wY,
@@ -167,6 +173,7 @@ class _$MutableClusterOrPointCopyWithImpl<T, $Res>
 
   @override
   $Res call({
+    Object? uuid = freezed,
     Object? x = freezed,
     Object? y = freezed,
     Object? wX = freezed,
@@ -177,6 +184,10 @@ class _$MutableClusterOrPointCopyWithImpl<T, $Res>
     Object? parentUuid = freezed,
   }) {
     return _then(_value.copyWith(
+      uuid: uuid == freezed
+          ? _value.uuid
+          : uuid // ignore: cast_nullable_to_non_nullable
+              as String,
       x: x == freezed
           ? _value.x
           : x // ignore: cast_nullable_to_non_nullable
@@ -367,6 +378,7 @@ class _$MutableCluster<T> extends MutableCluster<T> {
             String? parentUuid)
         cluster,
     required TResult Function(
+            String uuid,
             T originalPoint,
             double x,
             double y,
@@ -398,6 +410,7 @@ class _$MutableCluster<T> extends MutableCluster<T> {
             String? parentUuid)?
         cluster,
     TResult Function(
+            String uuid,
             T originalPoint,
             double x,
             double y,
@@ -429,6 +442,7 @@ class _$MutableCluster<T> extends MutableCluster<T> {
             String? parentUuid)?
         cluster,
     TResult Function(
+            String uuid,
             T originalPoint,
             double x,
             double y,
@@ -494,6 +508,7 @@ abstract class MutableCluster<T> extends MutableClusterOrPoint<T> {
       String? parentUuid}) = _$MutableCluster<T>;
   MutableCluster._() : super._();
 
+  @override
   String get uuid;
   set uuid(String value);
   @override
@@ -536,7 +551,8 @@ abstract class _$$MutablePointCopyWith<T, $Res>
       __$$MutablePointCopyWithImpl<T, $Res>;
   @override
   $Res call(
-      {T originalPoint,
+      {String uuid,
+      T originalPoint,
       double x,
       double y,
       double wX,
@@ -560,6 +576,7 @@ class __$$MutablePointCopyWithImpl<T, $Res>
 
   @override
   $Res call({
+    Object? uuid = freezed,
     Object? originalPoint = freezed,
     Object? x = freezed,
     Object? y = freezed,
@@ -571,6 +588,10 @@ class __$$MutablePointCopyWithImpl<T, $Res>
     Object? parentUuid = freezed,
   }) {
     return _then(_$MutablePoint<T>(
+      uuid: uuid == freezed
+          ? _value.uuid
+          : uuid // ignore: cast_nullable_to_non_nullable
+              as String,
       originalPoint: originalPoint == freezed
           ? _value.originalPoint
           : originalPoint // ignore: cast_nullable_to_non_nullable
@@ -615,7 +636,8 @@ class __$$MutablePointCopyWithImpl<T, $Res>
 
 class _$MutablePoint<T> extends MutablePoint<T> {
   _$MutablePoint(
-      {required this.originalPoint,
+      {required this.uuid,
+      required this.originalPoint,
       required this.x,
       required this.y,
       required this.wX,
@@ -626,6 +648,8 @@ class _$MutablePoint<T> extends MutablePoint<T> {
       this.parentUuid})
       : super._();
 
+  @override
+  String uuid;
   @override
   final T originalPoint;
   @override
@@ -649,7 +673,7 @@ class _$MutablePoint<T> extends MutablePoint<T> {
 
   @override
   String toString() {
-    return 'MutableClusterOrPoint<$T>.point(originalPoint: $originalPoint, x: $x, y: $y, wX: $wX, wY: $wY, clusterData: $clusterData, zoom: $zoom, lowestZoom: $lowestZoom, parentUuid: $parentUuid)';
+    return 'MutableClusterOrPoint<$T>.point(uuid: $uuid, originalPoint: $originalPoint, x: $x, y: $y, wX: $wX, wY: $wY, clusterData: $clusterData, zoom: $zoom, lowestZoom: $lowestZoom, parentUuid: $parentUuid)';
   }
 
   @JsonKey(ignore: true)
@@ -673,6 +697,7 @@ class _$MutablePoint<T> extends MutablePoint<T> {
             String? parentUuid)
         cluster,
     required TResult Function(
+            String uuid,
             T originalPoint,
             double x,
             double y,
@@ -684,8 +709,8 @@ class _$MutablePoint<T> extends MutablePoint<T> {
             String? parentUuid)
         point,
   }) {
-    return point(
-        originalPoint, x, y, wX, wY, clusterData, zoom, lowestZoom, parentUuid);
+    return point(uuid, originalPoint, x, y, wX, wY, clusterData, zoom,
+        lowestZoom, parentUuid);
   }
 
   @override
@@ -704,6 +729,7 @@ class _$MutablePoint<T> extends MutablePoint<T> {
             String? parentUuid)?
         cluster,
     TResult Function(
+            String uuid,
             T originalPoint,
             double x,
             double y,
@@ -715,8 +741,8 @@ class _$MutablePoint<T> extends MutablePoint<T> {
             String? parentUuid)?
         point,
   }) {
-    return point?.call(
-        originalPoint, x, y, wX, wY, clusterData, zoom, lowestZoom, parentUuid);
+    return point?.call(uuid, originalPoint, x, y, wX, wY, clusterData, zoom,
+        lowestZoom, parentUuid);
   }
 
   @override
@@ -735,6 +761,7 @@ class _$MutablePoint<T> extends MutablePoint<T> {
             String? parentUuid)?
         cluster,
     TResult Function(
+            String uuid,
             T originalPoint,
             double x,
             double y,
@@ -748,8 +775,8 @@ class _$MutablePoint<T> extends MutablePoint<T> {
     required TResult orElse(),
   }) {
     if (point != null) {
-      return point(originalPoint, x, y, wX, wY, clusterData, zoom, lowestZoom,
-          parentUuid);
+      return point(uuid, originalPoint, x, y, wX, wY, clusterData, zoom,
+          lowestZoom, parentUuid);
     }
     return orElse();
   }
@@ -788,7 +815,8 @@ class _$MutablePoint<T> extends MutablePoint<T> {
 
 abstract class MutablePoint<T> extends MutableClusterOrPoint<T> {
   factory MutablePoint(
-      {required final T originalPoint,
+      {required String uuid,
+      required final T originalPoint,
       required double x,
       required double y,
       required double wX,
@@ -799,6 +827,9 @@ abstract class MutablePoint<T> extends MutableClusterOrPoint<T> {
       String? parentUuid}) = _$MutablePoint<T>;
   MutablePoint._() : super._();
 
+  @override
+  String get uuid;
+  set uuid(String value);
   T get originalPoint;
   @override
   double get x;

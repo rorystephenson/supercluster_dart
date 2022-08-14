@@ -1,7 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:supercluster/src/cluster_data_base.dart';
-import 'package:supercluster/src/cluster_rbush.dart';
 import 'package:supercluster/src/util.dart' as util;
+import 'package:supercluster/src/uuid_stub.dart';
+
+import 'rbush_point.dart';
 
 part 'mutable_cluster_or_point.freezed.dart';
 
@@ -23,6 +25,7 @@ class MutableClusterOrPoint<T> with _$MutableClusterOrPoint<T> {
   }) = MutableCluster<T>;
 
   factory MutableClusterOrPoint.point({
+    required String uuid,
     required final T originalPoint,
     required double x,
     required double y,
@@ -66,6 +69,7 @@ class MutableClusterOrPoint<T> with _$MutableClusterOrPoint<T> {
     final y = util.latY(lat);
 
     return MutablePoint(
+      uuid: UuidStub.v4(),
       originalPoint: point,
       x: x,
       y: y,

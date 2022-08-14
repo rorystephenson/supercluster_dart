@@ -62,8 +62,8 @@ void main() {
     index.remove(features[10]);
     final pointCountsAtZooms = index.trees.map((e) => e.size).toList();
     expect(pointCountsAtZooms, [
-      33,
-      62,
+      32,
+      61,
       99,
       136,
       148,
