@@ -26,3 +26,14 @@ class RBushPoint<T> extends RBushElement<T> {
   @override
   int get hashCode => x.hashCode + y.hashCode + data.hashCode;
 }
+
+extension RBushBoxExtension on RBushBox {
+  RBushBox expandBy(double expandBy) {
+    return RBushBox(
+      minX: minX - expandBy,
+      minY: minY - expandBy,
+      maxX: maxX + expandBy,
+      maxY: maxY + expandBy,
+    );
+  }
+}

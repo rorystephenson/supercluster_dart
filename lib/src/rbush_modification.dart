@@ -12,16 +12,22 @@ class RBushModification<T> {
     required this.added,
   });
 
-  void remove(MutableClusterOrPoint<T> point) {
-    if (removed.any((element) => point.uuid == element.uuid)) return;
+  void recordRemoval(MutableClusterOrPoint<T> point) {
     removed.add(point.copyWith());
-    added.removeWhere((element) => element.uuid == point.uuid);
   }
 
-  void insert(MutableClusterOrPoint<T> point) {
-    if (added.any((element) => point.uuid == element.uuid)) return;
+  void recordInsertion(MutableClusterOrPoint<T> point) {
     added.add(point.copyWith());
-    removed.removeWhere((element) => element.uuid == point.uuid);
+  }
+
+  void removeFromAddedOrRecordRemoval(MutableClusterOrPoint<T> point) {
+    final addedIndex = added.indexWhere((e) => e.uuid == point.uuid);
+
+    if (addedIndex == -1) {
+      recordRemoval(point);
+    } else {
+      added.removeAt(addedIndex);
+    }
   }
 
   int get numPointsChange =>
@@ -30,7 +36,7 @@ class RBushModification<T> {
       removed.fold<int>(
           0, (previousValue, element) => previousValue + element.numPoints);
 
-  String get summary =>
-      "Add ${added.map((e) => "${e.uuid} (${e.parentUuid})").join(',')}\n"
+  String get summary => "$numPointsChange: "
+      "Add ${added.map((e) => "${e.uuid} (${e.parentUuid})").join(',')} "
       "Remove ${removed.map((e) => "${e.uuid} (${e.parentUuid})").join(',')}";
 }

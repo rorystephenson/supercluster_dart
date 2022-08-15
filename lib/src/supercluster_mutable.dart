@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:rbush/rbush.dart';
 import 'package:supercluster/src/cluster_rbush.dart';
+import 'package:supercluster/src/rbush_point.dart';
 
 import './util.dart' as util;
 import 'cluster_data_base.dart';
@@ -43,8 +44,7 @@ class SuperclusterMutable<T> {
       (maxZoom ?? 16) + 2,
       (i) => ClusterRBush<T>(
           zoom: i,
-          extent: extent ?? 512,
-          radius: radius ?? 40,
+          searchRadius: (radius ?? 40) / ((extent ?? 512) * pow(2, i)),
           getX: getX,
           getY: getY,
           maxPoints: maxEntries,
@@ -62,20 +62,21 @@ class SuperclusterMutable<T> {
             lat: getY(point),
             clusterData: extractClusterData?.call(point),
             zoom: maxZoom + 1,
-          ).toRBushPoint(),
+          ).positionRBushPoint(),
         )
         .toList();
+
+    trees[maxZoom + 1].load(clusters);
 
     // cluster points on max zoom, then cluster the results on previous zoom, etc.;
     // results in a cluster hierarchy across zoom levels
     for (var z = maxZoom; z >= minZoom; z--) {
-      trees[z + 1].load(clusters); // index input points into an R-tree
       clusters = _cluster(clusters, z)
-          .map((c) => c.toRBushPoint())
+          .map((c) => c.positionRBushPoint())
           .toList(); // create a new set of clusters for the zoom
-
+      trees[z].load(clusters); // index input points into an R-tree
     }
-    trees[minZoom].load(clusters); // index top-level clusters
+    trees[minZoom].all().first.positionRBushPoint().expandBy(1.0);
   }
 
   List<RBushElement<MutableClusterOrPoint<T>>> getClusters(

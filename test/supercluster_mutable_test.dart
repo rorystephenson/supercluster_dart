@@ -131,7 +131,7 @@ void main() {
     final removalTotal = features.length ~/ 2;
 
     for (int i = start; i < start + removalTotal; i++) {
-      print("Performing removal number ${start - i + 1}");
+      print("Performing removal number ${i - start + 1}");
 
       index.remove(features[i]);
       expect(index.trees.map((e) => e.numPoints).toSet().single,

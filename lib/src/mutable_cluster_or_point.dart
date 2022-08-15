@@ -94,19 +94,12 @@ class MutableClusterOrPoint<T> with _$MutableClusterOrPoint<T> {
   static double getY(MutableClusterOrPoint clusterOrMapPoint) =>
       clusterOrMapPoint.y;
 
-  RBushPoint<MutableClusterOrPoint<T>> toRBushPoint() {
-    return map(
-      cluster: (cluster) => RBushPoint(
-        x: cluster.x,
-        y: cluster.y,
-        data: cluster,
-      ),
-      point: (point) => RBushPoint(
-        x: point.x,
-        y: point.y,
-        data: point,
-      ),
-    );
+  RBushPoint<MutableClusterOrPoint<T>> positionRBushPoint() {
+    return RBushPoint(x: x, y: y, data: this);
+  }
+
+  RBushPoint<MutableClusterOrPoint<T>> weightedPositionRBushPoint() {
+    return RBushPoint(x: wX, y: wY, data: this);
   }
 }
 
