@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:supercluster/src/mutable_cluster_or_point.dart';
+import 'package:supercluster/src/layer_element.dart';
 import 'package:supercluster/src/supercluster_mutable.dart';
 import 'package:test/test.dart';
 
@@ -114,7 +114,7 @@ void main() {
 
       final sortedPoints = List.from(index.trees[index.maxZoom + 1]
           .all()
-          .map((e) => (e as MutablePoint).originalPoint))
+          .map((e) => (e as LayerPoint).originalPoint))
         ..sort((a, b) => jsonEncode(a).compareTo(jsonEncode(b)));
       expect(
         sortedPoints,

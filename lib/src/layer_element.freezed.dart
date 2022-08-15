@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target
 
-part of 'mutable_cluster_or_point.dart';
+part of 'layer_element.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -15,7 +15,7 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
 
 /// @nodoc
-mixin _$MutableClusterOrPoint<T> {
+mixin _$LayerElement<T> {
   String get uuid => throw _privateConstructorUsedError;
   set uuid(String value) => throw _privateConstructorUsedError;
   double get x => throw _privateConstructorUsedError;
@@ -122,34 +122,34 @@ mixin _$MutableClusterOrPoint<T> {
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(MutableCluster<T> value) cluster,
-    required TResult Function(MutablePoint<T> value) point,
+    required TResult Function(LayerCluster<T> value) cluster,
+    required TResult Function(LayerPoint<T> value) point,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult Function(MutableCluster<T> value)? cluster,
-    TResult Function(MutablePoint<T> value)? point,
+    TResult Function(LayerCluster<T> value)? cluster,
+    TResult Function(LayerPoint<T> value)? point,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(MutableCluster<T> value)? cluster,
-    TResult Function(MutablePoint<T> value)? point,
+    TResult Function(LayerCluster<T> value)? cluster,
+    TResult Function(LayerPoint<T> value)? point,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
-  $MutableClusterOrPointCopyWith<T, MutableClusterOrPoint<T>> get copyWith =>
+  $LayerElementCopyWith<T, LayerElement<T>> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $MutableClusterOrPointCopyWith<T, $Res> {
-  factory $MutableClusterOrPointCopyWith(MutableClusterOrPoint<T> value,
-          $Res Function(MutableClusterOrPoint<T>) then) =
-      _$MutableClusterOrPointCopyWithImpl<T, $Res>;
+abstract class $LayerElementCopyWith<T, $Res> {
+  factory $LayerElementCopyWith(
+          LayerElement<T> value, $Res Function(LayerElement<T>) then) =
+      _$LayerElementCopyWithImpl<T, $Res>;
   $Res call(
       {String uuid,
       double x,
@@ -163,13 +163,13 @@ abstract class $MutableClusterOrPointCopyWith<T, $Res> {
 }
 
 /// @nodoc
-class _$MutableClusterOrPointCopyWithImpl<T, $Res>
-    implements $MutableClusterOrPointCopyWith<T, $Res> {
-  _$MutableClusterOrPointCopyWithImpl(this._value, this._then);
+class _$LayerElementCopyWithImpl<T, $Res>
+    implements $LayerElementCopyWith<T, $Res> {
+  _$LayerElementCopyWithImpl(this._value, this._then);
 
-  final MutableClusterOrPoint<T> _value;
+  final LayerElement<T> _value;
   // ignore: unused_field
-  final $Res Function(MutableClusterOrPoint<T>) _then;
+  final $Res Function(LayerElement<T>) _then;
 
   @override
   $Res call({
@@ -225,11 +225,11 @@ class _$MutableClusterOrPointCopyWithImpl<T, $Res>
 }
 
 /// @nodoc
-abstract class _$$MutableClusterCopyWith<T, $Res>
-    implements $MutableClusterOrPointCopyWith<T, $Res> {
-  factory _$$MutableClusterCopyWith(
-          _$MutableCluster<T> value, $Res Function(_$MutableCluster<T>) then) =
-      __$$MutableClusterCopyWithImpl<T, $Res>;
+abstract class _$$LayerClusterCopyWith<T, $Res>
+    implements $LayerElementCopyWith<T, $Res> {
+  factory _$$LayerClusterCopyWith(
+          _$LayerCluster<T> value, $Res Function(_$LayerCluster<T>) then) =
+      __$$LayerClusterCopyWithImpl<T, $Res>;
   @override
   $Res call(
       {String uuid,
@@ -245,15 +245,15 @@ abstract class _$$MutableClusterCopyWith<T, $Res>
 }
 
 /// @nodoc
-class __$$MutableClusterCopyWithImpl<T, $Res>
-    extends _$MutableClusterOrPointCopyWithImpl<T, $Res>
-    implements _$$MutableClusterCopyWith<T, $Res> {
-  __$$MutableClusterCopyWithImpl(
-      _$MutableCluster<T> _value, $Res Function(_$MutableCluster<T>) _then)
-      : super(_value, (v) => _then(v as _$MutableCluster<T>));
+class __$$LayerClusterCopyWithImpl<T, $Res>
+    extends _$LayerElementCopyWithImpl<T, $Res>
+    implements _$$LayerClusterCopyWith<T, $Res> {
+  __$$LayerClusterCopyWithImpl(
+      _$LayerCluster<T> _value, $Res Function(_$LayerCluster<T>) _then)
+      : super(_value, (v) => _then(v as _$LayerCluster<T>));
 
   @override
-  _$MutableCluster<T> get _value => super._value as _$MutableCluster<T>;
+  _$LayerCluster<T> get _value => super._value as _$LayerCluster<T>;
 
   @override
   $Res call({
@@ -268,7 +268,7 @@ class __$$MutableClusterCopyWithImpl<T, $Res>
     Object? lowestZoom = freezed,
     Object? parentUuid = freezed,
   }) {
-    return _then(_$MutableCluster<T>(
+    return _then(_$LayerCluster<T>(
       uuid: uuid == freezed
           ? _value.uuid
           : uuid // ignore: cast_nullable_to_non_nullable
@@ -315,8 +315,8 @@ class __$$MutableClusterCopyWithImpl<T, $Res>
 
 /// @nodoc
 
-class _$MutableCluster<T> extends MutableCluster<T> {
-  _$MutableCluster(
+class _$LayerCluster<T> extends LayerCluster<T> {
+  _$LayerCluster(
       {required this.uuid,
       required this.x,
       required this.y,
@@ -354,13 +354,13 @@ class _$MutableCluster<T> extends MutableCluster<T> {
 
   @override
   String toString() {
-    return 'MutableClusterOrPoint<$T>.cluster(uuid: $uuid, x: $x, y: $y, wX: $wX, wY: $wY, originalPoints: $originalPoints, clusterData: $clusterData, zoom: $zoom, lowestZoom: $lowestZoom, parentUuid: $parentUuid)';
+    return 'LayerElement<$T>.cluster(uuid: $uuid, x: $x, y: $y, wX: $wX, wY: $wY, originalPoints: $originalPoints, clusterData: $clusterData, zoom: $zoom, lowestZoom: $lowestZoom, parentUuid: $parentUuid)';
   }
 
   @JsonKey(ignore: true)
   @override
-  _$$MutableClusterCopyWith<T, _$MutableCluster<T>> get copyWith =>
-      __$$MutableClusterCopyWithImpl<T, _$MutableCluster<T>>(this, _$identity);
+  _$$LayerClusterCopyWith<T, _$LayerCluster<T>> get copyWith =>
+      __$$LayerClusterCopyWithImpl<T, _$LayerCluster<T>>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -465,8 +465,8 @@ class _$MutableCluster<T> extends MutableCluster<T> {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(MutableCluster<T> value) cluster,
-    required TResult Function(MutablePoint<T> value) point,
+    required TResult Function(LayerCluster<T> value) cluster,
+    required TResult Function(LayerPoint<T> value) point,
   }) {
     return cluster(this);
   }
@@ -474,8 +474,8 @@ class _$MutableCluster<T> extends MutableCluster<T> {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult Function(MutableCluster<T> value)? cluster,
-    TResult Function(MutablePoint<T> value)? point,
+    TResult Function(LayerCluster<T> value)? cluster,
+    TResult Function(LayerPoint<T> value)? point,
   }) {
     return cluster?.call(this);
   }
@@ -483,8 +483,8 @@ class _$MutableCluster<T> extends MutableCluster<T> {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(MutableCluster<T> value)? cluster,
-    TResult Function(MutablePoint<T> value)? point,
+    TResult Function(LayerCluster<T> value)? cluster,
+    TResult Function(LayerPoint<T> value)? point,
     required TResult orElse(),
   }) {
     if (cluster != null) {
@@ -494,8 +494,8 @@ class _$MutableCluster<T> extends MutableCluster<T> {
   }
 }
 
-abstract class MutableCluster<T> extends MutableClusterOrPoint<T> {
-  factory MutableCluster(
+abstract class LayerCluster<T> extends LayerElement<T> {
+  factory LayerCluster(
       {required String uuid,
       required double x,
       required double y,
@@ -505,8 +505,8 @@ abstract class MutableCluster<T> extends MutableClusterOrPoint<T> {
       MutableClusterDataBase? clusterData,
       int zoom,
       int lowestZoom,
-      String? parentUuid}) = _$MutableCluster<T>;
-  MutableCluster._() : super._();
+      String? parentUuid}) = _$LayerCluster<T>;
+  LayerCluster._() : super._();
 
   @override
   String get uuid;
@@ -539,16 +539,16 @@ abstract class MutableCluster<T> extends MutableClusterOrPoint<T> {
   set parentUuid(String? value);
   @override
   @JsonKey(ignore: true)
-  _$$MutableClusterCopyWith<T, _$MutableCluster<T>> get copyWith =>
+  _$$LayerClusterCopyWith<T, _$LayerCluster<T>> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$MutablePointCopyWith<T, $Res>
-    implements $MutableClusterOrPointCopyWith<T, $Res> {
-  factory _$$MutablePointCopyWith(
-          _$MutablePoint<T> value, $Res Function(_$MutablePoint<T>) then) =
-      __$$MutablePointCopyWithImpl<T, $Res>;
+abstract class _$$LayerPointCopyWith<T, $Res>
+    implements $LayerElementCopyWith<T, $Res> {
+  factory _$$LayerPointCopyWith(
+          _$LayerPoint<T> value, $Res Function(_$LayerPoint<T>) then) =
+      __$$LayerPointCopyWithImpl<T, $Res>;
   @override
   $Res call(
       {String uuid,
@@ -564,15 +564,15 @@ abstract class _$$MutablePointCopyWith<T, $Res>
 }
 
 /// @nodoc
-class __$$MutablePointCopyWithImpl<T, $Res>
-    extends _$MutableClusterOrPointCopyWithImpl<T, $Res>
-    implements _$$MutablePointCopyWith<T, $Res> {
-  __$$MutablePointCopyWithImpl(
-      _$MutablePoint<T> _value, $Res Function(_$MutablePoint<T>) _then)
-      : super(_value, (v) => _then(v as _$MutablePoint<T>));
+class __$$LayerPointCopyWithImpl<T, $Res>
+    extends _$LayerElementCopyWithImpl<T, $Res>
+    implements _$$LayerPointCopyWith<T, $Res> {
+  __$$LayerPointCopyWithImpl(
+      _$LayerPoint<T> _value, $Res Function(_$LayerPoint<T>) _then)
+      : super(_value, (v) => _then(v as _$LayerPoint<T>));
 
   @override
-  _$MutablePoint<T> get _value => super._value as _$MutablePoint<T>;
+  _$LayerPoint<T> get _value => super._value as _$LayerPoint<T>;
 
   @override
   $Res call({
@@ -587,7 +587,7 @@ class __$$MutablePointCopyWithImpl<T, $Res>
     Object? lowestZoom = freezed,
     Object? parentUuid = freezed,
   }) {
-    return _then(_$MutablePoint<T>(
+    return _then(_$LayerPoint<T>(
       uuid: uuid == freezed
           ? _value.uuid
           : uuid // ignore: cast_nullable_to_non_nullable
@@ -634,8 +634,8 @@ class __$$MutablePointCopyWithImpl<T, $Res>
 
 /// @nodoc
 
-class _$MutablePoint<T> extends MutablePoint<T> {
-  _$MutablePoint(
+class _$LayerPoint<T> extends LayerPoint<T> {
+  _$LayerPoint(
       {required this.uuid,
       required this.originalPoint,
       required this.x,
@@ -673,13 +673,13 @@ class _$MutablePoint<T> extends MutablePoint<T> {
 
   @override
   String toString() {
-    return 'MutableClusterOrPoint<$T>.point(uuid: $uuid, originalPoint: $originalPoint, x: $x, y: $y, wX: $wX, wY: $wY, clusterData: $clusterData, zoom: $zoom, lowestZoom: $lowestZoom, parentUuid: $parentUuid)';
+    return 'LayerElement<$T>.point(uuid: $uuid, originalPoint: $originalPoint, x: $x, y: $y, wX: $wX, wY: $wY, clusterData: $clusterData, zoom: $zoom, lowestZoom: $lowestZoom, parentUuid: $parentUuid)';
   }
 
   @JsonKey(ignore: true)
   @override
-  _$$MutablePointCopyWith<T, _$MutablePoint<T>> get copyWith =>
-      __$$MutablePointCopyWithImpl<T, _$MutablePoint<T>>(this, _$identity);
+  _$$LayerPointCopyWith<T, _$LayerPoint<T>> get copyWith =>
+      __$$LayerPointCopyWithImpl<T, _$LayerPoint<T>>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -784,8 +784,8 @@ class _$MutablePoint<T> extends MutablePoint<T> {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(MutableCluster<T> value) cluster,
-    required TResult Function(MutablePoint<T> value) point,
+    required TResult Function(LayerCluster<T> value) cluster,
+    required TResult Function(LayerPoint<T> value) point,
   }) {
     return point(this);
   }
@@ -793,8 +793,8 @@ class _$MutablePoint<T> extends MutablePoint<T> {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult Function(MutableCluster<T> value)? cluster,
-    TResult Function(MutablePoint<T> value)? point,
+    TResult Function(LayerCluster<T> value)? cluster,
+    TResult Function(LayerPoint<T> value)? point,
   }) {
     return point?.call(this);
   }
@@ -802,8 +802,8 @@ class _$MutablePoint<T> extends MutablePoint<T> {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(MutableCluster<T> value)? cluster,
-    TResult Function(MutablePoint<T> value)? point,
+    TResult Function(LayerCluster<T> value)? cluster,
+    TResult Function(LayerPoint<T> value)? point,
     required TResult orElse(),
   }) {
     if (point != null) {
@@ -813,8 +813,8 @@ class _$MutablePoint<T> extends MutablePoint<T> {
   }
 }
 
-abstract class MutablePoint<T> extends MutableClusterOrPoint<T> {
-  factory MutablePoint(
+abstract class LayerPoint<T> extends LayerElement<T> {
+  factory LayerPoint(
       {required String uuid,
       required final T originalPoint,
       required double x,
@@ -824,8 +824,8 @@ abstract class MutablePoint<T> extends MutableClusterOrPoint<T> {
       MutableClusterDataBase? clusterData,
       int zoom,
       int lowestZoom,
-      String? parentUuid}) = _$MutablePoint<T>;
-  MutablePoint._() : super._();
+      String? parentUuid}) = _$LayerPoint<T>;
+  LayerPoint._() : super._();
 
   @override
   String get uuid;
@@ -857,6 +857,6 @@ abstract class MutablePoint<T> extends MutableClusterOrPoint<T> {
   set parentUuid(String? value);
   @override
   @JsonKey(ignore: true)
-  _$$MutablePointCopyWith<T, _$MutablePoint<T>> get copyWith =>
+  _$$LayerPointCopyWith<T, _$LayerPoint<T>> get copyWith =>
       throw _privateConstructorUsedError;
 }

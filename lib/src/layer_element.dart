@@ -5,13 +5,13 @@ import 'package:supercluster/src/uuid_stub.dart';
 
 import 'rbush_point.dart';
 
-part 'mutable_cluster_or_point.freezed.dart';
+part 'layer_element.freezed.dart';
 
 @unfreezed
-class MutableClusterOrPoint<T> with _$MutableClusterOrPoint<T> {
-  MutableClusterOrPoint._();
+class LayerElement<T> with _$LayerElement<T> {
+  LayerElement._();
 
-  factory MutableClusterOrPoint.cluster({
+  factory LayerElement.cluster({
     required String uuid,
     required double x,
     required double y,
@@ -22,9 +22,9 @@ class MutableClusterOrPoint<T> with _$MutableClusterOrPoint<T> {
     @Default(util.maxInt) int zoom,
     @Default(util.maxInt) int lowestZoom,
     String? parentUuid,
-  }) = MutableCluster<T>;
+  }) = LayerCluster<T>;
 
-  factory MutableClusterOrPoint.point({
+  factory LayerElement.point({
     required String uuid,
     required final T originalPoint,
     required double x,
@@ -35,9 +35,9 @@ class MutableClusterOrPoint<T> with _$MutableClusterOrPoint<T> {
     @Default(util.maxInt) int zoom,
     @Default(util.maxInt) int lowestZoom,
     String? parentUuid,
-  }) = MutablePoint<T>;
+  }) = LayerPoint<T>;
 
-  static MutableCluster<T> initializeCluster<T>({
+  static LayerCluster<T> initializeCluster<T>({
     required String uuid,
     required double x,
     required double y,
@@ -45,7 +45,7 @@ class MutableClusterOrPoint<T> with _$MutableClusterOrPoint<T> {
     required int zoom,
     MutableClusterDataBase? clusterData,
   }) {
-    return MutableCluster<T>(
+    return LayerCluster<T>(
       uuid: uuid,
       x: x,
       y: y,
@@ -58,7 +58,7 @@ class MutableClusterOrPoint<T> with _$MutableClusterOrPoint<T> {
     );
   }
 
-  static MutablePoint<T> initializePoint<T>({
+  static LayerPoint<T> initializePoint<T>({
     required T point,
     required double lon,
     required double lat,
@@ -68,7 +68,7 @@ class MutableClusterOrPoint<T> with _$MutableClusterOrPoint<T> {
     final x = util.lngX(lon);
     final y = util.latY(lat);
 
-    return MutablePoint(
+    return LayerPoint(
       uuid: UuidStub.v4(),
       originalPoint: point,
       x: x,
@@ -88,22 +88,20 @@ class MutableClusterOrPoint<T> with _$MutableClusterOrPoint<T> {
       cluster: (cluster) => cluster.originalPoints,
       point: (point) => [point.originalPoint]);
 
-  static double getX(MutableClusterOrPoint clusterOrMapPoint) =>
-      clusterOrMapPoint.x;
+  static double getX(LayerElement clusterOrMapPoint) => clusterOrMapPoint.x;
 
-  static double getY(MutableClusterOrPoint clusterOrMapPoint) =>
-      clusterOrMapPoint.y;
+  static double getY(LayerElement clusterOrMapPoint) => clusterOrMapPoint.y;
 
-  RBushPoint<MutableClusterOrPoint<T>> positionRBushPoint() {
+  RBushPoint<LayerElement<T>> positionRBushPoint() {
     return RBushPoint(x: x, y: y, data: this);
   }
 
-  RBushPoint<MutableClusterOrPoint<T>> weightedPositionRBushPoint() {
+  RBushPoint<LayerElement<T>> weightedPositionRBushPoint() {
     return RBushPoint(x: wX, y: wY, data: this);
   }
 }
 
-extension ClusterLatLngExtension<T> on MutableCluster<T> {
+extension ClusterLatLngExtension<T> on LayerCluster<T> {
   double get latitude => util.yLat(y);
 
   double get longitude => util.xLng(x);

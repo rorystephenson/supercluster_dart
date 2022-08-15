@@ -1,13 +1,13 @@
 import 'dart:math';
 
 import 'package:rbush/rbush.dart';
-import 'package:supercluster/src/cluster_rbush.dart';
+import 'package:supercluster/src/layer.dart';
 import 'package:supercluster/src/rbush_point.dart';
 
 import './util.dart' as util;
 import 'cluster_data_base.dart';
-import 'mutable_cluster_or_point.dart';
-import 'rbush_modification.dart';
+import 'layer_element.dart';
+import 'layer_modification.dart';
 import 'uuid_stub.dart';
 
 class SuperclusterMutable<T> {
@@ -23,7 +23,7 @@ class SuperclusterMutable<T> {
 
   final MutableClusterDataBase Function(T point)? extractClusterData;
 
-  late final List<ClusterRBush<T>> trees;
+  late final List<Layer<T>> trees;
 
   SuperclusterMutable({
     required this.getX,
@@ -42,7 +42,7 @@ class SuperclusterMutable<T> {
         nodeSize = nodeSize ?? 64 {
     trees = List.generate(
       (maxZoom ?? 16) + 2,
-      (i) => ClusterRBush<T>(
+      (i) => Layer<T>(
           zoom: i,
           searchRadius: (radius ?? 40) / ((extent ?? 512) * pow(2, i)),
           getX: getX,
@@ -56,7 +56,7 @@ class SuperclusterMutable<T> {
     // generate a cluster object for each point
     var clusters = points
         .map(
-          (point) => MutableClusterOrPoint.initializePoint(
+          (point) => LayerElement.initializePoint(
             point: point,
             lon: getX(point),
             lat: getY(point),
@@ -79,8 +79,7 @@ class SuperclusterMutable<T> {
     trees[minZoom].all().first.positionRBushPoint().expandBy(1.0);
   }
 
-  List<RBushElement<MutableClusterOrPoint<T>>> getClusters(
-      List<double> bbox, int zoom) {
+  List<RBushElement<LayerElement<T>>> getClusters(List<double> bbox, int zoom) {
     var projBBox = [
       util.lngX(bbox[0]),
       util.latY(bbox[3]),
@@ -101,7 +100,7 @@ class SuperclusterMutable<T> {
     final mutablePoint = trees[maxZoom + 1].removePointWithoutClustering(point);
     if (mutablePoint == null) return;
 
-    var rbushModification = RBushModification<T>(
+    var rbushModification = LayerModification<T>(
       zoomCluster: trees[maxZoom + 1],
       removed: [mutablePoint],
       added: [],
@@ -115,7 +114,7 @@ class SuperclusterMutable<T> {
   void insert(T point) {
     final mutablePoint = trees[maxZoom + 1].addPointWithoutClustering(point);
 
-    var rbushModification = RBushModification<T>(
+    var rbushModification = LayerModification<T>(
       zoomCluster: trees[maxZoom + 1],
       removed: [],
       added: [mutablePoint],
@@ -126,7 +125,7 @@ class SuperclusterMutable<T> {
     }
   }
 
-  List<MutableClusterOrPoint<T>> children(MutableCluster<T> cluster) {
+  List<LayerElement<T>> children(LayerCluster<T> cluster) {
     final r = radius / (extent * pow(2, cluster.zoom));
 
     return trees[cluster.zoom]
@@ -141,7 +140,7 @@ class SuperclusterMutable<T> {
         .toList();
   }
 
-  List<MutableClusterOrPoint<T>> descendants(MutableCluster<T> cluster) {
+  List<LayerElement<T>> descendants(LayerCluster<T> cluster) {
     var tree = trees[cluster.zoom];
 
     var searchResults = tree
@@ -176,9 +175,9 @@ class SuperclusterMutable<T> {
     return max(minZoom, min(zoom, maxZoom + 1));
   }
 
-  List<MutableClusterOrPoint<T>> _cluster(
-      List<RBushElement<MutableClusterOrPoint<T>>> points, int zoom) {
-    final clusters = <MutableClusterOrPoint<T>>[];
+  List<LayerElement<T>> _cluster(
+      List<RBushElement<LayerElement<T>>> points, int zoom) {
+    final clusters = <LayerElement<T>>[];
     final r = radius / (extent * pow(2, zoom));
 
     // loop through each point
@@ -234,7 +233,7 @@ class SuperclusterMutable<T> {
 
       // form a cluster with neighbors
       p.parentUuid = potentialClusterUuid;
-      final cluster = MutableClusterOrPoint.initializeCluster(
+      final cluster = LayerElement.initializeCluster(
         uuid: potentialClusterUuid,
         x: p.x,
         y: p.y,
@@ -258,8 +257,7 @@ class SuperclusterMutable<T> {
     return clusters;
   }
 
-  MutableClusterDataBase _extractClusterData(
-      MutableClusterOrPoint<T> clusterOrPoint) {
+  MutableClusterDataBase _extractClusterData(LayerElement<T> clusterOrPoint) {
     return clusterOrPoint.map(
         cluster: (cluster) => cluster.clusterData!,
         point: (mapPoint) => extractClusterData!(mapPoint.originalPoint));

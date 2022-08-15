@@ -1,14 +1,14 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:rbush/rbush.dart';
-import 'package:supercluster/src/mutable_cluster_or_point.dart';
+import 'package:supercluster/src/layer_element.dart';
 import 'package:supercluster/src/rbush_point.dart';
 import 'package:supercluster/src/uuid_stub.dart';
 
 import 'cluster_data_base.dart';
-import 'rbush_modification.dart';
+import 'layer_modification.dart';
 import 'util.dart' as util;
 
-class ClusterRBush<T> {
+class Layer<T> {
   final int zoom;
   final double searchRadius;
 
@@ -17,11 +17,10 @@ class ClusterRBush<T> {
   final double Function(T) getY;
   final MutableClusterDataBase Function(T point)? extractClusterData;
 
-  final RBush<MutableClusterOrPoint<T>> _innerTree;
-  final List<MutableClusterOrPoint<T>> Function(MutableCluster<T> cluster)
-      childrenOf;
+  final RBush<LayerElement<T>> _innerTree;
+  final List<LayerElement<T>> Function(LayerCluster<T> cluster) childrenOf;
 
-  ClusterRBush({
+  Layer({
     required this.zoom,
     required this.searchRadius,
     required this.maxPoints,
@@ -31,16 +30,16 @@ class ClusterRBush<T> {
     this.extractClusterData,
   }) : _innerTree = RBush(maxPoints);
 
-  void load(List<RBushElement<MutableClusterOrPoint<T>>> elements) {
+  void load(List<RBushElement<LayerElement<T>>> elements) {
     _innerTree.load(elements);
   }
 
-  List<RBushElement<MutableClusterOrPoint<T>>> search(RBushBox rBushBox) {
+  List<RBushElement<LayerElement<T>>> search(RBushBox rBushBox) {
     return _innerTree.search(rBushBox);
   }
 
-  MutablePoint<T> addPointWithoutClustering(T point) {
-    final mutablePoint = MutableClusterOrPoint.initializePoint(
+  LayerPoint<T> addPointWithoutClustering(T point) {
+    final mutablePoint = LayerElement.initializePoint(
       point: point,
       lon: getX(point),
       lat: getY(point),
@@ -52,7 +51,7 @@ class ClusterRBush<T> {
     return mutablePoint;
   }
 
-  MutablePoint<T>? removePointWithoutClustering(T point) {
+  LayerPoint<T>? removePointWithoutClustering(T point) {
     final x = util.lngX(getX(point));
     final y = util.latY(getY(point));
 
@@ -65,20 +64,20 @@ class ClusterRBush<T> {
 
     final index = searchResults.indexWhere((element) {
       final data = element.data;
-      return data is MutablePoint<T> && data.originalPoint == point;
+      return data is LayerPoint<T> && data.originalPoint == point;
     });
 
     if (index == -1) return null;
 
     _innerTree.remove(searchResults[index]);
-    return searchResults[index].data as MutablePoint<T>;
+    return searchResults[index].data as LayerPoint<T>;
   }
 
-  RBushModification<T> recluster(RBushModification<T> previousModification) {
+  LayerModification<T> recluster(LayerModification<T> previousModification) {
     int? numPointsBeforeRecluster;
     assert((numPointsBeforeRecluster = numPoints) > 0);
 
-    final currentModification = RBushModification<T>(
+    final currentModification = LayerModification<T>(
       zoomCluster: this,
       added: List.from(previousModification.added),
       removed: [],
@@ -111,8 +110,8 @@ class ClusterRBush<T> {
     return currentModification;
   }
 
-  void _performRemoval(RBushModification<T> previousModification,
-      RBushModification<T> currentModification) {
+  void _performRemoval(LayerModification<T> previousModification,
+      LayerModification<T> currentModification) {
     if (previousModification.removed.isNotEmpty) {
       // Must search withing searchRadius * 2 because the a parent of a removed
       // layer element may be that far away if it's weighted position is as far
@@ -121,8 +120,8 @@ class ClusterRBush<T> {
           _boundary(previousModification.removed).expandBy(searchRadius * 2);
 
       final elementsWithinRemovalBounds = _innerTree.search(removalBounds);
-      Map<RBushElement<MutableClusterOrPoint<T>>,
-          List<MutableClusterOrPoint<T>>> clusterToRemovals = {};
+      Map<RBushElement<LayerElement<T>>, List<LayerElement<T>>>
+          clusterToRemovals = {};
 
       for (final removedClusterOrPoint in previousModification.removed) {
         bool removed = false;
@@ -135,7 +134,7 @@ class ClusterRBush<T> {
             currentModification.recordRemoval(elementData);
 
             break;
-          } else if (elementData is MutableCluster<T> &&
+          } else if (elementData is LayerCluster<T> &&
               elementData.uuid == removedClusterOrPoint.parentUuid) {
             removed = true;
             clusterToRemovals[elementWithinRemovalBounds] ??= [];
@@ -146,7 +145,7 @@ class ClusterRBush<T> {
         }
 
         if (!removed) {
-          if (removedClusterOrPoint is MutableCluster<T>) {
+          if (removedClusterOrPoint is LayerCluster<T>) {
             assert(
               removed,
               'Failed to find cluster (${removedClusterOrPoint.uuid}) with parent id (${removedClusterOrPoint.parentUuid}) to remove from zoom ($zoom)',
@@ -162,7 +161,7 @@ class ClusterRBush<T> {
 
       clusterToRemovals.forEach((clusterElement, removals) {
         _innerTree.remove(clusterElement);
-        final cluster = clusterElement.data as MutableCluster<T>;
+        final cluster = clusterElement.data as LayerCluster<T>;
 
         currentModification.recordRemoval(cluster);
 
@@ -201,7 +200,7 @@ class ClusterRBush<T> {
     }
   }
 
-  void _insert(List<MutableClusterOrPoint<T>> elements) {
+  void _insert(List<LayerElement<T>> elements) {
     // Try to create new clusters or just add the points if it is not possible
     // to add to an existing cluster.
     for (final newClusterOrPoint in elements) {
@@ -212,8 +211,8 @@ class ClusterRBush<T> {
     }
   }
 
-  void _recluster(RBushModification<T> previousModification,
-      RBushModification<T> currentModification) {
+  void _recluster(LayerModification<T> previousModification,
+      LayerModification<T> currentModification) {
     assert(numPoints == previousModification.zoomCluster.numPoints);
     final these = all()
         .expand((e) => e.points)
@@ -230,8 +229,7 @@ class ClusterRBush<T> {
     for (int i = 0; i < these.length; i++) {
       assert(these[i] == those[i]);
     }
-    Map<MutableCluster<T>, List<MutableClusterOrPoint<T>>> clusterToNewPoints =
-        {};
+    Map<LayerCluster<T>, List<LayerElement<T>>> clusterToNewPoints = {};
     for (final newClusterOrPoint in currentModification.added) {
       if (clusterToNewPoints.containsKey(newClusterOrPoint)) continue;
       final existingNearbyClusterElement = _nearbyCluster(newClusterOrPoint);
@@ -239,7 +237,7 @@ class ClusterRBush<T> {
       if (existingNearbyClusterElement != null) {
         // Add to existing clusters where possible.
         final existingCluster =
-            existingNearbyClusterElement.data as MutableCluster<T>;
+            existingNearbyClusterElement.data as LayerCluster<T>;
         clusterToNewPoints[existingCluster] ??= [];
         clusterToNewPoints[existingCluster]!.add(newClusterOrPoint);
         continue;
@@ -262,8 +260,7 @@ class ClusterRBush<T> {
     });
   }
 
-  RBushElement<MutableClusterOrPoint<T>>? _nearbyCluster(
-      MutableClusterOrPoint<T> point) {
+  RBushElement<LayerElement<T>>? _nearbyCluster(LayerElement<T> point) {
     return _innerTree
         .search(
       point.weightedPositionRBushPoint().expandBy(searchRadius * 2),
@@ -272,7 +269,7 @@ class ClusterRBush<T> {
       null,
       (previousValue, element) {
         final data = element.data;
-        if (data is! MutableCluster<T> || data.uuid == point.uuid) {
+        if (data is! LayerCluster<T> || data.uuid == point.uuid) {
           return previousValue;
         }
         final distance = util.distSq(point, data);
@@ -285,10 +282,10 @@ class ClusterRBush<T> {
     )?.element;
   }
 
-  MutableCluster<T> _addToCluster(
-    ClusterRBush<T> zoomCluster,
-    MutableCluster<T> cluster,
-    List<MutableClusterOrPoint<T>> points,
+  LayerCluster<T> _addToCluster(
+    Layer<T> zoomCluster,
+    LayerCluster<T> cluster,
+    List<LayerElement<T>> points,
   ) {
     final pointUuids = points.map((e) => e.uuid).toList();
     final children = zoomCluster._innerTree
@@ -317,8 +314,8 @@ class ClusterRBush<T> {
     return newCluster;
   }
 
-  MutableCluster<T> _createCluster(MutableClusterOrPoint<T> sourcePoint,
-      List<MutableClusterOrPoint<T>> clusteringPoints) {
+  LayerCluster<T> _createCluster(
+      LayerElement<T> sourcePoint, List<LayerElement<T>> clusteringPoints) {
     List<T> clusteredPoints = [];
     var numPoints = sourcePoint.numPoints;
     var wx = sourcePoint.wX * numPoints;
@@ -350,7 +347,7 @@ class ClusterRBush<T> {
 
     // form a cluster with neighbors
     sourcePoint.parentUuid = clusterUuid;
-    final cluster = MutableClusterOrPoint.initializeCluster(
+    final cluster = LayerElement.initializeCluster(
       uuid: clusterUuid,
       x: sourcePoint.x,
       y: sourcePoint.y,
@@ -371,8 +368,7 @@ class ClusterRBush<T> {
     return cluster;
   }
 
-  MutableClusterDataBase _extractClusterData(
-      MutableClusterOrPoint<T> clusterOrPoint) {
+  MutableClusterDataBase _extractClusterData(LayerElement<T> clusterOrPoint) {
     return clusterOrPoint.map(
         cluster: (cluster) => cluster.clusterData!,
         point: (mapPoint) => extractClusterData!(mapPoint.originalPoint));
@@ -388,11 +384,11 @@ class ClusterRBush<T> {
       );
 
   @visibleForTesting
-  List<MutableClusterOrPoint<T>> all() {
+  List<LayerElement<T>> all() {
     return _innerTree.all().map((e) => e.data).toList();
   }
 
-  RBushBox _boundary(List<MutableClusterOrPoint<T>> clusterOrPoints) {
+  RBushBox _boundary(List<LayerElement<T>> clusterOrPoints) {
     RBushBox result = clusterOrPoints.first.positionRBushPoint();
 
     for (final clusterOrPoint in clusterOrPoints.skip(1)) {
@@ -404,10 +400,10 @@ class ClusterRBush<T> {
 }
 
 class ClusterWithDistance<T> {
-  final RBushElement<MutableClusterOrPoint<T>> element;
+  final RBushElement<LayerElement<T>> element;
   final double distance;
 
   ClusterWithDistance({required this.element, required this.distance});
 
-  MutableCluster<T> get cluster => element.data as MutableCluster<T>;
+  LayerCluster<T> get cluster => element.data as LayerCluster<T>;
 }

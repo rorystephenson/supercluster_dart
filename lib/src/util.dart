@@ -1,7 +1,7 @@
 // longitude/latitude to spherical mercator in [0..1] range
 import 'dart:math';
 
-import 'mutable_cluster_or_point.dart';
+import 'layer_element.dart';
 
 double lngX(lng) {
   return lng / 360 + 0.5;
@@ -29,7 +29,7 @@ double yLat(y) {
 
 // TODO: Make the distance measure customisable e.g. haversine
 // squared distance between two points
-double distSq(MutableClusterOrPoint a, MutableClusterOrPoint b) {
+double distSq(LayerElement a, LayerElement b) {
   var dx = a.wX - b.wX;
   var dy = a.wY - b.wY;
   return dx * dx + dy * dy;
