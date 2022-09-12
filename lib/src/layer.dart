@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:rbush/rbush.dart';
 import 'package:supercluster/src/layer_element.dart';
 import 'package:supercluster/src/rbush_point.dart';
+import 'package:supercluster/supercluster.dart';
 
 import 'layer_clusterer.dart';
 import 'layer_modification.dart';

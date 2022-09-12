@@ -43,6 +43,7 @@ class SuperclusterMutable<T> {
         _layerClusterer = LayerClusterer(
           radius: radius ?? 40,
           extent: extent ?? 512,
+          extractClusterData: extractClusterData,
         ) {
     trees = List.generate(
       (maxZoom ?? 16) + 2,
