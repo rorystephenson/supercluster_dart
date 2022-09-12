@@ -124,7 +124,8 @@ class SuperclusterMutable<T> {
   }
 
   void insert(T point) {
-    final layerPoint = trees[maxZoom + 1].addPointWithoutClustering(point);
+    final layerPoint =
+        trees[maxZoom + 1].addPointWithoutClustering(_initializePoint(point));
 
     int lowestZoomWhereInsertionDoesNotCluster = maxZoom + 1;
     List<LayerElement<T>> elementsToClusterWith = [];
@@ -133,7 +134,7 @@ class SuperclusterMutable<T> {
       elementsToClusterWith = trees[z].elementsToClusterWith(layerPoint);
       if (elementsToClusterWith.isEmpty) {
         lowestZoomWhereInsertionDoesNotCluster = z;
-        trees[z].addLayerPointWithoutClustering(layerPoint);
+        trees[z].addPointWithoutClustering(layerPoint);
         continue;
       } else {
         break;

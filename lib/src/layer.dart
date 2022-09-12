@@ -36,20 +36,7 @@ class Layer<T> {
     return _innerTree.search(rBushBox);
   }
 
-  LayerPoint<T> addPointWithoutClustering(T point) {
-    final mutablePoint = LayerElement.initializePoint(
-      point: point,
-      lon: getX(point),
-      lat: getY(point),
-      zoom: zoom,
-    );
-    mutablePoint.zoom = zoom;
-
-    _innerTree.insert(mutablePoint.positionRBushPoint());
-    return mutablePoint;
-  }
-
-  LayerPoint<T> addLayerPointWithoutClustering(LayerPoint<T> layerPoint) {
+  LayerPoint<T> addPointWithoutClustering(LayerPoint<T> layerPoint) {
     layerPoint.zoom = zoom;
 
     _innerTree.insert(layerPoint.positionRBushPoint());
