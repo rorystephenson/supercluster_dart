@@ -59,15 +59,7 @@ class SuperclusterMutable<T> {
   void load(List<T> points) {
     // generate a cluster object for each point
     var clusters = points
-        .map(
-          (point) => LayerElement.initializePoint(
-            point: point,
-            lon: getX(point),
-            lat: getY(point),
-            clusterData: extractClusterData?.call(point),
-            zoom: maxZoom + 1,
-          ).positionRBushPoint(),
-        )
+        .map((point) => _initializePoint(point).positionRBushPoint())
         .toList();
 
     trees[maxZoom + 1].load(clusters);
@@ -97,7 +89,6 @@ class SuperclusterMutable<T> {
       maxY: projBBox[3],
     ));
     return clusters;
-    //return clusters.map(getClusterJSON);
   }
 
   void remove(T point) {
@@ -133,10 +124,7 @@ class SuperclusterMutable<T> {
   }
 
   void insert(T point) {
-    final layerPoint = trees[maxZoom + 1]
-        .addPointWithoutClustering(point)
-        .added
-        .single as LayerPoint<T>;
+    final layerPoint = trees[maxZoom + 1].addPointWithoutClustering(point);
 
     int lowestZoomWhereInsertionDoesNotCluster = maxZoom + 1;
     List<LayerElement<T>> elementsToClusterWith = [];
@@ -213,4 +201,13 @@ class SuperclusterMutable<T> {
   int _limitZoom(int zoom) {
     return max(minZoom, min(zoom, maxZoom + 1));
   }
+
+  LayerPoint<T> _initializePoint(T originalPoint) =>
+      LayerElement.initializePoint(
+        point: originalPoint,
+        lon: getX(originalPoint),
+        lat: getY(originalPoint),
+        clusterData: extractClusterData?.call(originalPoint),
+        zoom: maxZoom + 1,
+      );
 }

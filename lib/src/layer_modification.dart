@@ -3,7 +3,6 @@ import 'layer_element.dart';
 
 class LayerModification<T> {
   final Layer<T> layer;
-  final List<LayerElement<T>> added = [];
   final List<LayerElement<T>> removed = [];
   final List<LayerElement<T>> orphaned = [];
 
@@ -19,21 +18,13 @@ class LayerModification<T> {
     removed.addAll(elements);
   }
 
-  void recordAddition(LayerElement<T> element) {
-    added.add(element);
-  }
-
   void recordOrphan(LayerElement<T> element) {
     orphaned.add(element);
   }
 
-  int get numPointsChange =>
-      added.fold<int>(
-          0, (previousValue, element) => previousValue + element.numPoints) -
-      removed.fold<int>(
-          0, (previousValue, element) => previousValue + element.numPoints);
+  List<LayerElement<T>> get removedAndOrphaned =>
+      List.from(removed)..addAll(orphaned);
 
-  String get summary => "$numPointsChange: "
-      "Add ${added.map((e) => "${e.uuid} (${e.parentUuid})").join(',')} "
-      "Remove ${removed.map((e) => "${e.uuid} (${e.parentUuid})").join(',')}";
+  String get summary => "Remove ${removed.map((e) => e.summary).join(',')} "
+      "Ophan ${orphaned.map((e) => e.summary).join(',')}";
 }

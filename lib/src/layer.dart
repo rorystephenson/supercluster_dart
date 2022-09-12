@@ -36,7 +36,7 @@ class Layer<T> {
     return _innerTree.search(rBushBox);
   }
 
-  LayerModification<T> addPointWithoutClustering(T point) {
+  LayerPoint<T> addPointWithoutClustering(T point) {
     final mutablePoint = LayerElement.initializePoint(
       point: point,
       lon: getX(point),
@@ -46,15 +46,14 @@ class Layer<T> {
     mutablePoint.zoom = zoom;
 
     _innerTree.insert(mutablePoint.positionRBushPoint());
-    return LayerModification<T>(layer: this)..recordAddition(mutablePoint);
+    return mutablePoint;
   }
 
-  LayerModification<T> addLayerPointWithoutClustering(
-      LayerPoint<T> layerPoint) {
+  LayerPoint<T> addLayerPointWithoutClustering(LayerPoint<T> layerPoint) {
     layerPoint.zoom = zoom;
 
     _innerTree.insert(layerPoint.positionRBushPoint());
-    return LayerModification<T>(layer: this)..recordAddition(layerPoint);
+    return layerPoint;
   }
 
   LayerModification<T> removePointWithoutClustering(T point) {
@@ -112,7 +111,7 @@ class Layer<T> {
             // Search the next layer down nullify the parent uuids of the children
             // and set their zoom value.
             final potentialChildren = previousModification.layer
-                .search(elementWithinRemovalBounds.expandBy(searchRadius));
+                .search(elementWithinRemovalBounds.expandBy(searchRadius * 2));
 
             for (final potentialChild in potentialChildren) {
               if (potentialChild.data.parentUuid == elementData.uuid) {
@@ -163,8 +162,9 @@ class Layer<T> {
   }
 
   List<LayerElement<T>> elementsToClusterWith(LayerPoint<T> layerPoint) {
-    final nearbyElements = _innerTree
-        .search(layerPoint.positionRBushPoint().expandBy(searchRadius));
+    final nearbyElements = _innerTree.search(layerPoint
+        .positionRBushPoint()
+        .expandBy(searchRadius)); // TODO Should be wX?
 
     if (nearbyElements.isEmpty) {
       return [];

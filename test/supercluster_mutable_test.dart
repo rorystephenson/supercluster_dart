@@ -15,6 +15,10 @@ void main() {
   final features = List.castFrom<dynamic, Map<String, dynamic>>(
       loadFixture('places-old.json')['features']);
 
+  int _compareFeatures(
+          Map<String, dynamic> featureA, Map<String, dynamic> featureB) =>
+      jsonEncode(featureA).compareTo(jsonEncode(featureB));
+
   SuperclusterMutable<Map<String, dynamic>> supercluster(
     List<Map<String, dynamic>> points, {
     int? maxEntries,
@@ -82,7 +86,7 @@ void main() {
     final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
     expect(pointCountsAtZooms, [
       32,
-      61,
+      62,
       99,
       136,
       148,
@@ -106,7 +110,7 @@ void main() {
       expect(
         tree.numPoints,
         161,
-        reason: 'Zoom ${tree.zoom} contains ${tree.numPoints}/162 points',
+        reason: 'Zoom ${tree.zoom} contains ${tree.numPoints}/161 points',
       );
     }
   });
@@ -189,8 +193,10 @@ void main() {
       print("Performing removal number ${i - start + 1}");
 
       index.remove(features[i]);
-      expect(index.trees.map((e) => e.numPoints).toSet().single,
-          features.length - (i - start + 1));
+      expect(
+        index.trees.map((e) => e.numPoints).toSet().single,
+        features.length - (i - start + 1),
+      );
     }
     for (int i = start; i < start + removalTotal; i++) {
       index.insert(features[i]);
@@ -200,10 +206,10 @@ void main() {
     index.remove(features[10]);
     final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
     expect(pointCountsAtZooms, [
-      32,
-      61,
-      99,
-      136,
+      40,
+      65,
+      100,
+      137,
       148,
       158,
       161,
@@ -228,6 +234,16 @@ void main() {
         reason: 'Zoom ${tree.zoom} contains ${tree.numPoints}/162 points',
       );
     }
+
+    final featuresInIndex = index.trees.last
+        .all()
+        .map((e) => (e as LayerPoint<Map<String, dynamic>>).originalPoint)
+        .toList()
+      ..sort(_compareFeatures);
+    final expectation = features
+      ..remove(features[10])
+      ..sort(_compareFeatures);
+    expect(featuresInIndex, equals(expectation));
   });
 
 /*
