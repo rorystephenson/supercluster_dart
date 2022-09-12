@@ -35,4 +35,7 @@ double distSq(LayerElement a, LayerElement b) {
   return dx * dx + dy * dy;
 }
 
+double searchRadius(int radius, int extent, int zoom) =>
+    (radius) / ((extent) * pow(2, zoom));
+
 const int maxInt = 9007199254740991; // 2^53

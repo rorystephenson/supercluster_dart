@@ -2,32 +2,29 @@ import 'layer.dart';
 import 'layer_element.dart';
 
 class LayerModification<T> {
-  final Layer<T> zoomCluster;
-  final List<LayerElement<T>> removed;
-  final List<LayerElement<T>> added;
+  final Layer<T> layer;
+  final List<LayerElement<T>> added = [];
+  final List<LayerElement<T>> removed = [];
+  final List<LayerElement<T>> orphaned = [];
 
   LayerModification({
-    required this.zoomCluster,
-    required this.removed,
-    required this.added,
+    required this.layer,
   });
 
-  void recordRemoval(LayerElement<T> point) {
-    removed.add(point.copyWith());
+  void recordRemoval(LayerElement<T> element) {
+    removed.add(element);
   }
 
-  void recordInsertion(LayerElement<T> point) {
-    added.add(point.copyWith());
+  void recordRemovals(Iterable<LayerElement<T>> elements) {
+    removed.addAll(elements);
   }
 
-  void removeFromAddedOrRecordRemoval(LayerElement<T> point) {
-    final addedIndex = added.indexWhere((e) => e.uuid == point.uuid);
+  void recordAddition(LayerElement<T> element) {
+    added.add(element);
+  }
 
-    if (addedIndex == -1) {
-      recordRemoval(point);
-    } else {
-      added.removeAt(addedIndex);
-    }
+  void recordOrphan(LayerElement<T> element) {
+    orphaned.add(element);
   }
 
   int get numPointsChange =>

@@ -5,5 +5,7 @@ library supercluster;
 
 export 'src/cluster_data_base.dart';
 export 'src/cluster_or_map_point.dart';
+export 'src/layer_element.dart';
+export 'src/layer_modification.dart';
 export 'src/supercluster.dart';
 export 'src/supercluster_mutable.dart';

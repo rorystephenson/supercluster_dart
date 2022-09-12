@@ -2,13 +2,12 @@ import 'dart:math';
 
 import 'package:rbush/rbush.dart';
 import 'package:supercluster/src/layer.dart';
-import 'package:supercluster/src/rbush_point.dart';
+import 'package:supercluster/src/layer_clusterer.dart';
 
 import './util.dart' as util;
 import 'cluster_data_base.dart';
 import 'layer_element.dart';
 import 'layer_modification.dart';
-import 'uuid_stub.dart';
 
 class SuperclusterMutable<T> {
   final double Function(T) getX;
@@ -21,8 +20,9 @@ class SuperclusterMutable<T> {
   final int extent;
   final int nodeSize;
 
-  final MutableClusterDataBase Function(T point)? extractClusterData;
+  final ClusterDataBase Function(T point)? extractClusterData;
 
+  final LayerClusterer<T> _layerClusterer;
   late final List<Layer<T>> trees;
 
   SuperclusterMutable({
@@ -39,16 +39,20 @@ class SuperclusterMutable<T> {
         maxZoom = maxZoom ?? 16,
         radius = radius ?? 40,
         extent = extent ?? 512,
-        nodeSize = nodeSize ?? 64 {
+        nodeSize = nodeSize ?? 64,
+        _layerClusterer = LayerClusterer(
+          radius: radius ?? 40,
+          extent: extent ?? 512,
+        ) {
     trees = List.generate(
       (maxZoom ?? 16) + 2,
       (i) => Layer<T>(
-          zoom: i,
-          searchRadius: (radius ?? 40) / ((extent ?? 512) * pow(2, i)),
-          getX: getX,
-          getY: getY,
-          maxPoints: maxEntries,
-          childrenOf: (cluster) => children(cluster)),
+        zoom: i,
+        searchRadius: util.searchRadius(radius ?? 40, extent ?? 512, i),
+        getX: getX,
+        getY: getY,
+        maxPoints: maxEntries,
+      ),
     );
   }
 
@@ -71,12 +75,12 @@ class SuperclusterMutable<T> {
     // cluster points on max zoom, then cluster the results on previous zoom, etc.;
     // results in a cluster hierarchy across zoom levels
     for (var z = maxZoom; z >= minZoom; z--) {
-      clusters = _cluster(clusters, z)
+      clusters = _layerClusterer
+          .cluster(clusters, z, trees[z + 1])
           .map((c) => c.positionRBushPoint())
           .toList(); // create a new set of clusters for the zoom
       trees[z].load(clusters); // index input points into an R-tree
     }
-    trees[minZoom].all().first.positionRBushPoint().expandBy(1.0);
   }
 
   List<RBushElement<LayerElement<T>>> getClusters(List<double> bbox, int zoom) {
@@ -97,38 +101,104 @@ class SuperclusterMutable<T> {
   }
 
   void remove(T point) {
-    final mutablePoint = trees[maxZoom + 1].removePointWithoutClustering(point);
-    if (mutablePoint == null) return;
-
-    var rbushModification = LayerModification<T>(
-      zoomCluster: trees[maxZoom + 1],
-      removed: [mutablePoint],
-      added: [],
-    );
+    final layerModifications = <LayerModification<T>>[];
+    layerModifications
+        .add(trees[maxZoom + 1].removePointWithoutClustering(point));
+    if (layerModifications.single.removed.isEmpty) return;
 
     for (int z = maxZoom; z >= minZoom; z--) {
-      rbushModification = trees[z].recluster(rbushModification);
+      layerModifications
+          .add(trees[z].removeElementsAndAncestors(layerModifications.last));
+    }
+
+    layerModifications
+        .expand<LayerElement<T>>((modification) =>
+            List.from(modification.removed)..addAll(modification.orphaned))
+        .forEach((element) {
+      element.parentUuid = null;
+    });
+
+    for (int z = maxZoom; z >= minZoom; z--) {
+      final layerRemoval = layerModifications[maxZoom + 1 - z];
+
+      trees[z]
+          .rebuildLayer(_layerClusterer, trees[z + 1], layerRemoval.removed);
+    }
+
+    final counts = trees.map((e) => e.numPoints).toSet();
+
+    if (counts.length != 1) {
+      throw 'hmm';
     }
   }
 
   void insert(T point) {
-    final mutablePoint = trees[maxZoom + 1].addPointWithoutClustering(point);
+    final layerPoint = trees[maxZoom + 1]
+        .addPointWithoutClustering(point)
+        .added
+        .single as LayerPoint<T>;
 
-    var rbushModification = LayerModification<T>(
-      zoomCluster: trees[maxZoom + 1],
-      removed: [],
-      added: [mutablePoint],
-    );
+    int lowestZoomWhereInsertionDoesNotCluster = maxZoom + 1;
+    List<LayerElement<T>> elementsToClusterWith = [];
 
     for (int z = maxZoom; z >= minZoom; z--) {
-      rbushModification = trees[z].recluster(rbushModification);
+      elementsToClusterWith = trees[z].elementsToClusterWith(layerPoint);
+      if (elementsToClusterWith.isEmpty) {
+        lowestZoomWhereInsertionDoesNotCluster = z;
+        trees[z].addLayerPointWithoutClustering(layerPoint);
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    final int firstClusteringZoom = lowestZoomWhereInsertionDoesNotCluster - 1;
+
+    if (firstClusteringZoom < minZoom) return;
+
+    final removalElements = elementsToClusterWith.length == 1 &&
+            elementsToClusterWith.single is LayerCluster<T>
+        ? trees[firstClusteringZoom + 1]
+            .descendants(elementsToClusterWith.single as LayerCluster<T>)
+        : elementsToClusterWith;
+
+    final layerModifications = [
+      trees[firstClusteringZoom].removeElementsAndAncestors(
+        LayerModification(layer: trees[firstClusteringZoom + 1])
+          ..recordRemovals(removalElements),
+      )
+    ];
+
+    for (int z = firstClusteringZoom - 1; z >= minZoom; z--) {
+      layerModifications
+          .add(trees[z].removeElementsAndAncestors(layerModifications.last));
+    }
+
+    layerModifications
+        .expand<LayerElement<T>>((modification) =>
+            List.from(modification.removed)..addAll(modification.orphaned))
+        .forEach((element) {
+      element.parentUuid = null;
+    });
+
+    for (int z = firstClusteringZoom; z >= minZoom; z--) {
+      final layerRemoval = layerModifications[firstClusteringZoom - z];
+
+      trees[z]
+          .rebuildLayer(_layerClusterer, trees[z + 1], layerRemoval.removed);
+    }
+
+    final counts = trees.map((e) => e.numPoints).toSet();
+
+    if (counts.length != 1) {
+      throw 'hmm';
     }
   }
 
   List<LayerElement<T>> children(LayerCluster<T> cluster) {
-    final r = radius / (extent * pow(2, cluster.zoom));
+    final r = util.searchRadius(radius, extent, cluster.zoom);
 
-    return trees[cluster.zoom]
+    return trees[cluster.lowestZoom + 1]
         .search(RBushBox(
           minX: cluster.x - r,
           minY: cluster.y - r,
@@ -140,126 +210,7 @@ class SuperclusterMutable<T> {
         .toList();
   }
 
-  List<LayerElement<T>> descendants(LayerCluster<T> cluster) {
-    var tree = trees[cluster.zoom];
-
-    var searchResults = tree
-        .search(RBushBox(
-          minX: cluster.x - tree.searchRadius,
-          minY: cluster.y - tree.searchRadius,
-          maxX: cluster.x + tree.searchRadius,
-          maxY: cluster.y + tree.searchRadius,
-        ))
-        .where((element) =>
-            element.data.parentUuid == cluster.uuid ||
-            element.data.uuid == cluster.uuid);
-
-    while (searchResults.length == 1) {
-      tree = trees[tree.zoom + 1];
-      searchResults = tree
-          .search(RBushBox(
-            minX: cluster.x - tree.searchRadius,
-            minY: cluster.y - tree.searchRadius,
-            maxX: cluster.x + tree.searchRadius,
-            maxY: cluster.y + tree.searchRadius,
-          ))
-          .where((element) =>
-              element.data.parentUuid == cluster.uuid ||
-              element.data.uuid == cluster.uuid);
-    }
-
-    return searchResults.map((e) => e.data).toList();
-  }
-
   int _limitZoom(int zoom) {
     return max(minZoom, min(zoom, maxZoom + 1));
-  }
-
-  List<LayerElement<T>> _cluster(
-      List<RBushElement<LayerElement<T>>> points, int zoom) {
-    final clusters = <LayerElement<T>>[];
-    final r = radius / (extent * pow(2, zoom));
-
-    // loop through each point
-    for (var i = 0; i < points.length; i++) {
-      var p = points[i].data;
-      // if we've already visited the point at this zoom level, skip it
-      if (p.zoom <= zoom) continue;
-      p.zoom = zoom;
-
-      final bboxNeighbors = trees[zoom + 1].search(RBushBox(
-        minX: p.wX - r,
-        minY: p.wY - r,
-        maxX: p.wX + r,
-        maxY: p.wY + r,
-      ));
-
-      final List<T> clusteredPoints = [];
-      var numPoints = p.numPoints;
-      var wx = p.wX * numPoints;
-      var wy = p.wY * numPoints;
-      MutableClusterDataBase? clusterData;
-      final potentialClusterUuid = UuidStub.v4(); // TODO Uuid().v4();
-
-      for (var j = 0; j < bboxNeighbors.length; j++) {
-        var b = bboxNeighbors[j].data;
-        // filter out neighbors that are too far or already processed
-        if (zoom < b.zoom && util.distSq(p, b) <= r * r) {
-          clusteredPoints.addAll(
-            b.map(
-              cluster: (cluster) => cluster.originalPoints,
-              point: (point) => [point.originalPoint],
-            ),
-          );
-          b.parentUuid = potentialClusterUuid;
-          b.zoom = zoom; // save the zoom (so it doesn't get processed twice)
-          wx += b.wX *
-              b.numPoints; // accumulate coordinates for calculating weighted center
-          wy += b.wY * b.numPoints;
-          numPoints += b.numPoints;
-
-          if (extractClusterData != null) {
-            clusterData ??= _extractClusterData(p);
-            clusterData = clusterData.combine(_extractClusterData(b));
-          }
-        }
-      }
-
-      if (clusteredPoints.isEmpty) {
-        clusters.add(p); // no neighbors, add a single point as cluster
-        p.lowestZoom = zoom;
-        continue;
-      }
-
-      // form a cluster with neighbors
-      p.parentUuid = potentialClusterUuid;
-      final cluster = LayerElement.initializeCluster(
-        uuid: potentialClusterUuid,
-        x: p.x,
-        y: p.y,
-        points: clusteredPoints
-          ..insertAll(
-              0,
-              p.map(
-                  cluster: (cluster) => cluster.originalPoints,
-                  point: (point) => [point.originalPoint])),
-        zoom: zoom,
-        clusterData: clusterData,
-      );
-
-      // save weighted cluster center for display
-      cluster.wX = wx / numPoints;
-      cluster.wY = wy / numPoints;
-
-      clusters.add(cluster);
-    }
-
-    return clusters;
-  }
-
-  MutableClusterDataBase _extractClusterData(LayerElement<T> clusterOrPoint) {
-    return clusterOrPoint.map(
-        cluster: (cluster) => cluster.clusterData!,
-        point: (mapPoint) => extractClusterData!(mapPoint.originalPoint));
   }
 }

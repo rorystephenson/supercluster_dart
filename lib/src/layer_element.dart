@@ -18,7 +18,7 @@ class LayerElement<T> with _$LayerElement<T> {
     required double wX,
     required double wY,
     required List<T> originalPoints,
-    MutableClusterDataBase? clusterData,
+    ClusterDataBase? clusterData,
     @Default(util.maxInt) int zoom,
     @Default(util.maxInt) int lowestZoom,
     String? parentUuid,
@@ -31,7 +31,7 @@ class LayerElement<T> with _$LayerElement<T> {
     required double y,
     required double wX,
     required double wY,
-    MutableClusterDataBase? clusterData,
+    ClusterDataBase? clusterData,
     @Default(util.maxInt) int zoom,
     @Default(util.maxInt) int lowestZoom,
     String? parentUuid,
@@ -43,7 +43,7 @@ class LayerElement<T> with _$LayerElement<T> {
     required double y,
     required List<T> points,
     required int zoom,
-    MutableClusterDataBase? clusterData,
+    ClusterDataBase? clusterData,
   }) {
     return LayerCluster<T>(
       uuid: uuid,
@@ -63,7 +63,7 @@ class LayerElement<T> with _$LayerElement<T> {
     required double lon,
     required double lat,
     required int zoom,
-    MutableClusterDataBase? clusterData,
+    ClusterDataBase? clusterData,
   }) {
     final x = util.lngX(lon);
     final y = util.latY(lat);
@@ -99,9 +99,12 @@ class LayerElement<T> with _$LayerElement<T> {
   RBushPoint<LayerElement<T>> weightedPositionRBushPoint() {
     return RBushPoint(x: wX, y: wY, data: this);
   }
+
+  String get summary =>
+      '${map(cluster: (cluster) => 'cluster', point: (point) => 'point')} ($uuid - $parentUuid)';
 }
 
-extension ClusterLatLngExtension<T> on LayerCluster<T> {
+extension LayerClusterLatLngExtension<T> on LayerCluster<T> {
   double get latitude => util.yLat(y);
 
   double get longitude => util.xLng(x);

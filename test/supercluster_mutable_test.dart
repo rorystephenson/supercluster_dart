@@ -5,6 +5,8 @@ import 'package:supercluster/src/layer_element.dart';
 import 'package:supercluster/src/supercluster_mutable.dart';
 import 'package:test/test.dart';
 
+import 'layer_test.dart';
+
 void main() {
   dynamic loadFixture(String name) => jsonDecode(
         File('test/$name').readAsStringSync(),
@@ -28,6 +30,22 @@ void main() {
         getY: (json) {
           return json['geometry']?['coordinates'][1].toDouble();
         },
+        radius: radius,
+        extent: extent,
+        maxZoom: maxZoom,
+      )..load(points);
+
+  SuperclusterMutable<TestPoint> supercluster2(
+    List<TestPoint> points, {
+    int? maxEntries,
+    int? radius,
+    int? extent,
+    int? maxZoom,
+  }) =>
+      SuperclusterMutable<TestPoint>(
+        maxEntries: maxEntries ?? points.length,
+        getX: TestPoint.getX,
+        getY: TestPoint.getY,
         radius: radius,
         extent: extent,
         maxZoom: maxZoom,
@@ -122,6 +140,43 @@ void main() {
         reason: 'Points at zoom $i should match the original points',
       );
     }
+  });
+
+  test('nearby insertions', () {
+    final index = supercluster2([
+      TestPoint(longitude: 9.203368, latitude: 45.460982), // Milano
+      TestPoint(longitude: 9.218777, latitude: 45.466276), // Milano east
+      TestPoint(longitude: 9.507878, latitude: 45.303647), // Lodi
+      TestPoint(longitude: 10.222456, latitude: 45.534990), // Brescia
+      TestPoint(longitude: 10.419535, latitude: 45.511298), // Bedizzole
+    ]);
+
+    index.insert(TestPoint(latitude: 46.805213, longitude: 9.448094));
+    index.insert(TestPoint(latitude: 46.775243, longitude: 9.711766));
+    index.insert(TestPoint(latitude: 46.75637, longitude: 9.942479));
+
+    final pointsPerZoom = index.trees.map((e) => e.numPoints).toSet();
+    expect(pointsPerZoom.single, 8);
+  });
+
+  test('adds to existing cluster only, even if other points are nearby', () {
+    final index = supercluster2([
+      TestPoint(longitude: 9.203368, latitude: 45.460982), // Milano
+      TestPoint(longitude: 9.218777, latitude: 45.466276), // Milano east
+      TestPoint(longitude: 9.507878, latitude: 45.303647), // Lodi
+      TestPoint(longitude: 10.222456, latitude: 45.534990), // Brescia
+      TestPoint(longitude: 10.419535, latitude: 45.511298), // Bedizzole
+    ]);
+
+    index.insert(TestPoint(latitude: 45.00324, longitude: 9.753136));
+    index.insert(TestPoint(latitude: 44.997413, longitude: 9.934411));
+    index.insert(TestPoint(latitude: 44.884685, longitude: 9.753136));
+    index.insert(TestPoint(latitude: 44.863244, longitude: 9.942651));
+    index.insert(TestPoint(latitude: 44.943066, longitude: 9.845233));
+    index.insert(TestPoint(latitude: 44.945982, longitude: 9.761462));
+    index.insert(TestPoint(latitude: 44.999401, longitude: 9.847979));
+
+    expect(index.trees.map((e) => e.numPoints).toSet().single, 12);
   });
 
   test('multiple removals and insertions', () {

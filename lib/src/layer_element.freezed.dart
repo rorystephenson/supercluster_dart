@@ -26,9 +26,8 @@ mixin _$LayerElement<T> {
   set wX(double value) => throw _privateConstructorUsedError;
   double get wY => throw _privateConstructorUsedError;
   set wY(double value) => throw _privateConstructorUsedError;
-  MutableClusterDataBase? get clusterData => throw _privateConstructorUsedError;
-  set clusterData(MutableClusterDataBase? value) =>
-      throw _privateConstructorUsedError;
+  ClusterDataBase? get clusterData => throw _privateConstructorUsedError;
+  set clusterData(ClusterDataBase? value) => throw _privateConstructorUsedError;
   int get zoom => throw _privateConstructorUsedError;
   set zoom(int value) => throw _privateConstructorUsedError;
   int get lowestZoom => throw _privateConstructorUsedError;
@@ -44,7 +43,7 @@ mixin _$LayerElement<T> {
             double wX,
             double wY,
             List<T> originalPoints,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)
@@ -56,7 +55,7 @@ mixin _$LayerElement<T> {
             double y,
             double wX,
             double wY,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)
@@ -72,7 +71,7 @@ mixin _$LayerElement<T> {
             double wX,
             double wY,
             List<T> originalPoints,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -84,7 +83,7 @@ mixin _$LayerElement<T> {
             double y,
             double wX,
             double wY,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -100,7 +99,7 @@ mixin _$LayerElement<T> {
             double wX,
             double wY,
             List<T> originalPoints,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -112,7 +111,7 @@ mixin _$LayerElement<T> {
             double y,
             double wX,
             double wY,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -156,7 +155,7 @@ abstract class $LayerElementCopyWith<T, $Res> {
       double y,
       double wX,
       double wY,
-      MutableClusterDataBase? clusterData,
+      ClusterDataBase? clusterData,
       int zoom,
       int lowestZoom,
       String? parentUuid});
@@ -207,7 +206,7 @@ class _$LayerElementCopyWithImpl<T, $Res>
       clusterData: clusterData == freezed
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
-              as MutableClusterDataBase?,
+              as ClusterDataBase?,
       zoom: zoom == freezed
           ? _value.zoom
           : zoom // ignore: cast_nullable_to_non_nullable
@@ -238,7 +237,7 @@ abstract class _$$LayerClusterCopyWith<T, $Res>
       double wX,
       double wY,
       List<T> originalPoints,
-      MutableClusterDataBase? clusterData,
+      ClusterDataBase? clusterData,
       int zoom,
       int lowestZoom,
       String? parentUuid});
@@ -296,7 +295,7 @@ class __$$LayerClusterCopyWithImpl<T, $Res>
       clusterData: clusterData == freezed
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
-              as MutableClusterDataBase?,
+              as ClusterDataBase?,
       zoom: zoom == freezed
           ? _value.zoom
           : zoom // ignore: cast_nullable_to_non_nullable
@@ -342,7 +341,7 @@ class _$LayerCluster<T> extends LayerCluster<T> {
   @override
   List<T> originalPoints;
   @override
-  MutableClusterDataBase? clusterData;
+  ClusterDataBase? clusterData;
   @override
   @JsonKey()
   int zoom;
@@ -372,7 +371,7 @@ class _$LayerCluster<T> extends LayerCluster<T> {
             double wX,
             double wY,
             List<T> originalPoints,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)
@@ -384,7 +383,7 @@ class _$LayerCluster<T> extends LayerCluster<T> {
             double y,
             double wX,
             double wY,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)
@@ -404,7 +403,7 @@ class _$LayerCluster<T> extends LayerCluster<T> {
             double wX,
             double wY,
             List<T> originalPoints,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -416,7 +415,7 @@ class _$LayerCluster<T> extends LayerCluster<T> {
             double y,
             double wX,
             double wY,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -436,7 +435,7 @@ class _$LayerCluster<T> extends LayerCluster<T> {
             double wX,
             double wY,
             List<T> originalPoints,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -448,7 +447,7 @@ class _$LayerCluster<T> extends LayerCluster<T> {
             double y,
             double wX,
             double wY,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -502,7 +501,7 @@ abstract class LayerCluster<T> extends LayerElement<T> {
       required double wX,
       required double wY,
       required List<T> originalPoints,
-      MutableClusterDataBase? clusterData,
+      ClusterDataBase? clusterData,
       int zoom,
       int lowestZoom,
       String? parentUuid}) = _$LayerCluster<T>;
@@ -526,8 +525,8 @@ abstract class LayerCluster<T> extends LayerElement<T> {
   List<T> get originalPoints;
   set originalPoints(List<T> value);
   @override
-  MutableClusterDataBase? get clusterData;
-  set clusterData(MutableClusterDataBase? value);
+  ClusterDataBase? get clusterData;
+  set clusterData(ClusterDataBase? value);
   @override
   int get zoom;
   set zoom(int value);
@@ -557,7 +556,7 @@ abstract class _$$LayerPointCopyWith<T, $Res>
       double y,
       double wX,
       double wY,
-      MutableClusterDataBase? clusterData,
+      ClusterDataBase? clusterData,
       int zoom,
       int lowestZoom,
       String? parentUuid});
@@ -615,7 +614,7 @@ class __$$LayerPointCopyWithImpl<T, $Res>
       clusterData: clusterData == freezed
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
-              as MutableClusterDataBase?,
+              as ClusterDataBase?,
       zoom: zoom == freezed
           ? _value.zoom
           : zoom // ignore: cast_nullable_to_non_nullable
@@ -661,7 +660,7 @@ class _$LayerPoint<T> extends LayerPoint<T> {
   @override
   double wY;
   @override
-  MutableClusterDataBase? clusterData;
+  ClusterDataBase? clusterData;
   @override
   @JsonKey()
   int zoom;
@@ -691,7 +690,7 @@ class _$LayerPoint<T> extends LayerPoint<T> {
             double wX,
             double wY,
             List<T> originalPoints,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)
@@ -703,7 +702,7 @@ class _$LayerPoint<T> extends LayerPoint<T> {
             double y,
             double wX,
             double wY,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)
@@ -723,7 +722,7 @@ class _$LayerPoint<T> extends LayerPoint<T> {
             double wX,
             double wY,
             List<T> originalPoints,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -735,7 +734,7 @@ class _$LayerPoint<T> extends LayerPoint<T> {
             double y,
             double wX,
             double wY,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -755,7 +754,7 @@ class _$LayerPoint<T> extends LayerPoint<T> {
             double wX,
             double wY,
             List<T> originalPoints,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -767,7 +766,7 @@ class _$LayerPoint<T> extends LayerPoint<T> {
             double y,
             double wX,
             double wY,
-            MutableClusterDataBase? clusterData,
+            ClusterDataBase? clusterData,
             int zoom,
             int lowestZoom,
             String? parentUuid)?
@@ -821,7 +820,7 @@ abstract class LayerPoint<T> extends LayerElement<T> {
       required double y,
       required double wX,
       required double wY,
-      MutableClusterDataBase? clusterData,
+      ClusterDataBase? clusterData,
       int zoom,
       int lowestZoom,
       String? parentUuid}) = _$LayerPoint<T>;
@@ -844,8 +843,8 @@ abstract class LayerPoint<T> extends LayerElement<T> {
   double get wY;
   set wY(double value);
   @override
-  MutableClusterDataBase? get clusterData;
-  set clusterData(MutableClusterDataBase? value);
+  ClusterDataBase? get clusterData;
+  set clusterData(ClusterDataBase? value);
   @override
   int get zoom;
   set zoom(int value);
