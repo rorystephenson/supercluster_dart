@@ -49,8 +49,6 @@ class SuperclusterMutable<T> {
       (i) => Layer<T>(
         zoom: i,
         searchRadius: util.searchRadius(radius ?? 40, extent ?? 512, i),
-        getX: getX,
-        getY: getY,
         maxPoints: maxEntries,
       ),
     );
@@ -93,8 +91,8 @@ class SuperclusterMutable<T> {
 
   void remove(T point) {
     final layerModifications = <LayerModification<T>>[];
-    layerModifications
-        .add(trees[maxZoom + 1].removePointWithoutClustering(point));
+    layerModifications.add(trees[maxZoom + 1]
+        .removePointWithoutClustering(_initializePoint(point)));
     if (layerModifications.single.removed.isEmpty) return;
 
     for (int z = maxZoom; z >= minZoom; z--) {
@@ -114,12 +112,6 @@ class SuperclusterMutable<T> {
 
       trees[z]
           .rebuildLayer(_layerClusterer, trees[z + 1], layerRemoval.removed);
-    }
-
-    final counts = trees.map((e) => e.numPoints).toSet();
-
-    if (counts.length != 1) {
-      throw 'hmm';
     }
   }
 
@@ -175,12 +167,6 @@ class SuperclusterMutable<T> {
 
       trees[z]
           .rebuildLayer(_layerClusterer, trees[z + 1], layerRemoval.removed);
-    }
-
-    final counts = trees.map((e) => e.numPoints).toSet();
-
-    if (counts.length != 1) {
-      throw 'hmm';
     }
   }
 

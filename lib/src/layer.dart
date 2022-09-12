@@ -3,19 +3,13 @@ import 'package:rbush/rbush.dart';
 import 'package:supercluster/src/layer_element.dart';
 import 'package:supercluster/src/rbush_point.dart';
 
-import 'cluster_data_base.dart';
 import 'layer_clusterer.dart';
 import 'layer_modification.dart';
-import 'util.dart' as util;
 
 class Layer<T> {
   final int zoom;
   final double searchRadius;
-
   final int maxPoints;
-  final double Function(T) getX;
-  final double Function(T) getY;
-  final ClusterDataBase Function(T point)? extractClusterData;
 
   final RBush<LayerElement<T>> _innerTree;
 
@@ -23,9 +17,6 @@ class Layer<T> {
     required this.zoom,
     required this.searchRadius,
     required this.maxPoints,
-    required this.getX,
-    required this.getY,
-    this.extractClusterData,
   }) : _innerTree = RBush(maxPoints);
 
   void load(List<RBushElement<LayerElement<T>>> elements) {
@@ -43,20 +34,12 @@ class Layer<T> {
     return layerPoint;
   }
 
-  LayerModification<T> removePointWithoutClustering(T point) {
-    final x = util.lngX(getX(point));
-    final y = util.latY(getY(point));
-
-    final searchResults = _innerTree.search(RBushBox(
-      minX: x,
-      minY: y,
-      maxX: x,
-      maxY: y,
-    ));
+  LayerModification<T> removePointWithoutClustering(LayerPoint<T> point) {
+    final searchResults = _innerTree.search(point.positionRBushPoint());
 
     final index = searchResults.indexWhere((element) {
       final data = element.data;
-      return data is LayerPoint<T> && data.originalPoint == point;
+      return data is LayerPoint<T> && data.originalPoint == point.originalPoint;
     });
 
     if (index == -1) return LayerModification<T>(layer: this);
@@ -149,9 +132,8 @@ class Layer<T> {
   }
 
   List<LayerElement<T>> elementsToClusterWith(LayerPoint<T> layerPoint) {
-    final nearbyElements = _innerTree.search(layerPoint
-        .positionRBushPoint()
-        .expandBy(searchRadius)); // TODO Should be wX?
+    final nearbyElements = _innerTree
+        .search(layerPoint.positionRBushPoint().expandBy(searchRadius));
 
     if (nearbyElements.isEmpty) {
       return [];

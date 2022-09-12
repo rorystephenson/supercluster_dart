@@ -5,7 +5,7 @@ import 'package:supercluster/src/layer_element.dart';
 import 'package:supercluster/src/supercluster_mutable.dart';
 import 'package:test/test.dart';
 
-import 'layer_test.dart';
+import 'test_point.dart';
 
 void main() {
   dynamic loadFixture(String name) => jsonDecode(
