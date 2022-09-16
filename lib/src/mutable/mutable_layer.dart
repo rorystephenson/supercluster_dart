@@ -10,15 +10,13 @@ import 'mutable_layer_element.dart';
 class MutableLayer<T> {
   final int zoom;
   final double searchRadius;
-  final int maxPoints;
 
   final RBush<MutableLayerElement<T>> _innerTree;
 
   MutableLayer({
     required this.zoom,
     required this.searchRadius,
-    required this.maxPoints,
-  }) : _innerTree = RBush(maxPoints);
+  }) : _innerTree = RBush(16);
 
   void load(List<RBushElement<MutableLayerElement<T>>> elements) {
     _innerTree.load(elements);

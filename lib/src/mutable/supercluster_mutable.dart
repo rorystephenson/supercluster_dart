@@ -15,7 +15,6 @@ import 'mutable_layer_element.dart';
 class SuperclusterMutable<T> extends Supercluster<T> {
   final double Function(T) getX;
   final double Function(T) getY;
-  final int maxEntries;
 
   final int minZoom;
   final int maxZoom;
@@ -39,7 +38,6 @@ class SuperclusterMutable<T> extends Supercluster<T> {
   SuperclusterMutable({
     required this.getX,
     required this.getY,
-    required this.maxEntries,
     String Function()? generateUuid,
     int? minZoom,
     int? maxZoom,
@@ -65,28 +63,31 @@ class SuperclusterMutable<T> extends Supercluster<T> {
       (i) => MutableLayer<T>(
         zoom: i,
         searchRadius: util.searchRadius(radius ?? 40, extent ?? 512, i),
-        maxPoints: maxEntries,
       ),
     );
   }
 
   void load(List<T> points) {
     // generate a cluster object for each point
+    print('building initial points');
     var clusters = points
         .map((point) => _initializePoint(point).positionRBushPoint())
         .toList();
 
+    print('loading initial points to base layer');
     trees[maxZoom + 1].load(clusters);
 
     // cluster points on max zoom, then cluster the results on previous zoom, etc.;
     // results in a cluster hierarchy across zoom levels
     for (var z = maxZoom; z >= minZoom; z--) {
+      print('cluster layer $z');
       clusters = _layerClusterer
           .cluster(clusters, z, trees[z + 1])
           .map((c) => c.positionRBushPoint())
           .toList(); // create a new set of clusters for the zoom
       trees[z].load(clusters); // index input points into an R-tree
     }
+    print('finished clustering');
     _onPointsChanged();
   }
 

@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:supercluster/supercluster.dart';
 import 'package:test/test.dart';
+import 'package:timing/timing.dart';
+
+import 'test_point.dart';
 
 void main() {
   dynamic loadFixture(String name) => jsonDecode(
@@ -170,5 +174,30 @@ void main() {
     ], maxZoom: 20, extent: 8192, radius: 16);
 
     expect(index.trees[20]!.length, 1);
+  });
+
+  test('clustering many points', () {
+    final random = Random(42);
+
+    print('Generating test points');
+    final testPoints = List<TestPoint>.generate(
+      10000,
+      (_) => TestPoint(
+        longitude: (random.nextDouble() * 360) - 180,
+        latitude: (random.nextDouble() * 180) - 90,
+      ),
+    );
+
+    print('Building clusters');
+    final tracker = SyncTimeTracker();
+    tracker.track(
+      () => SuperclusterImmutable(
+        points: testPoints,
+        getX: TestPoint.getX,
+        getY: TestPoint.getY,
+        minPoints: 1,
+      ),
+    );
+    print('Clusters built, took: ${tracker.duration}');
   });
 }

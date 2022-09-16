@@ -28,7 +28,6 @@ void main() {
   }) =>
       SuperclusterMutable<Map<String, dynamic>>(
         extractClusterData: extractClusterData,
-        maxEntries: maxEntries ?? points.length,
         getX: (json) {
           return json['geometry']?['coordinates'][0].toDouble();
         },
@@ -48,7 +47,6 @@ void main() {
     int? maxZoom,
   }) =>
       SuperclusterMutable<TestPoint>(
-        maxEntries: maxEntries ?? points.length,
         getX: TestPoint.getX,
         getY: TestPoint.getY,
         radius: radius,
@@ -262,7 +260,6 @@ void main() {
 
     final index = SuperclusterMutable<TestPoint2>(
       extractClusterData: (testPoint2) => TestClusterData(testPoint2.version),
-      maxEntries: features.length,
       getX: (testPoint2) => testPoint2.longitude,
       getY: (testPoint2) => testPoint2.latitude,
     )..load(testPoints);
@@ -336,48 +333,4 @@ void main() {
 
     expect(clusterDataPerLayer, equals(clusterDataPerLayerAfterModification2));
   });
-}
-
-class TestClusterData extends ClusterDataBase {
-  final int sum;
-
-  TestClusterData(this.sum);
-
-  @override
-  ClusterDataBase combine(covariant TestClusterData data) =>
-      TestClusterData(sum + data.sum);
-}
-
-class TestPoint2 {
-  final int version;
-  final String name;
-  final double latitude;
-  final double longitude;
-
-  TestPoint2({
-    this.version = 1,
-    required this.name,
-    required this.latitude,
-    required this.longitude,
-  });
-
-  TestPoint2 copyWithVersion(int version) => TestPoint2(
-        version: version,
-        name: name,
-        longitude: longitude,
-        latitude: latitude,
-      );
-
-  factory TestPoint2.fromFeature(Map<String, dynamic> feature) {
-    final coordinates = feature['geometry']?['coordinates'];
-    final x = coordinates[0].toDouble();
-    final y = coordinates[1].toDouble();
-    final name = feature['properties']['name'];
-
-    return TestPoint2(
-      name: name,
-      longitude: x,
-      latitude: y,
-    );
-  }
 }

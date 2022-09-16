@@ -17,3 +17,4 @@ dev_dependencies:
   freezed: ^2.1.0+1
   lints: ^2.0.0
   test: ^1.21.1
+  timing: ^1.0.0
