@@ -1,53 +1,60 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:rbush/rbush.dart';
-import 'package:supercluster/src/layer_element.dart';
-import 'package:supercluster/src/rbush_point.dart';
-import 'package:supercluster/supercluster.dart';
+import 'package:supercluster/src/mutable/layer_element_modification.dart';
+import 'package:supercluster/src/mutable/rbush_point.dart';
 
 import 'layer_clusterer.dart';
 import 'layer_modification.dart';
+import 'mutable_layer_element.dart';
 
-class Layer<T> {
+class MutableLayer<T> {
   final int zoom;
   final double searchRadius;
   final int maxPoints;
 
-  final RBush<LayerElement<T>> _innerTree;
+  final RBush<MutableLayerElement<T>> _innerTree;
 
-  Layer({
+  MutableLayer({
     required this.zoom,
     required this.searchRadius,
     required this.maxPoints,
   }) : _innerTree = RBush(maxPoints);
 
-  void load(List<RBushElement<LayerElement<T>>> elements) {
+  void load(List<RBushElement<MutableLayerElement<T>>> elements) {
     _innerTree.load(elements);
   }
 
-  List<RBushElement<LayerElement<T>>> search(RBushBox rBushBox) {
+  List<RBushElement<MutableLayerElement<T>>> search(RBushBox rBushBox) {
     return _innerTree.search(rBushBox);
   }
 
-  LayerPoint<T> addPointWithoutClustering(LayerPoint<T> layerPoint) {
-    layerPoint.zoom = zoom;
+  void addPointWithoutClustering(
+    MutableLayerPoint<T> layerPoint, {
+    bool updateZooms = true,
+  }) {
+    if (updateZooms) {
+      layerPoint.lowestZoom = zoom;
+      layerPoint.visitedAtZoom = zoom;
+    }
 
     _innerTree.insert(layerPoint.positionRBushPoint());
-    return layerPoint;
   }
 
-  LayerModification<T> removePointWithoutClustering(LayerPoint<T> point) {
+  LayerModification<T> removePointWithoutClustering(
+      MutableLayerPoint<T> point) {
     final searchResults = _innerTree.search(point.positionRBushPoint());
 
     final index = searchResults.indexWhere((element) {
       final data = element.data;
-      return data is LayerPoint<T> && data.originalPoint == point.originalPoint;
+      return data is MutableLayerPoint<T> &&
+          data.originalPoint == point.originalPoint;
     });
 
     if (index == -1) return LayerModification<T>(layer: this);
 
     _innerTree.remove(searchResults[index]);
     return LayerModification<T>(layer: this)
-      ..recordRemoval(searchResults[index].data as LayerPoint<T>);
+      ..recordRemoval(searchResults[index].data as MutableLayerPoint<T>);
   }
 
   LayerModification<T> removeElementsAndAncestors(
@@ -86,7 +93,10 @@ class Layer<T> {
 
             for (final potentialChild in potentialChildren) {
               if (potentialChild.data.parentUuid == elementData.uuid) {
-                potentialChild.data.zoom = previousModification.layer.zoom;
+                potentialChild.data.visitedAtZoom =
+                    previousModification.layer.zoom;
+                potentialChild.data.highestZoom =
+                    previousModification.layer.zoom;
                 result.recordOrphan(potentialChild.data);
               }
             }
@@ -95,7 +105,9 @@ class Layer<T> {
                 .search(elementWithinRemovalBounds)
                 .where((element) => element.data.uuid == elementData.uuid);
             if (matchingElement.isNotEmpty) {
-              matchingElement.single.data.zoom =
+              matchingElement.single.data.visitedAtZoom =
+                  previousModification.layer.zoom;
+              matchingElement.single.data.highestZoom =
                   previousModification.layer.zoom;
             }
           }
@@ -113,8 +125,8 @@ class Layer<T> {
 
   void rebuildLayer(
     LayerClusterer<T> layerClusterer,
-    Layer<T> previousLayer,
-    List<LayerElement<T>> removed,
+    MutableLayer<T> previousLayer,
+    List<MutableLayerElement<T>> removed,
   ) {
     // Must search withing searchRadius * 2 because the a parent of a removed
     // layer element may be that far away if it's weighted position is as far
@@ -122,7 +134,7 @@ class Layer<T> {
     final removalBounds = _boundary(removed).expandBy(searchRadius * 2);
     final points = previousLayer
         .search(removalBounds)
-        .where((element) => element.data.zoom > zoom)
+        .where((element) => element.data.visitedAtZoom > zoom)
         .map((e) => e.data.positionRBushPoint())
         .toList();
     final result = layerClusterer
@@ -132,7 +144,8 @@ class Layer<T> {
     load(result);
   }
 
-  List<LayerElement<T>> elementsToClusterWith(LayerPoint<T> layerPoint) {
+  List<MutableLayerElement<T>> elementsToClusterWith(
+      MutableLayerPoint<T> layerPoint) {
     final nearbyElements = _innerTree
         .search(layerPoint.positionRBushPoint().expandBy(searchRadius));
 
@@ -140,8 +153,8 @@ class Layer<T> {
       return [];
     }
 
-    final clusterIndex =
-        nearbyElements.indexWhere((element) => element.data is LayerCluster<T>);
+    final clusterIndex = nearbyElements
+        .indexWhere((element) => element.data is MutableLayerCluster<T>);
     if (clusterIndex != -1) {
       return [nearbyElements[clusterIndex].data];
     } else {
@@ -149,7 +162,8 @@ class Layer<T> {
     }
   }
 
-  List<LayerElement<T>> descendants(LayerCluster<T> layerCluster) {
+  List<MutableLayerElement<T>> descendants(
+      MutableLayerCluster<T> layerCluster) {
     return _innerTree
         .search(layerCluster.positionRBushPoint().expandBy(searchRadius * 2))
         .where((element) =>
@@ -160,20 +174,16 @@ class Layer<T> {
   }
 
   @visibleForTesting
-  int get numLayerElements => _innerTree.all().length;
-
-  @visibleForTesting
   int get numPoints => _innerTree.all().fold(
         0,
         (previousValue, element) => previousValue + element.data.numPoints,
       );
 
-  @visibleForTesting
-  List<LayerElement<T>> all() {
-    return _innerTree.all().map((e) => e.data).toList();
+  Iterable<MutableLayerElement<T>> all() {
+    return _innerTree.all().map((e) => e.data);
   }
 
-  RBushBox _boundary(List<LayerElement<T>> clusterOrPoints) {
+  RBushBox _boundary(List<MutableLayerElement<T>> clusterOrPoints) {
     RBushBox result = clusterOrPoints.first.positionRBushPoint();
 
     for (final clusterOrPoint in clusterOrPoints.skip(1)) {
@@ -181,5 +191,49 @@ class Layer<T> {
     }
 
     return result;
+  }
+
+  LayerElementModification<T> modifyElementAndAncestors(
+      LayerClusterer<T> layerClusterer,
+      LayerElementModification<T> lastModification) {
+    final removalBounds = _boundary([lastModification.oldLayerElement])
+        .expandBy(searchRadius * 2);
+    final parentOrMatchingRBushElement = search(removalBounds).firstWhere(
+        (element) =>
+            element.data.uuid == lastModification.oldLayerElement.uuid ||
+            element.data.uuid == lastModification.oldLayerElement.parentUuid);
+
+    if (parentOrMatchingRBushElement.data.uuid ==
+        lastModification.oldLayerElement.uuid) {
+      _innerTree.remove(lastModification.oldLayerElement.positionRBushPoint());
+      _innerTree.insert(lastModification.newLayerElement.positionRBushPoint());
+      return LayerElementModification(
+        layer: this,
+        oldLayerElement: lastModification.oldLayerElement,
+        newLayerElement: lastModification.newLayerElement,
+      );
+    } else {
+      _innerTree.remove(parentOrMatchingRBushElement);
+      final removedElement =
+          parentOrMatchingRBushElement.data as MutableLayerCluster<T>;
+      final updatedClusterData = removedElement.clusterData == null
+          ? null
+          : lastModification.layer
+              .search(parentOrMatchingRBushElement.expandBy(searchRadius * 2))
+              .where(
+                  (element) => element.data.parentUuid == removedElement.uuid)
+              .map((e) => e.data.clusterData)
+              .reduce((value, element) => value!.combine(element!));
+
+      final newLayerElement = removedElement.copyWith(
+        clusterData: updatedClusterData,
+      );
+      _innerTree.insert(newLayerElement.positionRBushPoint());
+      return LayerElementModification(
+        layer: this,
+        oldLayerElement: removedElement,
+        newLayerElement: newLayerElement,
+      );
+    }
   }
 }

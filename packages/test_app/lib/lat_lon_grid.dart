@@ -115,15 +115,9 @@ class _LatLonPainter extends CustomPainter {
       if (pixelPos + textPainterMaxW >= 0.0 &&
           pixelPos - textPainterMaxW <= w) {
         if (options.showLabels) {
-          if (true) {
-            // add to list
-            lonGridLabels.add(_GridLabel(lonPos[i], inc[1].toInt(), pixelPos,
-                h - options.offsetLonLabelsBottom - textPainterH, false));
-          } else {
-            // draw labels
-            drawText(canvas, lonPos[i], inc[1].toInt(), pixelPos,
-                h - options.offsetLonLabelsBottom - textPainterH, false);
-          }
+          // add to list
+          lonGridLabels.add(_GridLabel(lonPos[i], inc[1].toInt(), pixelPos,
+              h - options.offsetLonLabelsBottom - textPainterH, false));
         }
       }
     }
@@ -149,15 +143,9 @@ class _LatLonPainter extends CustomPainter {
       // label logic
       if (pixelPos - textPainterMaxW <= h && pixelPos + textPainterMaxW >= 0) {
         if (options.showLabels) {
-          if (true) {
-            // add to list
-            latGridLabels.add(_GridLabel(latPos[i], inc[1].toInt(),
-                options.offsetLatLabelsLeft, pixelPos, true));
-          } else {
-            // draw labels
-            drawText(canvas, latPos[i], inc[1].toInt(),
-                options.offsetLatLabelsLeft, pixelPos, true);
-          }
+          // add to list
+          latGridLabels.add(_GridLabel(latPos[i], inc[1].toInt(),
+              options.offsetLatLabelsLeft, pixelPos, true));
         }
       }
     }
@@ -200,7 +188,7 @@ class _LatLonPainter extends CustomPainter {
   // can be used for a single item or list of items.
   void canvasCall(Canvas canvas, List<_GridLabel> list) {
     // check for at least on entry
-    assert(list.length > 0);
+    assert(list.isNotEmpty);
 
     // check for longitude and enabled rotation
     if (!list[0].isLat && options.rotateLonLabels) {

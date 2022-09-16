@@ -124,7 +124,7 @@ class _TestAppMapState extends State<TestAppMap> {
                         });
                       }),
                   children: [
-                    MapColorBackground(),
+                    const MapColorBackground(),
                     const LatLonGrid(),
                     TestAppMarkerLayer(
                       key: _markerLayerKey,

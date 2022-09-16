@@ -82,15 +82,13 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
     return StreamBuilder<void>(
       stream: mapState.onMoved,
       builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-        final points = supercluster.getClusters(
-          [
-            paddedBounds.west,
-            paddedBounds.south,
-            paddedBounds.east,
-            paddedBounds.north,
-          ],
+        final points = supercluster.search(
+          paddedBounds.west,
+          paddedBounds.south,
+          paddedBounds.east,
+          paddedBounds.north,
           mapState.zoom.ceil(),
-        ).map((e) => e.data);
+        );
 
         List<Widget> markers = [];
 

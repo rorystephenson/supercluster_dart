@@ -6,7 +6,7 @@ void main() {
     CustomMapPoint(name: 'second', lat: 46.4, lon: 0.9),
     CustomMapPoint(name: 'third', lat: 45, lon: 19),
   ];
-  final supercluster = Supercluster<CustomMapPoint>(
+  final supercluster = SuperclusterImmutable<CustomMapPoint>(
     points: points,
     getX: (p) => p.lon,
     getY: (p) => p.lat,
@@ -14,14 +14,13 @@ void main() {
         ClusterNameData([customMapPoint.name]),
   );
 
-  final clustersAndPoints =
-      supercluster.getClustersAndPoints(0.0, 43, 8, 47, 10).map(
-            (e) => e.map(
-              cluster: (cluster) =>
-                  'A cluster of: ${(cluster.clusterData as ClusterNameData).pointNames.join(', ')}',
-              mapPoint: (mapPoint) => mapPoint.originalPoint.toString(),
-            ),
-          );
+  final clustersAndPoints = supercluster.search(0.0, 43, 8, 47, 10).map(
+        (e) => e.map(
+          cluster: (cluster) =>
+              'A cluster of: ${(cluster.clusterData as ClusterNameData).pointNames.join(', ')}',
+          point: (mapPoint) => mapPoint.originalPoint.toString(),
+        ),
+      );
 
   print(clustersAndPoints.join(', '));
   // Output: result: first (46.0, 1.5), second (46.4, 0.9)

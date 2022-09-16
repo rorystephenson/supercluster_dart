@@ -12,7 +12,7 @@ void main() {
       );
 
   final features = List.castFrom<dynamic, Map<String, dynamic>>(
-      loadFixture('places-old.json')['features']);
+      List.unmodifiable(loadFixture('places-old.json')['features']));
 
   int _compareFeatures(
           Map<String, dynamic> featureA, Map<String, dynamic> featureB) =>
@@ -137,7 +137,7 @@ void main() {
 
       final sortedPoints = List.from(index.trees[index.maxZoom + 1]
           .all()
-          .map((e) => (e as LayerPoint).originalPoint))
+          .map((e) => (e as MutableLayerPoint).originalPoint))
         ..sort((a, b) => jsonEncode(a).compareTo(jsonEncode(b)));
       expect(
         sortedPoints,
@@ -239,10 +239,11 @@ void main() {
 
     final featuresInIndex = index.trees.last
         .all()
-        .map((e) => (e as LayerPoint<Map<String, dynamic>>).originalPoint)
+        .map(
+            (e) => (e as MutableLayerPoint<Map<String, dynamic>>).originalPoint)
         .toList()
       ..sort(_compareFeatures);
-    final expectation = features
+    final expectation = List<Map<String, dynamic>>.from(features)
       ..remove(features[10])
       ..sort(_compareFeatures);
     expect(featuresInIndex, equals(expectation));
@@ -250,18 +251,133 @@ void main() {
     for (final tree in index.trees) {
       for (final layerElement in tree.all()) {
         expect(layerElement.numPoints,
-            (layerElement.clusterData as TestClusterData).numPoints);
+            (layerElement.clusterData as TestClusterData).sum);
       }
     }
+  });
+
+  test('modify point data', () {
+    final testPoints = List<TestPoint2>.unmodifiable(
+        features.map(TestPoint2.fromFeature).toList());
+
+    final index = SuperclusterMutable<TestPoint2>(
+      extractClusterData: (testPoint2) => TestClusterData(testPoint2.version),
+      maxEntries: features.length,
+      getX: (testPoint2) => testPoint2.longitude,
+      getY: (testPoint2) => testPoint2.latitude,
+    )..load(testPoints);
+
+    final clusterDataPerLayer = index.trees
+        .map((e) =>
+            e.all().map((e) => (e.clusterData as TestClusterData).sum).toList()
+              ..sort())
+        .toList();
+
+    final expectedLayerElementCounts = [
+      32,
+      62,
+      100,
+      137,
+      149,
+      159,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162
+    ];
+
+    final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
+    expect(pointCountsAtZooms, expectedLayerElementCounts);
+
+    final modifiedPoint = testPoints[10].copyWithVersion(2);
+    index.modifyPointData(testPoints[10], modifiedPoint);
+    final pointCountsAtZoomsAfter =
+        index.trees.map((e) => e.all().length).toList();
+    expect(pointCountsAtZoomsAfter, expectedLayerElementCounts);
+    final clusterDataPerLayerAfterModification = index.trees
+        .map((e) =>
+            e.all().map((e) => (e.clusterData as TestClusterData).sum).toList()
+              ..sort())
+        .toList();
+
+    for (int i = clusterDataPerLayer.length - 1; i >= 0; i--) {
+      int differences = 0;
+
+      for (int j = 0; j < clusterDataPerLayer[i].length; j++) {
+        final left = clusterDataPerLayer[i][j];
+        final right = clusterDataPerLayerAfterModification[i][j];
+        if (left == right) continue;
+        expect(left, right - 1);
+        differences++;
+      }
+
+      expect(differences, 1, reason: 'Expected 1 difference at zoom $i');
+    }
+
+    expect(pointCountsAtZooms, expectedLayerElementCounts);
+
+    index.modifyPointData(modifiedPoint, modifiedPoint.copyWithVersion(1));
+    final pointCountsAtZoomsAfter2 =
+        index.trees.map((e) => e.all().length).toList();
+    expect(pointCountsAtZoomsAfter2, expectedLayerElementCounts);
+    final clusterDataPerLayerAfterModification2 = index.trees
+        .map((e) =>
+            e.all().map((e) => (e.clusterData as TestClusterData).sum).toList()
+              ..sort())
+        .toList();
+
+    expect(clusterDataPerLayer, equals(clusterDataPerLayerAfterModification2));
   });
 }
 
 class TestClusterData extends ClusterDataBase {
-  final int numPoints;
+  final int sum;
 
-  TestClusterData(this.numPoints);
+  TestClusterData(this.sum);
 
   @override
   ClusterDataBase combine(covariant TestClusterData data) =>
-      TestClusterData(numPoints + data.numPoints);
+      TestClusterData(sum + data.sum);
+}
+
+class TestPoint2 {
+  final int version;
+  final String name;
+  final double latitude;
+  final double longitude;
+
+  TestPoint2({
+    this.version = 1,
+    required this.name,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  TestPoint2 copyWithVersion(int version) => TestPoint2(
+        version: version,
+        name: name,
+        longitude: longitude,
+        latitude: latitude,
+      );
+
+  factory TestPoint2.fromFeature(Map<String, dynamic> feature) {
+    final coordinates = feature['geometry']?['coordinates'];
+    final x = coordinates[0].toDouble();
+    final y = coordinates[1].toDouble();
+    final name = feature['properties']['name'];
+
+    return TestPoint2(
+      name: name,
+      longitude: x,
+      latitude: y,
+    );
+  }
 }

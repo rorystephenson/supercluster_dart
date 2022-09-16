@@ -1,111 +1,34 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:supercluster/src/cluster_data_base.dart';
-import 'package:supercluster/src/util.dart' as util;
-import 'package:supercluster/src/uuid_stub.dart';
 
-import 'rbush_point.dart';
+import 'util.dart' as util;
 
-part 'layer_element.freezed.dart';
+mixin LayerElement<T> {
+  String get uuid;
 
-@unfreezed
-class LayerElement<T> with _$LayerElement<T> {
-  LayerElement._();
+  int get lowestZoom;
 
-  factory LayerElement.cluster({
-    required String uuid,
-    required double x,
-    required double y,
-    required double wX,
-    required double wY,
-    required List<T> originalPoints,
-    ClusterDataBase? clusterData,
-    @Default(util.maxInt) int zoom,
-    @Default(util.maxInt) int lowestZoom,
-    String? parentUuid,
-  }) = LayerCluster<T>;
+  int get highestZoom;
 
-  factory LayerElement.point({
-    required String uuid,
-    required final T originalPoint,
-    required double x,
-    required double y,
-    required double wX,
-    required double wY,
-    ClusterDataBase? clusterData,
-    @Default(util.maxInt) int zoom,
-    @Default(util.maxInt) int lowestZoom,
-    String? parentUuid,
-  }) = LayerPoint<T>;
+  double get x;
 
-  static LayerCluster<T> initializeCluster<T>({
-    required String uuid,
-    required double x,
-    required double y,
-    required List<T> points,
-    required int zoom,
-    ClusterDataBase? clusterData,
-  }) {
-    return LayerCluster<T>(
-      uuid: uuid,
-      x: x,
-      y: y,
-      wX: x,
-      wY: y,
-      zoom: zoom,
-      lowestZoom: zoom,
-      originalPoints: points,
-      clusterData: clusterData,
-    );
-  }
+  double get y;
 
-  static LayerPoint<T> initializePoint<T>({
-    required T point,
-    required double lon,
-    required double lat,
-    required int zoom,
-    ClusterDataBase? clusterData,
-  }) {
-    final x = util.lngX(lon);
-    final y = util.latY(lat);
-
-    return LayerPoint(
-      uuid: UuidStub.v4(),
-      originalPoint: point,
-      x: x,
-      y: y,
-      wX: x,
-      wY: y,
-      zoom: zoom,
-      lowestZoom: zoom,
-      clusterData: clusterData,
-    );
-  }
-
-  int get numPoints => map(
-      cluster: (cluster) => cluster.originalPoints.length, point: (point) => 1);
-
-  List<T> get points => map(
-      cluster: (cluster) => cluster.originalPoints,
-      point: (point) => [point.originalPoint]);
-
-  static double getX(LayerElement clusterOrMapPoint) => clusterOrMapPoint.x;
-
-  static double getY(LayerElement clusterOrMapPoint) => clusterOrMapPoint.y;
-
-  RBushPoint<LayerElement<T>> positionRBushPoint() {
-    return RBushPoint(x: x, y: y, data: this);
-  }
-
-  RBushPoint<LayerElement<T>> weightedPositionRBushPoint() {
-    return RBushPoint(x: wX, y: wY, data: this);
-  }
-
-  String get summary =>
-      '${map(cluster: (cluster) => 'cluster', point: (point) => 'point')} ($uuid - $parentUuid)';
+  TResult handle<TResult extends Object?>({
+    required TResult Function(LayerCluster<T> cluster) cluster,
+    required TResult Function(LayerPoint<T> point) point,
+  });
 }
 
-extension LayerClusterLatLngExtension<T> on LayerCluster<T> {
+mixin LayerCluster<T> on LayerElement<T> {
+  ClusterDataBase? clusterData;
+
+  int get childPointCount;
+
   double get latitude => util.yLat(y);
 
   double get longitude => util.xLng(x);
+}
+
+mixin LayerPoint<T> on LayerElement<T> {
+  T get originalPoint;
 }

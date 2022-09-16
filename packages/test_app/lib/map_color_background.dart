@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
 class MapColorBackground extends StatelessWidget {
+  const MapColorBackground({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return TileLayerWidget(
