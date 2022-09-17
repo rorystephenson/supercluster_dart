@@ -56,11 +56,12 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
     });
 
     supercluster = SuperclusterMutable<TestPoint>(
+      points: widget.initialPoints,
       getX: TestPoint.getX,
       getY: TestPoint.getY,
       maxZoom: widget.maxZoom,
       minZoom: widget.minZoom,
-    )..load(widget.initialPoints);
+    );
   }
 
   @override

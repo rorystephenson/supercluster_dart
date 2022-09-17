@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:rbush/rbush.dart';
 import 'package:supercluster/src/mutable/layer_clusterer.dart';
 import 'package:supercluster/src/mutable/mutable_layer.dart';
@@ -13,21 +14,11 @@ import 'layer_modification.dart';
 import 'mutable_layer_element.dart';
 
 class SuperclusterMutable<T> extends Supercluster<T> {
-  final double Function(T) getX;
-  final double Function(T) getY;
-
-  final int minZoom;
-  final int maxZoom;
-  final int radius;
-  final int extent;
-  final int nodeSize;
+  @visibleForTesting
+  late final List<MutableLayer<T>> trees;
+  late final LayerClusterer<T> _layerClusterer;
 
   late final String Function() generateUuid;
-
-  final ClusterDataBase Function(T point)? extractClusterData;
-
-  final LayerClusterer<T> _layerClusterer;
-  late final List<MutableLayer<T>> trees;
 
   /// An optional function which will be called whenever the aggregated cluster
   /// data of all points changes. Note that this will only be calculated if the
@@ -36,58 +27,54 @@ class SuperclusterMutable<T> extends Supercluster<T> {
       onClusterDataChange;
 
   SuperclusterMutable({
-    required this.getX,
-    required this.getY,
+    required List<T> points,
+    required super.getX,
+    required super.getY,
     String Function()? generateUuid,
-    int? minZoom,
-    int? maxZoom,
-    int? radius,
-    int? extent,
-    int? nodeSize,
-    this.extractClusterData,
+    super.minZoom,
+    super.maxZoom,
+    super.radius,
+    super.extent,
+    super.nodeSize = 16,
+    super.extractClusterData,
     this.onClusterDataChange,
-  })  : minZoom = minZoom ?? 0,
-        maxZoom = maxZoom ?? 16,
-        radius = radius ?? 40,
-        extent = extent ?? 512,
-        nodeSize = nodeSize ?? 64,
-        _layerClusterer = LayerClusterer(
-          radius: radius ?? 40,
-          extent: extent ?? 512,
-          extractClusterData: extractClusterData,
-          generateUuid: generateUuid ?? () => Uuid().v4(),
-        ),
-        generateUuid = generateUuid ?? (() => Uuid().v4()) {
+  }) : generateUuid = generateUuid ?? (() => Uuid().v4()) {
+    _layerClusterer = LayerClusterer(
+      radius: radius,
+      extent: extent,
+      extractClusterData: extractClusterData,
+      generateUuid: generateUuid ?? () => Uuid().v4(),
+    );
+
     trees = List.generate(
-      (maxZoom ?? 16) + 2,
+      (maxZoom) + 2,
       (i) => MutableLayer<T>(
+        nodeSize: nodeSize,
         zoom: i,
-        searchRadius: util.searchRadius(radius ?? 40, extent ?? 512, i),
+        searchRadius: util.searchRadius(radius, extent, i),
       ),
     );
+    load(points);
   }
 
+  /// Replace any existing points with [points] and form clusters.
   void load(List<T> points) {
     // generate a cluster object for each point
-    print('building initial points');
     var clusters = points
         .map((point) => _initializePoint(point).positionRBushPoint())
         .toList();
 
-    print('loading initial points to base layer');
     trees[maxZoom + 1].load(clusters);
 
     // cluster points on max zoom, then cluster the results on previous zoom, etc.;
     // results in a cluster hierarchy across zoom levels
     for (var z = maxZoom; z >= minZoom; z--) {
-      print('cluster layer $z');
       clusters = _layerClusterer
           .cluster(clusters, z, trees[z + 1])
           .map((c) => c.positionRBushPoint())
           .toList(); // create a new set of clusters for the zoom
       trees[z].load(clusters); // index input points into an R-tree
     }
-    print('finished clustering');
     _onPointsChanged();
   }
 

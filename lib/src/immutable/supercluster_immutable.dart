@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:kdbush/kdbush.dart';
 import 'package:supercluster/src/immutable/immutable_layer_element.dart';
 import 'package:supercluster/src/util.dart' as util;
@@ -8,39 +9,23 @@ import '../cluster_data_base.dart';
 import '../supercluster.dart';
 
 class SuperclusterImmutable<T> extends Supercluster<T> {
-  final double? Function(T) getX;
-  final double? Function(T) getY;
-
-  final int minZoom;
-  final int maxZoom;
-  final int minPoints;
-  final int radius;
-  final int extent;
-  final int nodeSize;
-
-  final ClusterDataBase Function(T point)? extractClusterData;
-
-  final List<KDBush<ImmutableLayerElement<T>, double>?> trees;
+  @visibleForTesting
+  late final List<KDBush<ImmutableLayerElement<T>, double>?> trees;
   List<T>? points;
 
   SuperclusterImmutable({
     required List<T> points,
-    required this.getX,
-    required this.getY,
-    int? minZoom,
-    int? maxZoom,
-    int? minPoints,
-    int? radius,
-    int? extent,
-    int? nodeSize,
-    this.extractClusterData,
-  })  : minZoom = minZoom ?? 0,
-        maxZoom = maxZoom ?? 16,
-        minPoints = minPoints ?? 2,
-        radius = radius ?? 40,
-        extent = extent ?? 512,
-        nodeSize = nodeSize ?? 64,
-        trees = List.filled((maxZoom ?? 16) + 2, null) {
+    required super.getX,
+    required super.getY,
+    super.minZoom,
+    super.maxZoom,
+    super.minPoints,
+    super.radius,
+    super.extent,
+    super.nodeSize = 64,
+    super.extractClusterData,
+  }) {
+    trees = List.filled(maxZoom + 2, null);
     _load(points);
   }
 
@@ -53,7 +38,6 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
       final point = points[i];
       final x = getX(point);
       final y = getY(point);
-      if (x == null || y == null) continue;
       clusters.add(
         ImmutableLayerElement.initializePoint<T>(
           originalPoint: point,

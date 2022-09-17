@@ -14,9 +14,10 @@ class MutableLayer<T> {
   final RBush<MutableLayerElement<T>> _innerTree;
 
   MutableLayer({
+    required int nodeSize,
     required this.zoom,
     required this.searchRadius,
-  }) : _innerTree = RBush(16);
+  }) : _innerTree = RBush(nodeSize);
 
   void load(List<RBushElement<MutableLayerElement<T>>> elements) {
     _innerTree.load(elements);

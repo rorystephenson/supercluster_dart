@@ -1,20 +1,13 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:supercluster/supercluster.dart';
 import 'package:test/test.dart';
 
+import 'fixtures/fixtures.dart';
 import 'test_point.dart';
 
 void main() {
-  dynamic loadFixture(String name) => jsonDecode(
-        File('test/$name').readAsStringSync(),
-      );
-
-  final features = List.castFrom<dynamic, Map<String, dynamic>>(
-      List.unmodifiable(loadFixture('places-old.json')['features']));
-
-  int _compareFeatures(
+  int compareFeatures(
           Map<String, dynamic> featureA, Map<String, dynamic> featureB) =>
       jsonEncode(featureA).compareTo(jsonEncode(featureB));
 
@@ -27,6 +20,7 @@ void main() {
     int? maxZoom,
   }) =>
       SuperclusterMutable<Map<String, dynamic>>(
+        points: points,
         extractClusterData: extractClusterData,
         getX: (json) {
           return json['geometry']?['coordinates'][0].toDouble();
@@ -37,7 +31,7 @@ void main() {
         radius: radius,
         extent: extent,
         maxZoom: maxZoom,
-      )..load(points);
+      );
 
   SuperclusterMutable<TestPoint> supercluster2(
     List<TestPoint> points, {
@@ -47,12 +41,13 @@ void main() {
     int? maxZoom,
   }) =>
       SuperclusterMutable<TestPoint>(
+        points: points,
         getX: TestPoint.getX,
         getY: TestPoint.getY,
         radius: radius,
         extent: extent,
         maxZoom: maxZoom,
-      )..load(points);
+      );
 
   test('returns children of a cluster', () {
     final index = supercluster(features);
@@ -190,8 +185,6 @@ void main() {
     final removalTotal = features.length ~/ 2;
 
     for (int i = start; i < start + removalTotal; i++) {
-      print("Performing removal number ${i - start + 1}");
-
       index.remove(features[i]);
       expect(
         index.trees.map((e) => e.numPoints).toSet().single,
@@ -207,8 +200,8 @@ void main() {
     final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
     expect(pointCountsAtZooms, [
       40,
-      65,
-      100,
+      64,
+      101,
       137,
       148,
       158,
@@ -240,10 +233,10 @@ void main() {
         .map(
             (e) => (e as MutableLayerPoint<Map<String, dynamic>>).originalPoint)
         .toList()
-      ..sort(_compareFeatures);
+      ..sort(compareFeatures);
     final expectation = List<Map<String, dynamic>>.from(features)
       ..remove(features[10])
-      ..sort(_compareFeatures);
+      ..sort(compareFeatures);
     expect(featuresInIndex, equals(expectation));
 
     for (final tree in index.trees) {
@@ -259,10 +252,11 @@ void main() {
         features.map(TestPoint2.fromFeature).toList());
 
     final index = SuperclusterMutable<TestPoint2>(
+      points: testPoints,
       extractClusterData: (testPoint2) => TestClusterData(testPoint2.version),
       getX: (testPoint2) => testPoint2.longitude,
       getY: (testPoint2) => testPoint2.latitude,
-    )..load(testPoints);
+    );
 
     final clusterDataPerLayer = index.trees
         .map((e) =>

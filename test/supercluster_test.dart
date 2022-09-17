@@ -1,21 +1,13 @@
-import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:supercluster/supercluster.dart';
 import 'package:test/test.dart';
 import 'package:timing/timing.dart';
 
+import 'fixtures/fixtures.dart';
 import 'test_point.dart';
 
 void main() {
-  dynamic loadFixture(String name) => jsonDecode(
-        File('test/$name').readAsStringSync(),
-      );
-
-  final features = List.castFrom<dynamic, Map<String, dynamic>>(
-      loadFixture('places.json')['features']);
-
   SuperclusterImmutable<Map<String, dynamic>> supercluster(
           List<Map<String, dynamic>> points,
           {int? radius,
@@ -37,7 +29,7 @@ void main() {
   test('returns children of a cluster', () {
     final index = supercluster(features);
     final childCounts = index.childrenOf(164).map((p) => p.numPoints);
-    expect(childCounts, equals([6, 7, 2, 1]));
+    expect(childCounts.toList(), equals([6, 7, 2, 1]));
   });
 
   test('returns leaves of a cluster', () {

@@ -21,9 +21,10 @@ void main() {
   final tracker = SyncTimeTracker();
   tracker.track(
     () => SuperclusterMutable(
+      points: testPoints,
       getX: TestPoint.getX,
       getY: TestPoint.getY,
-    )..load(testPoints),
+    ),
   );
   print('Clusters built, took: ${tracker.duration}');
 }
