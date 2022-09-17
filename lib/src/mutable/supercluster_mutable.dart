@@ -33,6 +33,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     String Function()? generateUuid,
     super.minZoom,
     super.maxZoom,
+    super.minPoints,
     super.radius,
     super.extent,
     super.nodeSize = 16,
@@ -40,6 +41,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     this.onClusterDataChange,
   }) : generateUuid = generateUuid ?? (() => Uuid().v4()) {
     _layerClusterer = LayerClusterer(
+      minPoints: minPoints,
       radius: radius,
       extent: extent,
       extractClusterData: extractClusterData,

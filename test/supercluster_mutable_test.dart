@@ -14,6 +14,7 @@ void main() {
   SuperclusterMutable<Map<String, dynamic>> supercluster(
     List<Map<String, dynamic>> points, {
     ClusterDataBase Function(Map<String, dynamic> point)? extractClusterData,
+    int? minPoints,
     int? maxEntries,
     int? radius,
     int? extent,
@@ -28,6 +29,7 @@ void main() {
         getY: (json) {
           return json['geometry']?['coordinates'][1].toDouble();
         },
+        minPoints: minPoints,
         radius: radius,
         extent: extent,
         maxZoom: maxZoom,
@@ -35,6 +37,7 @@ void main() {
 
   SuperclusterMutable<TestPoint> supercluster2(
     List<TestPoint> points, {
+    int? minPoints,
     int? maxEntries,
     int? radius,
     int? extent,
@@ -44,12 +47,13 @@ void main() {
         points: points,
         getX: TestPoint.getX,
         getY: TestPoint.getY,
+        minPoints: minPoints,
         radius: radius,
         extent: extent,
         maxZoom: maxZoom,
       );
 
-  test('returns children of a cluster', () {
+  test('clusters points', () {
     final index = supercluster(features);
     final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
     expect(pointCountsAtZooms, [
@@ -59,6 +63,31 @@ void main() {
       137,
       149,
       159,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162,
+      162
+    ]);
+  });
+
+  test('clusters points with a minimum cluster size', () {
+    final index = supercluster(features, minPoints: 5);
+    final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
+    expect(pointCountsAtZooms, [
+      50,
+      117,
+      147,
+      151,
+      162,
+      162,
       162,
       162,
       162,
