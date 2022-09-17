@@ -99,7 +99,6 @@ void main() {
       161
     ]);
 
-    print(index.trees.map((e) => '${e.zoom}: ${e.numPoints}').join(', '));
     for (final tree in index.trees) {
       expect(
         tree.numPoints,
@@ -219,7 +218,6 @@ void main() {
       161
     ]);
 
-    print(index.trees.map((e) => '${e.zoom}: ${e.numPoints}').join(', '));
     for (final tree in index.trees) {
       expect(
         tree.numPoints,

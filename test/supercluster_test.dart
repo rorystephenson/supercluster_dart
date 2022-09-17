@@ -1,11 +1,7 @@
-import 'dart:math';
-
 import 'package:supercluster/supercluster.dart';
 import 'package:test/test.dart';
-import 'package:timing/timing.dart';
 
 import 'fixtures/fixtures.dart';
-import 'test_point.dart';
 
 void main() {
   SuperclusterImmutable<Map<String, dynamic>> supercluster(
@@ -28,7 +24,7 @@ void main() {
 
   test('returns children of a cluster', () {
     final index = supercluster(features);
-    final childCounts = index.childrenOf(164).map((p) => p.numPoints);
+    final childCounts = index.childrenOf(163).map((p) => p.numPoints);
     expect(childCounts.toList(), equals([6, 7, 2, 1]));
   });
 
@@ -36,7 +32,7 @@ void main() {
     final index = supercluster(features);
 
     final leafNames = index
-        .pointsWithin(164, limit: 10, offset: 5)
+        .pointsWithin(163, limit: 10, offset: 5)
         .map((p) => features[p.index]['properties']['name'])
         .toList();
     expect(
@@ -60,11 +56,11 @@ void main() {
 
   test('returns cluster expansion zoom', () {
     final index = supercluster(features);
-    expect(index.expansionZoomOf(164), 1);
-    expect(index.expansionZoomOf(196), 1);
-    expect(index.expansionZoomOf(581), 2);
-    expect(index.expansionZoomOf(1157), 2);
-    expect(index.expansionZoomOf(4134), 3);
+    expect(index.expansionZoomOf(163), 1);
+    expect(index.expansionZoomOf(195), 1);
+    expect(index.expansionZoomOf(580), 2);
+    expect(index.expansionZoomOf(1156), 2);
+    expect(index.expansionZoomOf(4133), 3);
   });
 
   test('returns cluster expansion zoom for maxZoom', () {
@@ -166,30 +162,5 @@ void main() {
     ], maxZoom: 20, extent: 8192, radius: 16);
 
     expect(index.trees[20]!.length, 1);
-  });
-
-  test('clustering many points', () {
-    final random = Random(42);
-
-    print('Generating test points');
-    final testPoints = List<TestPoint>.generate(
-      10000,
-      (_) => TestPoint(
-        longitude: (random.nextDouble() * 360) - 180,
-        latitude: (random.nextDouble() * 180) - 90,
-      ),
-    );
-
-    print('Building clusters');
-    final tracker = SyncTimeTracker();
-    tracker.track(
-      () => SuperclusterImmutable(
-        points: testPoints,
-        getX: TestPoint.getX,
-        getY: TestPoint.getY,
-        minPoints: 1,
-      ),
-    );
-    print('Clusters built, took: ${tracker.duration}');
   });
 }
