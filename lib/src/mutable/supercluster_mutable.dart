@@ -1,21 +1,30 @@
 import 'dart:math';
 
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:rbush/rbush.dart';
 import 'package:supercluster/src/mutable/layer_clusterer.dart';
 import 'package:supercluster/src/mutable/mutable_layer.dart';
 import 'package:uuid/uuid.dart';
 
 import '../cluster_data_base.dart';
-import '../supercluster.dart';
 import '../util.dart' as util;
 import 'layer_element_modification.dart';
 import 'layer_modification.dart';
 import 'mutable_layer_element.dart';
 
-class SuperclusterMutable<T> extends Supercluster<T> {
-  @visibleForTesting
-  late final List<MutableLayer<T>> trees;
+class SuperclusterMutable<T> {
+  final double Function(T) getX;
+  final double Function(T) getY;
+
+  final int minZoom;
+  final int maxZoom;
+  final int minPoints;
+  final int radius;
+  final int extent;
+  final int nodeSize;
+
+  final ClusterDataBase Function(T point)? extractClusterData;
+
+  late final List<MutableLayer<T>> _trees;
   late final LayerClusterer<T> _layerClusterer;
 
   late final String Function() generateUuid;
@@ -27,37 +36,47 @@ class SuperclusterMutable<T> extends Supercluster<T> {
       onClusterDataChange;
 
   SuperclusterMutable({
-    required List<T> points,
-    required super.getX,
-    required super.getY,
+    required this.getX,
+    required this.getY,
     String Function()? generateUuid,
-    super.minZoom,
-    super.maxZoom,
-    super.minPoints,
-    super.radius,
-    super.extent,
-    super.nodeSize = 16,
-    super.extractClusterData,
+    int? minZoom,
+    int? maxZoom,
+    int? minPoints,
+    int? radius,
+    int? extent,
+    int? nodeSize,
+    this.extractClusterData,
     this.onClusterDataChange,
-  }) : generateUuid = generateUuid ?? (() => Uuid().v4()) {
+  })  : assert(minPoints == null || minPoints > 1),
+        minZoom = minZoom ?? 0,
+        maxZoom = maxZoom ?? 16,
+        minPoints = minPoints ?? 2,
+        radius = radius ?? 40,
+        extent = extent ?? 512,
+        nodeSize = nodeSize ?? 16,
+        generateUuid = generateUuid ?? (() => Uuid().v4()) {
     _layerClusterer = LayerClusterer(
-      minPoints: minPoints,
-      radius: radius,
-      extent: extent,
+      minPoints: this.minPoints,
+      radius: this.radius,
+      extent: this.extent,
       extractClusterData: extractClusterData,
       generateUuid: generateUuid ?? () => Uuid().v4(),
     );
 
-    trees = List.generate(
-      (maxZoom) + 2,
+    _trees = List.generate(
+      this.maxZoom + 2,
       (i) => MutableLayer<T>(
-        nodeSize: nodeSize,
+        nodeSize: this.nodeSize,
         zoom: i,
-        searchRadius: util.searchRadius(radius, extent, i),
+        searchRadius: util.searchRadius(this.radius, this.extent, i),
       ),
     );
-    load(points);
   }
+
+  List<T> get points => _trees[maxZoom + 1]
+      .all()
+      .map((e) => (e as MutableLayerPoint<T>).originalPoint)
+      .toList();
 
   /// Replace any existing points with [points] and form clusters.
   void load(List<T> points) {
@@ -66,29 +85,28 @@ class SuperclusterMutable<T> extends Supercluster<T> {
         .map((point) => _initializePoint(point).positionRBushPoint())
         .toList();
 
-    trees[maxZoom + 1].load(clusters);
+    _trees[maxZoom + 1].load(clusters);
 
     // cluster points on max zoom, then cluster the results on previous zoom, etc.;
     // results in a cluster hierarchy across zoom levels
     for (var z = maxZoom; z >= minZoom; z--) {
       clusters = _layerClusterer
-          .cluster(clusters, z, trees[z + 1])
+          .cluster(clusters, z, _trees[z + 1])
           .map((c) => c.positionRBushPoint())
           .toList(); // create a new set of clusters for the zoom
-      trees[z].load(clusters); // index input points into an R-tree
+      _trees[z].load(clusters); // index input points into an R-tree
     }
     _onPointsChanged();
   }
 
-  @override
-  Iterable<MutableLayerElement<T>> search(
+  List<MutableLayerElement<T>> search(
     double westLng,
     double southLat,
     double eastLng,
     double northLat,
     int zoom,
   ) {
-    return trees[_limitZoom(zoom)]
+    return _trees[_limitZoom(zoom)]
         .search(
           RBushBox(
             minX: util.lngX(westLng),
@@ -97,11 +115,11 @@ class SuperclusterMutable<T> extends Supercluster<T> {
             maxY: util.latY(southLat),
           ),
         )
-        .map((e) => e.data);
+        .map((e) => e.data)
+        .toList();
   }
 
-  @override
-  Iterable<T> getLeaves() => trees[maxZoom + 1]
+  Iterable<T> getLeaves() => _trees[maxZoom + 1]
       .all()
       .map((e) => (e as MutableLayerPoint<T>).originalPoint);
 
@@ -112,7 +130,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     assert(
         getX(oldPoint) == getX(newPoint) && getY(oldPoint) == getY(newPoint));
 
-    final baseLayerModification = trees[maxZoom + 1]
+    final baseLayerModification = _trees[maxZoom + 1]
         .removePointWithoutClustering(_initializePoint(oldPoint));
 
     if (baseLayerModification.removed.isEmpty) return;
@@ -123,14 +141,14 @@ class SuperclusterMutable<T> extends Supercluster<T> {
       originalPoint: newPoint,
       clusterData: extractClusterData?.call(newPoint),
     );
-    trees[maxZoom + 1].addPointWithoutClustering(
+    _trees[maxZoom + 1].addPointWithoutClustering(
       newLayerPoint,
       updateZooms: false,
     );
 
     final layerElementModifications = <LayerElementModification<T>>[
       LayerElementModification(
-        layer: trees[maxZoom + 1],
+        layer: _trees[maxZoom + 1],
         oldLayerElement: oldLayerPoint,
         newLayerElement: newLayerPoint,
       ),
@@ -142,7 +160,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
 
     for (int z = maxZoom; z >= stopAtZoom; z--) {
       layerElementModifications.add(
-        trees[z].modifyElementAndAncestors(
+        _trees[z].modifyElementAndAncestors(
           _layerClusterer,
           layerElementModifications.last,
         ),
@@ -154,13 +172,13 @@ class SuperclusterMutable<T> extends Supercluster<T> {
 
   void remove(T point) {
     final layerModifications = <LayerModification<T>>[];
-    layerModifications.add(trees[maxZoom + 1]
+    layerModifications.add(_trees[maxZoom + 1]
         .removePointWithoutClustering(_initializePoint(point)));
     if (layerModifications.single.removed.isEmpty) return;
 
     for (int z = maxZoom; z >= minZoom; z--) {
       layerModifications
-          .add(trees[z].removeElementsAndAncestors(layerModifications.last));
+          .add(_trees[z].removeElementsAndAncestors(layerModifications.last));
     }
 
     layerModifications
@@ -173,8 +191,8 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     for (int z = maxZoom; z >= minZoom; z--) {
       final layerRemoval = layerModifications[maxZoom + 1 - z];
 
-      trees[z]
-          .rebuildLayer(_layerClusterer, trees[z + 1], layerRemoval.removed);
+      _trees[z]
+          .rebuildLayer(_layerClusterer, _trees[z + 1], layerRemoval.removed);
     }
 
     _onPointsChanged();
@@ -182,16 +200,16 @@ class SuperclusterMutable<T> extends Supercluster<T> {
 
   void insert(T point) {
     final layerPoint = _initializePoint(point);
-    trees[maxZoom + 1].addPointWithoutClustering(layerPoint);
+    _trees[maxZoom + 1].addPointWithoutClustering(layerPoint);
 
     int lowestZoomWhereInsertionDoesNotCluster = maxZoom + 1;
     List<MutableLayerElement<T>> elementsToClusterWith = [];
 
     for (int z = maxZoom; z >= minZoom; z--) {
-      elementsToClusterWith = trees[z].elementsToClusterWith(layerPoint);
+      elementsToClusterWith = _trees[z].elementsToClusterWith(layerPoint);
       if (elementsToClusterWith.isEmpty) {
         lowestZoomWhereInsertionDoesNotCluster = z;
-        trees[z].addPointWithoutClustering(layerPoint);
+        _trees[z].addPointWithoutClustering(layerPoint);
         continue;
       } else {
         break;
@@ -207,20 +225,20 @@ class SuperclusterMutable<T> extends Supercluster<T> {
 
     final removalElements = elementsToClusterWith.length == 1 &&
             elementsToClusterWith.single is MutableLayerCluster<T>
-        ? trees[firstClusteringZoom + 1]
+        ? _trees[firstClusteringZoom + 1]
             .descendants(elementsToClusterWith.single as MutableLayerCluster<T>)
         : elementsToClusterWith;
 
     final layerModifications = [
-      trees[firstClusteringZoom].removeElementsAndAncestors(
-        LayerModification(layer: trees[firstClusteringZoom + 1])
+      _trees[firstClusteringZoom].removeElementsAndAncestors(
+        LayerModification(layer: _trees[firstClusteringZoom + 1])
           ..recordRemovals(removalElements),
       )
     ];
 
     for (int z = firstClusteringZoom - 1; z >= minZoom; z--) {
       layerModifications
-          .add(trees[z].removeElementsAndAncestors(layerModifications.last));
+          .add(_trees[z].removeElementsAndAncestors(layerModifications.last));
     }
 
     layerModifications
@@ -233,8 +251,8 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     for (int z = firstClusteringZoom; z >= minZoom; z--) {
       final layerRemoval = layerModifications[firstClusteringZoom - z];
 
-      trees[z]
-          .rebuildLayer(_layerClusterer, trees[z + 1], layerRemoval.removed);
+      _trees[z]
+          .rebuildLayer(_layerClusterer, _trees[z + 1], layerRemoval.removed);
     }
 
     _onPointsChanged();
@@ -243,7 +261,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
   List<MutableLayerElement<T>> childrenOf(MutableLayerCluster<T> cluster) {
     final r = util.searchRadius(radius, extent, cluster.highestZoom);
 
-    return trees[cluster.lowestZoom + 1]
+    return _trees[cluster.lowestZoom + 1]
         .search(RBushBox(
           minX: cluster.x - r,
           minY: cluster.y - r,
@@ -258,7 +276,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
   void _onPointsChanged() {
     if (onClusterDataChange == null) return;
 
-    final topLevelClusterData = trees[minZoom].all().map((e) => e.clusterData);
+    final topLevelClusterData = _trees[minZoom].all().map((e) => e.clusterData);
 
     final aggregatedData = topLevelClusterData.isEmpty
         ? null

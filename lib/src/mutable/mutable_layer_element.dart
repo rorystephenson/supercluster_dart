@@ -11,6 +11,8 @@ part 'mutable_layer_element.freezed.dart';
 class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
   MutableLayerElement._();
 
+  // Should be uncommented only when running build_runner until this issue
+  // is resolved: https://github.com/rrousselGit/freezed/issues/757
   //@With<LayerCluster<T>>()
   factory MutableLayerElement.cluster({
     required String uuid,
@@ -26,6 +28,8 @@ class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
     String? parentUuid,
   }) = MutableLayerCluster<T>;
 
+  // Should be uncommented only when running build_runner until this issue
+  // is resolved: https://github.com/rrousselGit/freezed/issues/757
   //@With<LayerPoint<T>>()
   factory MutableLayerElement.point({
     required String uuid,

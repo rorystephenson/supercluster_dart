@@ -22,10 +22,9 @@ void main() {
   var tracker = SyncTimeTracker();
   tracker.track(
     () => SuperclusterMutable(
-      points: testPoints,
       getX: TestPoint.getX,
       getY: TestPoint.getY,
-    ),
+    )..load(testPoints),
   );
   print('Clusters built, took: ${tracker.duration}');
   print('Finished SuperclusterMutable profiling');
@@ -34,7 +33,7 @@ void main() {
   print('Building clusters');
   tracker = SyncTimeTracker();
   tracker.track(
-    () => SuperclusterImmutable(
+    () => Supercluster(
       points: testPoints,
       getX: TestPoint.getX,
       getY: TestPoint.getY,

@@ -1,55 +1,25 @@
 import 'package:supercluster/supercluster.dart';
 
+import 'map_point.dart';
+
 void main() {
   final points = [
-    CustomMapPoint(name: 'first', lat: 46, lon: 1.5),
-    CustomMapPoint(name: 'second', lat: 46.4, lon: 0.9),
-    CustomMapPoint(name: 'third', lat: 45, lon: 19),
+    MapPoint(name: 'first', lat: 46, lon: 1.5),
+    MapPoint(name: 'second', lat: 46.4, lon: 0.9),
+    MapPoint(name: 'third', lat: 45, lon: 19),
   ];
-  final supercluster = SuperclusterImmutable<CustomMapPoint>(
+  final supercluster = Supercluster<MapPoint>(
     points: points,
     getX: (p) => p.lon,
     getY: (p) => p.lat,
-    extractClusterData: (customMapPoint) =>
-        ClusterNameData([customMapPoint.name]),
   );
 
-  final clustersAndPoints = supercluster.search(0.0, 43, 8, 47, 10).map(
+  final clustersAndPoints = supercluster.search(0, 40, 20, 50, 5).map(
         (e) => e.map(
-          cluster: (cluster) =>
-              'A cluster of: ${(cluster.clusterData as ClusterNameData).pointNames.join(', ')}',
-          point: (mapPoint) => mapPoint.originalPoint.toString(),
-        ),
+            cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
+            point: (point) => 'point ${point.originalPoint}'),
       );
 
   print(clustersAndPoints.join(', '));
-  // Output: result: first (46.0, 1.5), second (46.4, 0.9)
-}
-
-class CustomMapPoint {
-  String name;
-  final double lat;
-  final double lon;
-
-  CustomMapPoint({
-    required this.name,
-    required this.lat,
-    required this.lon,
-  });
-
-  @override
-  String toString() => '$name ($lat, $lon)';
-}
-
-class ClusterNameData extends ClusterDataBase {
-  final List<String> pointNames;
-
-  ClusterNameData(this.pointNames);
-
-  @override
-  ClusterNameData combine(ClusterNameData other) {
-    return ClusterNameData(
-      List.from(pointNames)..addAll(other.pointNames),
-    );
-  }
+  // prints: cluster (2 points), point "third" (45.0, 19.0)
 }

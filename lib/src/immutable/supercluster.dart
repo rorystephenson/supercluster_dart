@@ -1,31 +1,46 @@
 import 'dart:math';
 
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:kdbush/kdbush.dart';
 import 'package:supercluster/src/immutable/immutable_layer_element.dart';
 import 'package:supercluster/src/util.dart' as util;
 
 import '../cluster_data_base.dart';
-import '../supercluster.dart';
 
-class SuperclusterImmutable<T> extends Supercluster<T> {
-  @visibleForTesting
-  late final List<KDBush<ImmutableLayerElement<T>, double>?> trees;
-  List<T>? points;
+class Supercluster<T> {
+  List<T> points;
+  final double Function(T) getX;
+  final double Function(T) getY;
 
-  SuperclusterImmutable({
-    required List<T> points,
-    required super.getX,
-    required super.getY,
-    super.minZoom,
-    super.maxZoom,
-    super.minPoints,
-    super.radius,
-    super.extent,
-    super.nodeSize = 64,
-    super.extractClusterData,
-  }) {
-    trees = List.filled(maxZoom + 2, null);
+  final int minZoom;
+  final int maxZoom;
+  final int minPoints;
+  final int radius;
+  final int extent;
+  final int nodeSize;
+
+  final ClusterDataBase Function(T point)? extractClusterData;
+
+  late final List<KDBush<ImmutableLayerElement<T>, double>?> _trees;
+
+  Supercluster({
+    required this.points,
+    required this.getX,
+    required this.getY,
+    int? minZoom,
+    int? maxZoom,
+    int? minPoints,
+    int? radius,
+    int? extent,
+    int? nodeSize,
+    this.extractClusterData,
+  })  : assert(minPoints == null || minPoints > 1),
+        minZoom = minZoom ?? 0,
+        maxZoom = maxZoom ?? 16,
+        minPoints = minPoints ?? 2,
+        radius = radius ?? 40,
+        extent = extent ?? 512,
+        nodeSize = nodeSize ?? 64 {
+    _trees = List.filled(this.maxZoom + 2, null);
     _load(points);
   }
 
@@ -50,7 +65,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
       );
     }
 
-    trees[maxZoom + 1] = KDBush<ImmutableLayerElement<T>, double>(
+    _trees[maxZoom + 1] = KDBush<ImmutableLayerElement<T>, double>(
       points: clusters,
       getX: ImmutableLayerElement.getX,
       getY: ImmutableLayerElement.getY,
@@ -62,7 +77,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     for (var z = maxZoom; z >= minZoom; z--) {
       // create a new set of clusters for the zoom and index them with a KD-tree
       clusters = _cluster(clusters, z);
-      trees[z] = KDBush<ImmutableLayerElement<T>, double>(
+      _trees[z] = KDBush<ImmutableLayerElement<T>, double>(
         points: clusters,
         getX: ImmutableLayerElement.getX,
         getY: ImmutableLayerElement.getY,
@@ -71,7 +86,6 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     }
   }
 
-  @override
   List<ImmutableLayerElement<T>> search(
     double westLng,
     double southLat,
@@ -94,7 +108,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
       return easternHem..addAll(westernHem);
     }
 
-    final tree = trees[_limitZoom(zoom)]!;
+    final tree = _trees[_limitZoom(zoom)]!;
     final ids = tree.withinBounds(
       util.lngX(minLng),
       util.latY(maxLat),
@@ -108,8 +122,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     return clusters;
   }
 
-  @override
-  Iterable<T> getLeaves() => trees[maxZoom + 1]!
+  Iterable<T> getLeaves() => _trees[maxZoom + 1]!
       .points
       .map((e) => (e as ImmutableLayerPoint<T>).originalPoint);
 
@@ -118,7 +131,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     final originZoom = getOriginZoom(clusterId);
     final errorMsg = 'No cluster with the specified id.';
 
-    final index = trees[originZoom];
+    final index = _trees[originZoom];
     if (index == null) throw errorMsg;
 
     if (originId >= index.points.length) throw errorMsg;
@@ -167,7 +180,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
 
     final parentZoom = getOriginZoom(clusterOrMapPoint.parentId) - 1;
 
-    return trees[parentZoom]!.points.firstWhere(
+    return _trees[parentZoom]!.points.firstWhere(
           (e) =>
               e is ImmutableLayerCluster<T> &&
               e.id == clusterOrMapPoint.parentId,
@@ -176,7 +189,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
 
   /// Returns the zoom level at which the cluster with the given id appears
   int getOriginZoom(int clusterId) {
-    return (clusterId - points!.length) % 32;
+    return (clusterId - points.length) % 32;
   }
 
   int _appendLeaves(List<ImmutableLayerPoint<T>> result, int clusterId,
@@ -230,7 +243,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
       p.visitedAtZoom = zoom;
 
       // find all nearby points
-      final tree = trees[zoom + 1]!;
+      final tree = _trees[zoom + 1]!;
       final neighborIds = tree.withinRadius(p.x, p.y, r);
 
       final numPointsOrigin = p.numPoints;
@@ -252,7 +265,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
             (extractClusterData != null ? _extractClusterData(p) : null);
 
         // encode both zoom and point index on which the cluster originated -- offset by total length of features
-        final id = (i << 5) + (zoom + 1) + this.points!.length;
+        final id = (i << 5) + (zoom + 1) + this.points.length;
 
         for (final neighborId in neighborIds) {
           final b = tree.points[neighborId];
@@ -314,7 +327,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
 
   // get index of the point from which the cluster originated
   int _getOriginId(int clusterId) {
-    return (clusterId - points!.length) >> 5;
+    return (clusterId - points.length) >> 5;
   }
 
   Map<String, dynamic> extend(

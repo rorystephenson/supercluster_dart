@@ -4,12 +4,12 @@ import 'package:test/test.dart';
 import 'fixtures/fixtures.dart';
 
 void main() {
-  SuperclusterImmutable<Map<String, dynamic>> supercluster(
+  Supercluster<Map<String, dynamic>> supercluster(
           List<Map<String, dynamic>> points,
           {int? radius,
           int? extent,
           int? maxZoom}) =>
-      SuperclusterImmutable<Map<String, dynamic>>(
+      Supercluster<Map<String, dynamic>>(
         points: points,
         getX: (json) {
           return json['geometry']?['coordinates'][0].toDouble();
@@ -23,17 +23,17 @@ void main() {
       );
 
   test('returns children of a cluster', () {
-    final index = supercluster(features);
+    final index = supercluster(Fixtures.features);
     final childCounts = index.childrenOf(163).map((p) => p.numPoints);
     expect(childCounts.toList(), equals([6, 7, 2, 1]));
   });
 
   test('returns leaves of a cluster', () {
-    final index = supercluster(features);
+    final index = supercluster(Fixtures.features);
 
     final leafNames = index
         .pointsWithin(163, limit: 10, offset: 5)
-        .map((p) => features[p.index]['properties']['name'])
+        .map((p) => Fixtures.features[p.index]['properties']['name'])
         .toList();
     expect(
       leafNames,
@@ -55,7 +55,7 @@ void main() {
   });
 
   test('returns cluster expansion zoom', () {
-    final index = supercluster(features);
+    final index = supercluster(Fixtures.features);
     expect(index.expansionZoomOf(163), 1);
     expect(index.expansionZoomOf(195), 1);
     expect(index.expansionZoomOf(580), 2);
@@ -65,7 +65,7 @@ void main() {
 
   test('returns cluster expansion zoom for maxZoom', () {
     final index = supercluster(
-      features,
+      Fixtures.features,
       radius: 60,
       extent: 256,
       maxZoom: 4,
@@ -119,7 +119,7 @@ void main() {
   });
 
   test('does not crash on weird bbox values', () {
-    final index = supercluster(features);
+    final index = supercluster(Fixtures.features);
     expect(
         index
             .search(129.426390, -103.720017, -445.930843, 114.518236, 1)
@@ -161,6 +161,6 @@ void main() {
       }
     ], maxZoom: 20, extent: 8192, radius: 16);
 
-    expect(index.trees[20]!.length, 1);
+    expect(index.search(-180, -90, 180, 90, 20).length, 1);
   });
 }

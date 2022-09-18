@@ -11,6 +11,8 @@ class ImmutableLayerElement<T>
     with _$ImmutableLayerElement<T>, LayerElement<T> {
   ImmutableLayerElement._();
 
+  // Should be uncommented only when running build_runner until this issue
+  // is resolved: https://github.com/rrousselGit/freezed/issues/757
   //@With<LayerCluster<T>>()
   factory ImmutableLayerElement.cluster({
     required final double x,
@@ -24,6 +26,8 @@ class ImmutableLayerElement<T>
     @Default(-1) int parentId,
   }) = ImmutableLayerCluster<T>;
 
+  // Should be uncommented only when running build_runner until this issue
+  // is resolved: https://github.com/rrousselGit/freezed/issues/757
   //@With<LayerPoint<T>>()
   factory ImmutableLayerElement.point({
     required final T originalPoint,

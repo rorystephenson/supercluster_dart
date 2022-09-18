@@ -11,6 +11,42 @@ void main() {
           Map<String, dynamic> featureA, Map<String, dynamic> featureB) =>
       jsonEncode(featureA).compareTo(jsonEncode(featureB));
 
+  List<MutableLayerElement<T>> layerElementsAtZoom<T>(
+          SuperclusterMutable<T> index, int zoom) =>
+      index.search(-180, -90, 180, 90, zoom).toList();
+
+  List<List<MutableLayerElement<T>>> layerElementsAtZooms<T>(
+      SuperclusterMutable<T> index) {
+    final result = <List<MutableLayerElement<T>>>[];
+    for (int i = index.minZoom; i <= index.maxZoom + 1; i++) {
+      result.add(index.search(-180, -90, 180, 90, i).toList());
+    }
+    return result;
+  }
+
+  List<int> pointCountsAtZooms(SuperclusterMutable index) {
+    final result = <int>[];
+    for (int i = index.minZoom; i <= index.maxZoom + 1; i++) {
+      result.add(layerElementsAtZoom(index, i).length);
+    }
+    return result;
+  }
+
+  int numPointsAtZoom(SuperclusterMutable index, int zoom) {
+    return layerElementsAtZoom(index, zoom).fold(
+      0,
+      (previousValue, element) => previousValue + element.numPoints,
+    );
+  }
+
+  List<int> numPointsAtZooms(SuperclusterMutable index) {
+    final result = <int>[];
+    for (int i = index.minZoom; i <= index.maxZoom + 1; i++) {
+      result.add(numPointsAtZoom(index, i));
+    }
+    return result;
+  }
+
   SuperclusterMutable<Map<String, dynamic>> supercluster(
     List<Map<String, dynamic>> points, {
     ClusterDataBase Function(Map<String, dynamic> point)? extractClusterData,
@@ -21,7 +57,6 @@ void main() {
     int? maxZoom,
   }) =>
       SuperclusterMutable<Map<String, dynamic>>(
-        points: points,
         extractClusterData: extractClusterData,
         getX: (json) {
           return json['geometry']?['coordinates'][0].toDouble();
@@ -33,7 +68,7 @@ void main() {
         radius: radius,
         extent: extent,
         maxZoom: maxZoom,
-      );
+      )..load(points);
 
   SuperclusterMutable<TestPoint> supercluster2(
     List<TestPoint> points, {
@@ -44,19 +79,17 @@ void main() {
     int? maxZoom,
   }) =>
       SuperclusterMutable<TestPoint>(
-        points: points,
         getX: TestPoint.getX,
         getY: TestPoint.getY,
         minPoints: minPoints,
         radius: radius,
         extent: extent,
         maxZoom: maxZoom,
-      );
+      )..load(points);
 
   test('clusters points', () {
-    final index = supercluster(features);
-    final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
-    expect(pointCountsAtZooms, [
+    final index = supercluster(Fixtures.features);
+    expect(pointCountsAtZooms(index), [
       32,
       62,
       100,
@@ -79,9 +112,8 @@ void main() {
   });
 
   test('clusters points with a minimum cluster size', () {
-    final index = supercluster(features, minPoints: 5);
-    final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
-    expect(pointCountsAtZooms, [
+    final index = supercluster(Fixtures.features, minPoints: 5);
+    expect(pointCountsAtZooms(index), [
       50,
       117,
       147,
@@ -104,10 +136,9 @@ void main() {
   });
 
   test('removal', () {
-    final index = supercluster(features);
-    index.remove(features[10]);
-    final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
-    expect(pointCountsAtZooms, [
+    final index = supercluster(Fixtures.features);
+    index.remove(Fixtures.features[10]);
+    expect(pointCountsAtZooms(index), [
       32,
       62,
       99,
@@ -128,44 +159,47 @@ void main() {
       161
     ]);
 
-    for (final tree in index.trees) {
+    for (int i = index.minZoom; i <= index.maxZoom; i++) {
+      final numPoints = numPointsAtZoom(index, i);
       expect(
-        tree.numPoints,
+        numPoints,
         161,
-        reason: 'Zoom ${tree.zoom} contains ${tree.numPoints}/161 points',
+        reason: 'Zoom $i contains $numPoints/161 points',
       );
     }
   });
 
   test('insertion', () {
-    final index = supercluster(features);
-    index.remove(features[10]);
-    var pointsPerZoom = index.trees.map((e) => e.numPoints).toList();
+    final index = supercluster(Fixtures.features);
+
+    index.remove(Fixtures.features[10]);
+    var pointsPerZoom = numPointsAtZooms(index);
     expect(Set.from(pointsPerZoom).single, 161);
-    index.insert(features[10]);
-    pointsPerZoom = index.trees.map((e) => e.numPoints).toList();
+
+    index.insert(Fixtures.features[10]);
+    pointsPerZoom = numPointsAtZooms(index);
     expect(Set.from(pointsPerZoom).single, 162);
 
-    final featuresSorted = List.from(features)
+    final featuresSorted = List.from(Fixtures.features)
       ..sort((a, b) => jsonEncode(a).compareTo(jsonEncode(b)));
 
-    for (int i = 0; i < index.trees.length; i++) {
+    for (int i = index.minZoom; i <= index.maxZoom; i++) {
+      final numPoints = numPointsAtZoom(index, i);
       expect(
-        index.trees[i].numPoints,
-        features.length,
-        reason: 'Points at zoom $i should match the original points',
-      );
-
-      final sortedPoints = List.from(index.trees[index.maxZoom + 1]
-          .all()
-          .map((e) => (e as MutableLayerPoint).originalPoint))
-        ..sort((a, b) => jsonEncode(a).compareTo(jsonEncode(b)));
-      expect(
-        sortedPoints,
-        featuresSorted,
+        numPoints,
+        Fixtures.features.length,
         reason: 'Points at zoom $i should match the original points',
       );
     }
+
+    final sortedPoints = List.from(layerElementsAtZoom(index, index.maxZoom + 1)
+        .map((e) => (e as MutableLayerPoint).originalPoint))
+      ..sort((a, b) => jsonEncode(a).compareTo(jsonEncode(b)));
+    expect(
+      sortedPoints,
+      featuresSorted,
+      reason: 'Points should match the original points',
+    );
   });
 
   test('nearby insertions', () {
@@ -181,7 +215,7 @@ void main() {
     index.insert(TestPoint(latitude: 46.775243, longitude: 9.711766));
     index.insert(TestPoint(latitude: 46.75637, longitude: 9.942479));
 
-    final pointsPerZoom = index.trees.map((e) => e.numPoints).toSet();
+    final pointsPerZoom = numPointsAtZooms(index).toSet();
     expect(pointsPerZoom.single, 8);
   });
 
@@ -202,31 +236,30 @@ void main() {
     index.insert(TestPoint(latitude: 44.945982, longitude: 9.761462));
     index.insert(TestPoint(latitude: 44.999401, longitude: 9.847979));
 
-    expect(index.trees.map((e) => e.numPoints).toSet().single, 12);
+    expect(numPointsAtZooms(index).toSet().single, 12);
   });
 
   test('multiple removals and insertions (with cluster data)', () {
-    final index = supercluster(features,
+    final index = supercluster(Fixtures.features,
         extractClusterData: (point) => TestClusterData(1));
 
-    final start = features.length ~/ 3;
-    final removalTotal = features.length ~/ 2;
+    final start = Fixtures.features.length ~/ 3;
+    final removalTotal = Fixtures.features.length ~/ 2;
 
     for (int i = start; i < start + removalTotal; i++) {
-      index.remove(features[i]);
+      index.remove(Fixtures.features[i]);
       expect(
-        index.trees.map((e) => e.numPoints).toSet().single,
-        features.length - (i - start + 1),
+        numPointsAtZooms(index).toSet().single,
+        Fixtures.features.length - (i - start + 1),
       );
     }
     for (int i = start; i < start + removalTotal; i++) {
-      index.insert(features[i]);
-      expect(index.trees.map((e) => e.numPoints).toSet().single,
-          features.length - removalTotal + (i - start + 1));
+      index.insert(Fixtures.features[i]);
+      expect(numPointsAtZooms(index).toSet().single,
+          Fixtures.features.length - removalTotal + (i - start + 1));
     }
-    index.remove(features[10]);
-    final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
-    expect(pointCountsAtZooms, [
+    index.remove(Fixtures.features[10]);
+    expect(pointCountsAtZooms(index), [
       40,
       64,
       101,
@@ -247,47 +280,44 @@ void main() {
       161
     ]);
 
-    for (final tree in index.trees) {
+    for (int i = index.minZoom; i <= index.maxZoom + 1; i++) {
+      final numPoints = numPointsAtZoom(index, i);
       expect(
-        tree.numPoints,
+        numPoints,
         161,
-        reason: 'Zoom ${tree.zoom} contains ${tree.numPoints}/162 points',
+        reason: 'Zoom $i contains $numPoints/162 points',
       );
     }
 
-    final featuresInIndex = index.trees.last
-        .all()
-        .map(
-            (e) => (e as MutableLayerPoint<Map<String, dynamic>>).originalPoint)
-        .toList()
-      ..sort(compareFeatures);
-    final expectation = List<Map<String, dynamic>>.from(features)
-      ..remove(features[10])
+    final featuresInIndex = index.points..sort(compareFeatures);
+    final expectation = List<Map<String, dynamic>>.from(Fixtures.features)
+      ..remove(Fixtures.features[10])
       ..sort(compareFeatures);
     expect(featuresInIndex, equals(expectation));
 
-    for (final tree in index.trees) {
-      for (final layerElement in tree.all()) {
-        expect(layerElement.numPoints,
-            (layerElement.clusterData as TestClusterData).sum);
+    for (int i = index.minZoom; i <= index.maxZoom + 1; i++) {
+      for (final layerElement in layerElementsAtZoom(index, i)) {
+        expect(
+          layerElement.numPoints,
+          (layerElement.clusterData as TestClusterData).sum,
+        );
       }
     }
   });
 
   test('modify point data', () {
     final testPoints = List<TestPoint2>.unmodifiable(
-        features.map(TestPoint2.fromFeature).toList());
+        Fixtures.features.map(TestPoint2.fromFeature).toList());
 
     final index = SuperclusterMutable<TestPoint2>(
-      points: testPoints,
       extractClusterData: (testPoint2) => TestClusterData(testPoint2.version),
       getX: (testPoint2) => testPoint2.longitude,
       getY: (testPoint2) => testPoint2.latitude,
-    );
+    )..load(testPoints);
 
-    final clusterDataPerLayer = index.trees
+    final clusterDataPerLayer = layerElementsAtZooms(index)
         .map((e) =>
-            e.all().map((e) => (e.clusterData as TestClusterData).sum).toList()
+            e.map((e) => (e.clusterData as TestClusterData).sum).toList()
               ..sort())
         .toList();
 
@@ -312,17 +342,15 @@ void main() {
       162
     ];
 
-    final pointCountsAtZooms = index.trees.map((e) => e.all().length).toList();
-    expect(pointCountsAtZooms, expectedLayerElementCounts);
+    expect(pointCountsAtZooms(index), expectedLayerElementCounts);
 
     final modifiedPoint = testPoints[10].copyWithVersion(2);
     index.modifyPointData(testPoints[10], modifiedPoint);
-    final pointCountsAtZoomsAfter =
-        index.trees.map((e) => e.all().length).toList();
+    final pointCountsAtZoomsAfter = pointCountsAtZooms(index);
     expect(pointCountsAtZoomsAfter, expectedLayerElementCounts);
-    final clusterDataPerLayerAfterModification = index.trees
+    final clusterDataPerLayerAfterModification = layerElementsAtZooms(index)
         .map((e) =>
-            e.all().map((e) => (e.clusterData as TestClusterData).sum).toList()
+            e.map((e) => (e.clusterData as TestClusterData).sum).toList()
               ..sort())
         .toList();
 
@@ -340,15 +368,14 @@ void main() {
       expect(differences, 1, reason: 'Expected 1 difference at zoom $i');
     }
 
-    expect(pointCountsAtZooms, expectedLayerElementCounts);
+    expect(pointCountsAtZooms(index), expectedLayerElementCounts);
 
     index.modifyPointData(modifiedPoint, modifiedPoint.copyWithVersion(1));
-    final pointCountsAtZoomsAfter2 =
-        index.trees.map((e) => e.all().length).toList();
+    final pointCountsAtZoomsAfter2 = pointCountsAtZooms(index);
     expect(pointCountsAtZoomsAfter2, expectedLayerElementCounts);
-    final clusterDataPerLayerAfterModification2 = index.trees
+    final clusterDataPerLayerAfterModification2 = layerElementsAtZooms(index)
         .map((e) =>
-            e.all().map((e) => (e.clusterData as TestClusterData).sum).toList()
+            e.map((e) => (e.clusterData as TestClusterData).sum).toList()
               ..sort())
         .toList();
 
