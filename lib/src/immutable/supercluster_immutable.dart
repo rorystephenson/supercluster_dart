@@ -1,46 +1,29 @@
 import 'dart:math';
 
 import 'package:kdbush/kdbush.dart';
-import 'package:supercluster/src/immutable/immutable_layer_element.dart';
 import 'package:supercluster/src/util.dart' as util;
 
-import '../cluster_data_base.dart';
+import '../../supercluster.dart';
 
-class Supercluster<T> {
+class SuperclusterImmutable<T> extends Supercluster<T> {
   List<T> points;
-  final double Function(T) getX;
-  final double Function(T) getY;
-
-  final int minZoom;
-  final int maxZoom;
-  final int minPoints;
-  final int radius;
-  final int extent;
-  final int nodeSize;
-
-  final ClusterDataBase Function(T point)? extractClusterData;
 
   late final List<KDBush<ImmutableLayerElement<T>, double>?> _trees;
 
-  Supercluster({
+  SuperclusterImmutable({
     required this.points,
-    required this.getX,
-    required this.getY,
-    int? minZoom,
-    int? maxZoom,
-    int? minPoints,
-    int? radius,
-    int? extent,
-    int? nodeSize,
-    this.extractClusterData,
-  })  : assert(minPoints == null || minPoints > 1),
-        minZoom = minZoom ?? 0,
-        maxZoom = maxZoom ?? 16,
-        minPoints = minPoints ?? 2,
-        radius = radius ?? 40,
-        extent = extent ?? 512,
-        nodeSize = nodeSize ?? 64 {
-    _trees = List.filled(this.maxZoom + 2, null);
+    required super.getX,
+    required super.getY,
+    super.minZoom,
+    super.maxZoom,
+    super.minPoints,
+    super.radius,
+    super.extent,
+    super.nodeSize = 64,
+    super.extractClusterData,
+    super.onClusterDataChange,
+  }) {
+    _trees = List.filled(maxZoom + 2, null);
     _load(points);
   }
 
@@ -84,8 +67,11 @@ class Supercluster<T> {
         nodeSize: nodeSize,
       );
     }
+
+    _onPointsChanged();
   }
 
+  @override
   List<ImmutableLayerElement<T>> search(
     double westLng,
     double southLat,
@@ -122,6 +108,7 @@ class Supercluster<T> {
     return clusters;
   }
 
+  @override
   Iterable<T> getLeaves() => _trees[maxZoom + 1]!
       .points
       .map((e) => (e as ImmutableLayerPoint<T>).originalPoint);
@@ -325,16 +312,22 @@ class Supercluster<T> {
         point: (mapPoint) => extractClusterData!(mapPoint.originalPoint));
   }
 
-  // get index of the point from which the cluster originated
+// get index of the point from which the cluster originated
   int _getOriginId(int clusterId) {
     return (clusterId - points.length) >> 5;
   }
 
-  Map<String, dynamic> extend(
-      Map<String, dynamic> dest, Map<String, dynamic> src) {
-    for (final id in src.keys) {
-      dest[id] = src[id];
-    }
-    return dest;
+  void _onPointsChanged() {
+    if (onClusterDataChange == null) return;
+
+    final topLevelClusterData =
+        _trees[minZoom]!.points.map((e) => e.clusterData);
+
+    final aggregatedData = topLevelClusterData.isEmpty
+        ? null
+        : topLevelClusterData
+            .reduce((value, element) => value?.combine(element!));
+
+    onClusterDataChange!.call(aggregatedData);
   }
 }

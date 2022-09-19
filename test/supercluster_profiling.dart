@@ -33,7 +33,7 @@ void main() {
   print('Building clusters');
   tracker = SyncTimeTracker();
   tracker.track(
-    () => Supercluster(
+    () => SuperclusterImmutable(
       points: testPoints,
       getX: TestPoint.getX,
       getY: TestPoint.getY,

@@ -5,70 +5,44 @@ import 'package:supercluster/src/mutable/layer_clusterer.dart';
 import 'package:supercluster/src/mutable/mutable_layer.dart';
 import 'package:uuid/uuid.dart';
 
-import '../cluster_data_base.dart';
+import '../../supercluster.dart';
 import '../util.dart' as util;
 import 'layer_element_modification.dart';
-import 'layer_modification.dart';
-import 'mutable_layer_element.dart';
 
-class SuperclusterMutable<T> {
-  final double Function(T) getX;
-  final double Function(T) getY;
-
-  final int minZoom;
-  final int maxZoom;
-  final int minPoints;
-  final int radius;
-  final int extent;
-  final int nodeSize;
-
-  final ClusterDataBase Function(T point)? extractClusterData;
-
+class SuperclusterMutable<T> extends Supercluster<T> {
   late final List<MutableLayer<T>> _trees;
   late final LayerClusterer<T> _layerClusterer;
 
   late final String Function() generateUuid;
 
-  /// An optional function which will be called whenever the aggregated cluster
-  /// data of all points changes. Note that this will only be calculated if the
-  /// callback is provided.
-  final void Function(ClusterDataBase? aggregatedClusterData)?
-      onClusterDataChange;
-
   SuperclusterMutable({
-    required this.getX,
-    required this.getY,
+    required super.getX,
+    required super.getY,
     String Function()? generateUuid,
-    int? minZoom,
-    int? maxZoom,
-    int? minPoints,
-    int? radius,
-    int? extent,
-    int? nodeSize,
-    this.extractClusterData,
-    this.onClusterDataChange,
+    super.minZoom,
+    super.maxZoom,
+    super.minPoints,
+    super.radius,
+    super.extent,
+    super.nodeSize = 16,
+    super.extractClusterData,
+    super.onClusterDataChange,
   })  : assert(minPoints == null || minPoints > 1),
-        minZoom = minZoom ?? 0,
-        maxZoom = maxZoom ?? 16,
-        minPoints = minPoints ?? 2,
-        radius = radius ?? 40,
-        extent = extent ?? 512,
-        nodeSize = nodeSize ?? 16,
         generateUuid = generateUuid ?? (() => Uuid().v4()) {
     _layerClusterer = LayerClusterer(
-      minPoints: this.minPoints,
-      radius: this.radius,
-      extent: this.extent,
+      minPoints: minPoints,
+      radius: radius,
+      extent: extent,
       extractClusterData: extractClusterData,
       generateUuid: generateUuid ?? () => Uuid().v4(),
     );
 
     _trees = List.generate(
-      this.maxZoom + 2,
+      maxZoom + 2,
       (i) => MutableLayer<T>(
-        nodeSize: this.nodeSize,
+        nodeSize: nodeSize,
         zoom: i,
-        searchRadius: util.searchRadius(this.radius, this.extent, i),
+        searchRadius: util.searchRadius(radius, extent, i),
       ),
     );
   }
@@ -99,6 +73,7 @@ class SuperclusterMutable<T> {
     _onPointsChanged();
   }
 
+  @override
   List<MutableLayerElement<T>> search(
     double westLng,
     double southLat,
@@ -119,6 +94,7 @@ class SuperclusterMutable<T> {
         .toList();
   }
 
+  @override
   Iterable<T> getLeaves() => _trees[maxZoom + 1]
       .all()
       .map((e) => (e as MutableLayerPoint<T>).originalPoint);

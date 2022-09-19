@@ -4,12 +4,12 @@ import 'package:test/test.dart';
 import 'fixtures/fixtures.dart';
 
 void main() {
-  Supercluster<Map<String, dynamic>> supercluster(
+  SuperclusterImmutable<Map<String, dynamic>> supercluster(
           List<Map<String, dynamic>> points,
           {int? radius,
           int? extent,
           int? maxZoom}) =>
-      Supercluster<Map<String, dynamic>>(
+      SuperclusterImmutable<Map<String, dynamic>>(
         points: points,
         getX: (json) {
           return json['geometry']?['coordinates'][0].toDouble();

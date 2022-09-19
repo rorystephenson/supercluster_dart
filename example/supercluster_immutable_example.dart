@@ -8,7 +8,7 @@ void main() {
     MapPoint(name: 'second', lat: 46.4, lon: 0.9),
     MapPoint(name: 'third', lat: 45, lon: 19),
   ];
-  final supercluster = Supercluster<MapPoint>(
+  final supercluster = SuperclusterImmutable<MapPoint>(
     points: points,
     getX: (p) => p.lon,
     getY: (p) => p.lat,
