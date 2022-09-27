@@ -182,6 +182,18 @@ class MutableLayer<T> {
     return _innerTree.all().map((e) => e.data);
   }
 
+  bool containsPoint(MutableLayerPoint<T> layerPoint) {
+    for (final element in _innerTree.search(layerPoint.positionRBushPoint())) {
+      final data = element.data;
+      if (data is MutableLayerPoint<T> &&
+          data.originalPoint == layerPoint.originalPoint) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   RBushBox _boundary(List<MutableLayerElement<T>> clusterOrPoints) {
     RBushBox result = clusterOrPoints.first.positionRBushPoint();
 

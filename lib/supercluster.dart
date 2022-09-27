@@ -60,4 +60,7 @@ abstract class Supercluster<T> {
   Iterable<T> getLeaves();
 
   ClusterDataBase? aggregatedClusterData();
+
+  /// Returns whether the specified point is in the supercluster's index.
+  bool contains(T point);
 }

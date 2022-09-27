@@ -162,4 +162,21 @@ void main() {
 
     expect(index.search(-180, -90, 180, 90, 20).length, 1);
   });
+
+  test('contains', () {
+    final index = supercluster(Fixtures.features);
+
+    for (final feature in Fixtures.features) {
+      expect(index.contains(feature), isTrue);
+    }
+
+    var feature = Map<String, dynamic>.from(Fixtures.features.first);
+    feature['properties']['name'] = 'Changed name';
+    expect(index.contains(feature), isFalse);
+
+    feature = Map<String, dynamic>.from(Fixtures.features.first);
+    feature['geometry']['coordinates'][0] =
+        feature['geometry']['coordinates'][0] + 1;
+    expect(index.contains(feature), isFalse);
+  });
 }

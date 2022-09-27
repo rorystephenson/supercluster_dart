@@ -1,3 +1,8 @@
+## 2.1.0
+
+- Add new `contains` function which returns true if the provided point is
+  contained in the index.
+
 ## 2.0.0
 
 - BREAKING: SuperclusterImmutable no longer has a `points` argument. Instead the

@@ -232,6 +232,11 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     }
   }
 
+  @override
+  bool contains(T point) {
+    return _trees[maxZoom + 1].containsPoint(_initializePoint(point));
+  }
+
   List<MutableLayerElement<T>> childrenOf(MutableLayerCluster<T> cluster) {
     final r = util.searchRadius(radius, extent, cluster.highestZoom);
 

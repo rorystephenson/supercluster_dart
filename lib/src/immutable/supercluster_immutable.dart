@@ -31,19 +31,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     // generate a cluster object for each point and index input points into a KD-tree
     var clusters = <ImmutableLayerElement<T>>[];
     for (var i = 0; i < points.length; i++) {
-      final point = points[i];
-      final x = getX(point);
-      final y = getY(point);
-      clusters.add(
-        ImmutableLayerElement.initializePoint<T>(
-          originalPoint: point,
-          x: util.lngX(x),
-          y: util.latY(y),
-          index: i,
-          clusterData: extractClusterData?.call(point),
-          zoom: maxZoom + 1,
-        ),
-      );
+      clusters.add(_initializePoint(i, points[i]));
     }
 
     _trees[maxZoom + 1] = KDBush<ImmutableLayerElement<T>, double>(
@@ -69,6 +57,16 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
 
   @override
   List<ImmutableLayerElement<T>> search(
+    double westLng,
+    double southLat,
+    double eastLng,
+    double northLat,
+    int zoom,
+  ) {
+    return _searchImpl(westLng, southLat, eastLng, northLat, _limitZoom(zoom));
+  }
+
+  List<ImmutableLayerElement<T>> _searchImpl(
     double westLng,
     double southLat,
     double eastLng,
@@ -173,6 +171,24 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
   /// Returns the zoom level at which the cluster with the given id appears
   int getOriginZoom(int clusterId) {
     return (clusterId - points.length) % 32;
+  }
+
+  @override
+  bool contains(T point) {
+    final longitude = getX(point);
+    final latitude = getY(point);
+
+    for (final searchResult in _searchImpl(
+        longitude - 0.000001,
+        latitude - 0.000001,
+        longitude + 0.000001,
+        latitude + 0.000001,
+        maxZoom + 1)) {
+      if (searchResult is ImmutableLayerPoint<T> &&
+          points[searchResult.index] == point) return true;
+    }
+
+    return false;
   }
 
   int _appendLeaves(List<ImmutableLayerPoint<T>> result, int clusterId,
@@ -311,6 +327,20 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
   // get index of the point from which the cluster originated
   int _getOriginId(int clusterId) {
     return (clusterId - points.length) >> 5;
+  }
+
+  ImmutableLayerPoint<T> _initializePoint(int index, T point) {
+    final x = getX(point);
+    final y = getY(point);
+
+    return ImmutableLayerElement.initializePoint<T>(
+      originalPoint: point,
+      x: util.lngX(x),
+      y: util.latY(y),
+      index: index,
+      clusterData: extractClusterData?.call(point),
+      zoom: maxZoom + 1,
+    );
   }
 
   @override
