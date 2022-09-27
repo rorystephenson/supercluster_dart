@@ -10,7 +10,6 @@ void main() {
           int? extent,
           int? maxZoom}) =>
       SuperclusterImmutable<Map<String, dynamic>>(
-        points: points,
         getX: (json) {
           return json['geometry']?['coordinates'][0].toDouble();
         },
@@ -20,7 +19,7 @@ void main() {
         radius: radius,
         extent: extent,
         maxZoom: maxZoom,
-      );
+      )..load(points);
 
   test('returns children of a cluster', () {
     final index = supercluster(Fixtures.features);

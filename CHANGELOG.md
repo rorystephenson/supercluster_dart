@@ -1,3 +1,14 @@
+## 2.0.0
+
+- BREAKING: SuperclusterImmutable no longer has a `points` argument. Instead the
+            points should be set by calling load() as is done with
+            SuperclusterMutable.
+- BREAKING: onClusterDataChange callback has been removed. If you want to
+            react to cluster data changes you can do so after:
+              - `load` is called.
+              - `remove` is called and returns true.
+              - `modifyPointData` is called and returns true.
+
 ## 1.0.0
 
 - BREAKING: ClusterOrMapPoint has been renamed to LayerElement

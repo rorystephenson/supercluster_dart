@@ -6,12 +6,11 @@ import 'package:supercluster/src/util.dart' as util;
 import '../../supercluster.dart';
 
 class SuperclusterImmutable<T> extends Supercluster<T> {
-  List<T> points;
+  List<T> points = [];
 
   late final List<KDBush<ImmutableLayerElement<T>, double>?> _trees;
 
   SuperclusterImmutable({
-    required this.points,
     required super.getX,
     required super.getY,
     super.minZoom,
@@ -21,13 +20,12 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     super.extent,
     super.nodeSize = 64,
     super.extractClusterData,
-    super.onClusterDataChange,
   }) {
     _trees = List.filled(maxZoom + 2, null);
-    _load(points);
   }
 
-  void _load(List<T> points) {
+  @override
+  void load(List<T> points) {
     this.points = points;
 
     // generate a cluster object for each point and index input points into a KD-tree
@@ -67,8 +65,6 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
         nodeSize: nodeSize,
       );
     }
-
-    _onPointsChanged();
   }
 
   @override
@@ -312,22 +308,19 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
         point: (mapPoint) => extractClusterData!(mapPoint.originalPoint));
   }
 
-// get index of the point from which the cluster originated
+  // get index of the point from which the cluster originated
   int _getOriginId(int clusterId) {
     return (clusterId - points.length) >> 5;
   }
 
-  void _onPointsChanged() {
-    if (onClusterDataChange == null) return;
-
+  @override
+  ClusterDataBase? aggregatedClusterData() {
     final topLevelClusterData =
         _trees[minZoom]!.points.map((e) => e.clusterData);
 
-    final aggregatedData = topLevelClusterData.isEmpty
+    return topLevelClusterData.isEmpty
         ? null
         : topLevelClusterData
             .reduce((value, element) => value?.combine(element!));
-
-    onClusterDataChange!.call(aggregatedData);
   }
 }

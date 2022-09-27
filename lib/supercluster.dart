@@ -26,11 +26,6 @@ abstract class Supercluster<T> {
 
   final ClusterDataBase Function(T point)? extractClusterData;
 
-  /// An optional function which will be called whenever the aggregated cluster
-  /// data of all points changes. Note that this will only be calculated if the
-  /// callback is set.
-  Function(ClusterDataBase? aggregatedClusterData)? onClusterDataChange;
-
   Supercluster({
     required this.getX,
     required this.getY,
@@ -41,13 +36,18 @@ abstract class Supercluster<T> {
     int? radius,
     int? extent,
     this.extractClusterData,
-    this.onClusterDataChange,
   })  : assert(minPoints == null || minPoints > 1),
         minZoom = minZoom ?? 0,
         maxZoom = maxZoom ?? 16,
         minPoints = minPoints ?? 2,
         radius = radius ?? 40,
         extent = extent ?? 512;
+
+  /// Remove any existing points and replace them with [points]. This will
+  /// recreate the index completely and may take some time. If you want to
+  /// add/remove points in an efficient manner you should use
+  /// [SuperclusterImmutable] and call add/remove/modifyPointData.
+  void load(List<T> points);
 
   List<LayerElement<T>> search(
     double westLng,
@@ -58,4 +58,6 @@ abstract class Supercluster<T> {
   );
 
   Iterable<T> getLeaves();
+
+  ClusterDataBase? aggregatedClusterData();
 }

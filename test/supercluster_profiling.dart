@@ -34,11 +34,10 @@ void main() {
   tracker = SyncTimeTracker();
   tracker.track(
     () => SuperclusterImmutable(
-      points: testPoints,
       getX: TestPoint.getX,
       getY: TestPoint.getY,
       minPoints: 1,
-    ),
+    )..load(testPoints),
   );
   print('Clusters built, took: ${tracker.duration}');
   print('Finished SuperclusterImmutable profiling');

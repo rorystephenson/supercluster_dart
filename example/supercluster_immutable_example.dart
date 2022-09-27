@@ -9,15 +9,15 @@ void main() {
     MapPoint(name: 'third', lat: 45, lon: 19),
   ];
   final supercluster = SuperclusterImmutable<MapPoint>(
-    points: points,
     getX: (p) => p.lon,
     getY: (p) => p.lat,
-  );
+  )..load(points);
 
   final clustersAndPoints = supercluster.search(0, 40, 20, 50, 5).map(
         (e) => e.map(
-            cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
-            point: (point) => 'point ${point.originalPoint}'),
+          cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
+          point: (point) => 'point ${point.originalPoint}',
+        ),
       );
 
   print(clustersAndPoints.join(', '));

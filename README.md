@@ -38,17 +38,18 @@ void main() {
     MapPoint(name: 'second', lat: 46.4, lon: 0.9),
     MapPoint(name: 'third', lat: 45, lon: 19),
   ];
-  final supercluster = Supercluster<MapPoint>(
-    points: points,
+  final supercluster = SuperclusterImmutable<MapPoint>(
     getX: (p) => p.lon,
     getY: (p) => p.lat,
-  );
+  )
+    ..load(points);
 
   final clustersAndPoints = supercluster.search(0, 40, 20, 50, 5).map(
         (e) =>
         e.map(
-            cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
-            point: (point) => 'point ${point.originalPoint}'),
+          cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
+          point: (point) => 'point ${point.originalPoint}',
+        ),
   );
 
   print(clustersAndPoints.join(', '));
@@ -76,8 +77,9 @@ void main() {
   var clustersAndPoints = supercluster.search(0.0, 40, 20, 50, 5).map(
         (e) =>
         e.map(
-            cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
-            point: (point) => 'point ${point.originalPoint}'),
+          cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
+          point: (point) => 'point ${point.originalPoint}',
+        ),
   );
 
   print(clustersAndPoints.join(', '));

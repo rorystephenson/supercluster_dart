@@ -18,8 +18,9 @@ void main() {
 
   var clustersAndPoints = supercluster.search(0.0, 40, 20, 50, 5).map(
         (e) => e.map(
-            cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
-            point: (point) => 'point ${point.originalPoint}'),
+          cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
+          point: (point) => 'point ${point.originalPoint}',
+        ),
       );
 
   print(clustersAndPoints.join(', '));

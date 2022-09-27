@@ -26,7 +26,6 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     super.extent,
     super.nodeSize = 16,
     super.extractClusterData,
-    super.onClusterDataChange,
   })  : assert(minPoints == null || minPoints > 1),
         generateUuid = generateUuid ?? (() => Uuid().v4()) {
     _layerClusterer = LayerClusterer(
@@ -53,6 +52,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
       .toList();
 
   /// Replace any existing points with [points] and form clusters.
+  @override
   void load(List<T> points) {
     // generate a cluster object for each point
     var clusters = points
@@ -70,7 +70,6 @@ class SuperclusterMutable<T> extends Supercluster<T> {
           .toList(); // create a new set of clusters for the zoom
       _trees[z].load(clusters); // index input points into an R-tree
     }
-    _onPointsChanged();
   }
 
   @override
@@ -100,8 +99,9 @@ class SuperclusterMutable<T> extends Supercluster<T> {
       .map((e) => (e as MutableLayerPoint<T>).originalPoint);
 
   /// An optimised function for changing a single point's data without changing
-  /// the position of that point.
-  void modifyPointData(T oldPoint, T newPoint,
+  /// the position of that point. Returns true if [oldPoint] is found and
+  /// replaced.
+  bool modifyPointData(T oldPoint, T newPoint,
       {bool updateParentClusters = true}) {
     assert(
         getX(oldPoint) == getX(newPoint) && getY(oldPoint) == getY(newPoint));
@@ -109,7 +109,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     final baseLayerModification = _trees[maxZoom + 1]
         .removePointWithoutClustering(_initializePoint(oldPoint));
 
-    if (baseLayerModification.removed.isEmpty) return;
+    if (baseLayerModification.removed.isEmpty) return false;
     final oldLayerPoint =
         baseLayerModification.removed.single as MutableLayerPoint<T>;
 
@@ -143,14 +143,16 @@ class SuperclusterMutable<T> extends Supercluster<T> {
       );
     }
 
-    _onPointsChanged();
+    return true;
   }
 
-  void remove(T point) {
+  /// Remove [point]. Returns true if the specified point is found and removed.
+  /// Note that this may cause clusters to be split/changed.
+  bool remove(T point) {
     final layerModifications = <LayerModification<T>>[];
     layerModifications.add(_trees[maxZoom + 1]
         .removePointWithoutClustering(_initializePoint(point)));
-    if (layerModifications.single.removed.isEmpty) return;
+    if (layerModifications.single.removed.isEmpty) return false;
 
     for (int z = maxZoom; z >= minZoom; z--) {
       layerModifications
@@ -171,9 +173,10 @@ class SuperclusterMutable<T> extends Supercluster<T> {
           .rebuildLayer(_layerClusterer, _trees[z + 1], layerRemoval.removed);
     }
 
-    _onPointsChanged();
+    return true;
   }
 
+  /// Insert [point]. Note that this may cause clusters to be created/changed.
   void insert(T point) {
     final layerPoint = _initializePoint(point);
     _trees[maxZoom + 1].addPointWithoutClustering(layerPoint);
@@ -194,10 +197,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
 
     final int firstClusteringZoom = lowestZoomWhereInsertionDoesNotCluster - 1;
 
-    if (firstClusteringZoom < minZoom) {
-      _onPointsChanged();
-      return;
-    }
+    if (firstClusteringZoom < minZoom) return;
 
     final removalElements = elementsToClusterWith.length == 1 &&
             elementsToClusterWith.single is MutableLayerCluster<T>
@@ -230,8 +230,6 @@ class SuperclusterMutable<T> extends Supercluster<T> {
       _trees[z]
           .rebuildLayer(_layerClusterer, _trees[z + 1], layerRemoval.removed);
     }
-
-    _onPointsChanged();
   }
 
   List<MutableLayerElement<T>> childrenOf(MutableLayerCluster<T> cluster) {
@@ -249,17 +247,14 @@ class SuperclusterMutable<T> extends Supercluster<T> {
         .toList();
   }
 
-  void _onPointsChanged() {
-    if (onClusterDataChange == null) return;
-
+  @override
+  ClusterDataBase? aggregatedClusterData() {
     final topLevelClusterData = _trees[minZoom].all().map((e) => e.clusterData);
 
-    final aggregatedData = topLevelClusterData.isEmpty
+    return topLevelClusterData.isEmpty
         ? null
         : topLevelClusterData
             .reduce((value, element) => value?.combine(element!));
-
-    onClusterDataChange!.call(aggregatedData);
   }
 
   int _limitZoom(int zoom) {
