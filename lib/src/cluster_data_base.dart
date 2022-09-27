@@ -1,3 +1,3 @@
 abstract class ClusterDataBase {
-  ClusterDataBase combine(covariant ClusterDataBase point);
+  ClusterDataBase combine(covariant ClusterDataBase data);
 }
