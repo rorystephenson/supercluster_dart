@@ -34,7 +34,7 @@ abstract class Supercluster<T> {
   Supercluster({
     required this.getX,
     required this.getY,
-    required int nodeSize,
+    required this.nodeSize,
     int? minZoom,
     int? maxZoom,
     int? minPoints,
@@ -47,8 +47,7 @@ abstract class Supercluster<T> {
         maxZoom = maxZoom ?? 16,
         minPoints = minPoints ?? 2,
         radius = radius ?? 40,
-        extent = extent ?? 512,
-        nodeSize = nodeSize ?? 16;
+        extent = extent ?? 512;
 
   List<LayerElement<T>> search(
     double westLng,
