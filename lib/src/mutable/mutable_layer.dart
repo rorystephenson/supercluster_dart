@@ -19,6 +19,10 @@ class MutableLayer<T> {
     required this.searchRadius,
   }) : _innerTree = RBush(nodeSize);
 
+  void clear() {
+    _innerTree.clear();
+  }
+
   void load(List<RBushElement<MutableLayerElement<T>>> elements) {
     _innerTree.load(elements);
   }
