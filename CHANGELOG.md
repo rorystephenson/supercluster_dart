@@ -1,18 +1,21 @@
+## 2.1.1
+
+- BUGFIX: SuperclusterMutable now removes existing points when calling load(). This was the
+  documented behaviour but there was a bug in the implementation. Thanks
+  [`@Robbendebiene`](https://github.com/Robbendebiene) for pointing this out.
+
 ## 2.1.0
 
-- Add new `contains` function which returns true if the provided point is
-  contained in the index.
+- Add new `contains` function which returns true if the provided point is contained in the index.
 
 ## 2.0.0
 
-- BREAKING: SuperclusterImmutable no longer has a `points` argument. Instead the
-            points should be set by calling load() as is done with
-            SuperclusterMutable.
-- BREAKING: onClusterDataChange callback has been removed. If you want to
-            react to cluster data changes you can do so after:
-              - `load` is called.
-              - `remove` is called and returns true.
-              - `modifyPointData` is called and returns true.
+- BREAKING: SuperclusterImmutable no longer has a `points` argument. Instead the points should be
+  set by calling load() as is done with SuperclusterMutable.
+- BREAKING: onClusterDataChange callback has been removed. If you want to react to cluster data
+  changes you can do so after:
+  - `load` is called. - `remove` is called and returns true. - `modifyPointData` is called and
+    returns true.
 
 ## 1.0.0
 

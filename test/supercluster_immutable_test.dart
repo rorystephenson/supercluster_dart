@@ -21,6 +21,13 @@ void main() {
         maxZoom: maxZoom,
       )..load(points);
 
+  test('removes existing points when calling load()', () {
+    final index = supercluster(Fixtures.features);
+    index.load([]);
+    expect(index.points, isEmpty);
+    expect(index.getLeaves(), isEmpty);
+  });
+
   test('returns children of a cluster', () {
     final index = supercluster(Fixtures.features);
     final childCounts = index.childrenOf(163).map((p) => p.numPoints);

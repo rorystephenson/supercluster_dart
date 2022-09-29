@@ -59,7 +59,9 @@ class SuperclusterMutable<T> extends Supercluster<T> {
         .map((point) => _initializePoint(point).positionRBushPoint())
         .toList();
 
-    _trees[maxZoom + 1].load(clusters);
+    _trees[maxZoom + 1]
+      ..clear()
+      ..load(clusters);
 
     // cluster points on max zoom, then cluster the results on previous zoom, etc.;
     // results in a cluster hierarchy across zoom levels
@@ -68,7 +70,9 @@ class SuperclusterMutable<T> extends Supercluster<T> {
           .cluster(clusters, z, _trees[z + 1])
           .map((c) => c.positionRBushPoint())
           .toList(); // create a new set of clusters for the zoom
-      _trees[z].load(clusters); // index input points into an R-tree
+      _trees[z]
+        ..clear()
+        ..load(clusters); // index input points into an R-tree
     }
   }
 

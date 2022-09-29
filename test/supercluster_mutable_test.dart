@@ -111,6 +111,12 @@ void main() {
     ]);
   });
 
+  test('removes existing points when calling load()', () {
+    final index = supercluster(Fixtures.features);
+    index.load([]);
+    expect(numPointsAtZoom(index, index.maxZoom), 0);
+  });
+
   test('clusters points with a minimum cluster size', () {
     final index = supercluster(Fixtures.features, minPoints: 5);
     expect(pointCountsAtZooms(index), [
