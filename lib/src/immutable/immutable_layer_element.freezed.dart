@@ -1,7 +1,7 @@
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
-// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'immutable_layer_element.dart';
 
@@ -56,7 +56,7 @@ mixin _$ImmutableLayerElement<T> {
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(
+    TResult? Function(
             double x,
             double y,
             int childPointCount,
@@ -67,7 +67,7 @@ mixin _$ImmutableLayerElement<T> {
             int highestZoom,
             int parentId)?
         cluster,
-    TResult Function(
+    TResult? Function(
             T originalPoint,
             double x,
             double y,
@@ -115,8 +115,8 @@ mixin _$ImmutableLayerElement<T> {
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult Function(ImmutableLayerCluster<T> value)? cluster,
-    TResult Function(ImmutableLayerPoint<T> value)? point,
+    TResult? Function(ImmutableLayerCluster<T> value)? cluster,
+    TResult? Function(ImmutableLayerPoint<T> value)? point,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -136,7 +136,8 @@ mixin _$ImmutableLayerElement<T> {
 abstract class $ImmutableLayerElementCopyWith<T, $Res> {
   factory $ImmutableLayerElementCopyWith(ImmutableLayerElement<T> value,
           $Res Function(ImmutableLayerElement<T>) then) =
-      _$ImmutableLayerElementCopyWithImpl<T, $Res>;
+      _$ImmutableLayerElementCopyWithImpl<T, $Res, ImmutableLayerElement<T>>;
+  @useResult
   $Res call(
       {double x,
       double y,
@@ -148,54 +149,57 @@ abstract class $ImmutableLayerElementCopyWith<T, $Res> {
 }
 
 /// @nodoc
-class _$ImmutableLayerElementCopyWithImpl<T, $Res>
+class _$ImmutableLayerElementCopyWithImpl<T, $Res,
+        $Val extends ImmutableLayerElement<T>>
     implements $ImmutableLayerElementCopyWith<T, $Res> {
   _$ImmutableLayerElementCopyWithImpl(this._value, this._then);
 
-  final ImmutableLayerElement<T> _value;
   // ignore: unused_field
-  final $Res Function(ImmutableLayerElement<T>) _then;
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
 
+  @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? x = freezed,
-    Object? y = freezed,
+    Object? x = null,
+    Object? y = null,
     Object? clusterData = freezed,
-    Object? visitedAtZoom = freezed,
-    Object? lowestZoom = freezed,
-    Object? highestZoom = freezed,
-    Object? parentId = freezed,
+    Object? visitedAtZoom = null,
+    Object? lowestZoom = null,
+    Object? highestZoom = null,
+    Object? parentId = null,
   }) {
     return _then(_value.copyWith(
-      x: x == freezed
+      x: null == x
           ? _value.x
           : x // ignore: cast_nullable_to_non_nullable
               as double,
-      y: y == freezed
+      y: null == y
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
               as double,
-      clusterData: clusterData == freezed
+      clusterData: freezed == clusterData
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
               as ClusterDataBase?,
-      visitedAtZoom: visitedAtZoom == freezed
+      visitedAtZoom: null == visitedAtZoom
           ? _value.visitedAtZoom
           : visitedAtZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      lowestZoom: lowestZoom == freezed
+      lowestZoom: null == lowestZoom
           ? _value.lowestZoom
           : lowestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      highestZoom: highestZoom == freezed
+      highestZoom: null == highestZoom
           ? _value.highestZoom
           : highestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      parentId: parentId == freezed
+      parentId: null == parentId
           ? _value.parentId
           : parentId // ignore: cast_nullable_to_non_nullable
               as int,
-    ));
+    ) as $Val);
   }
 }
 
@@ -206,6 +210,7 @@ abstract class _$$ImmutableLayerClusterCopyWith<T, $Res>
           $Res Function(_$ImmutableLayerCluster<T>) then) =
       __$$ImmutableLayerClusterCopyWithImpl<T, $Res>;
   @override
+  @useResult
   $Res call(
       {double x,
       double y,
@@ -220,62 +225,60 @@ abstract class _$$ImmutableLayerClusterCopyWith<T, $Res>
 
 /// @nodoc
 class __$$ImmutableLayerClusterCopyWithImpl<T, $Res>
-    extends _$ImmutableLayerElementCopyWithImpl<T, $Res>
+    extends _$ImmutableLayerElementCopyWithImpl<T, $Res,
+        _$ImmutableLayerCluster<T>>
     implements _$$ImmutableLayerClusterCopyWith<T, $Res> {
   __$$ImmutableLayerClusterCopyWithImpl(_$ImmutableLayerCluster<T> _value,
       $Res Function(_$ImmutableLayerCluster<T>) _then)
-      : super(_value, (v) => _then(v as _$ImmutableLayerCluster<T>));
+      : super(_value, _then);
 
-  @override
-  _$ImmutableLayerCluster<T> get _value =>
-      super._value as _$ImmutableLayerCluster<T>;
-
+  @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? x = freezed,
-    Object? y = freezed,
-    Object? childPointCount = freezed,
-    Object? id = freezed,
+    Object? x = null,
+    Object? y = null,
+    Object? childPointCount = null,
+    Object? id = null,
     Object? clusterData = freezed,
-    Object? visitedAtZoom = freezed,
-    Object? lowestZoom = freezed,
-    Object? highestZoom = freezed,
-    Object? parentId = freezed,
+    Object? visitedAtZoom = null,
+    Object? lowestZoom = null,
+    Object? highestZoom = null,
+    Object? parentId = null,
   }) {
     return _then(_$ImmutableLayerCluster<T>(
-      x: x == freezed
+      x: null == x
           ? _value.x
           : x // ignore: cast_nullable_to_non_nullable
               as double,
-      y: y == freezed
+      y: null == y
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
               as double,
-      childPointCount: childPointCount == freezed
+      childPointCount: null == childPointCount
           ? _value.childPointCount
           : childPointCount // ignore: cast_nullable_to_non_nullable
               as int,
-      id: id == freezed
+      id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as int,
-      clusterData: clusterData == freezed
+      clusterData: freezed == clusterData
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
               as ClusterDataBase?,
-      visitedAtZoom: visitedAtZoom == freezed
+      visitedAtZoom: null == visitedAtZoom
           ? _value.visitedAtZoom
           : visitedAtZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      lowestZoom: lowestZoom == freezed
+      lowestZoom: null == lowestZoom
           ? _value.lowestZoom
           : lowestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      highestZoom: highestZoom == freezed
+      highestZoom: null == highestZoom
           ? _value.highestZoom
           : highestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      parentId: parentId == freezed
+      parentId: null == parentId
           ? _value.parentId
           : parentId // ignore: cast_nullable_to_non_nullable
               as int,
@@ -326,6 +329,7 @@ class _$ImmutableLayerCluster<T> extends ImmutableLayerCluster<T>
 
   @JsonKey(ignore: true)
   @override
+  @pragma('vm:prefer-inline')
   _$$ImmutableLayerClusterCopyWith<T, _$ImmutableLayerCluster<T>>
       get copyWith =>
           __$$ImmutableLayerClusterCopyWithImpl<T, _$ImmutableLayerCluster<T>>(
@@ -364,7 +368,7 @@ class _$ImmutableLayerCluster<T> extends ImmutableLayerCluster<T>
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(
+    TResult? Function(
             double x,
             double y,
             int childPointCount,
@@ -375,7 +379,7 @@ class _$ImmutableLayerCluster<T> extends ImmutableLayerCluster<T>
             int highestZoom,
             int parentId)?
         cluster,
-    TResult Function(
+    TResult? Function(
             T originalPoint,
             double x,
             double y,
@@ -437,8 +441,8 @@ class _$ImmutableLayerCluster<T> extends ImmutableLayerCluster<T>
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult Function(ImmutableLayerCluster<T> value)? cluster,
-    TResult Function(ImmutableLayerPoint<T> value)? point,
+    TResult? Function(ImmutableLayerCluster<T> value)? cluster,
+    TResult? Function(ImmutableLayerPoint<T> value)? point,
   }) {
     return cluster?.call(this);
   }
@@ -505,6 +509,7 @@ abstract class _$$ImmutableLayerPointCopyWith<T, $Res>
           $Res Function(_$ImmutableLayerPoint<T>) then) =
       __$$ImmutableLayerPointCopyWithImpl<T, $Res>;
   @override
+  @useResult
   $Res call(
       {T originalPoint,
       double x,
@@ -519,62 +524,60 @@ abstract class _$$ImmutableLayerPointCopyWith<T, $Res>
 
 /// @nodoc
 class __$$ImmutableLayerPointCopyWithImpl<T, $Res>
-    extends _$ImmutableLayerElementCopyWithImpl<T, $Res>
+    extends _$ImmutableLayerElementCopyWithImpl<T, $Res,
+        _$ImmutableLayerPoint<T>>
     implements _$$ImmutableLayerPointCopyWith<T, $Res> {
   __$$ImmutableLayerPointCopyWithImpl(_$ImmutableLayerPoint<T> _value,
       $Res Function(_$ImmutableLayerPoint<T>) _then)
-      : super(_value, (v) => _then(v as _$ImmutableLayerPoint<T>));
+      : super(_value, _then);
 
-  @override
-  _$ImmutableLayerPoint<T> get _value =>
-      super._value as _$ImmutableLayerPoint<T>;
-
+  @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? originalPoint = freezed,
-    Object? x = freezed,
-    Object? y = freezed,
-    Object? index = freezed,
+    Object? x = null,
+    Object? y = null,
+    Object? index = null,
     Object? clusterData = freezed,
-    Object? parentId = freezed,
-    Object? visitedAtZoom = freezed,
-    Object? lowestZoom = freezed,
-    Object? highestZoom = freezed,
+    Object? parentId = null,
+    Object? visitedAtZoom = null,
+    Object? lowestZoom = null,
+    Object? highestZoom = null,
   }) {
     return _then(_$ImmutableLayerPoint<T>(
-      originalPoint: originalPoint == freezed
+      originalPoint: freezed == originalPoint
           ? _value.originalPoint
           : originalPoint // ignore: cast_nullable_to_non_nullable
               as T,
-      x: x == freezed
+      x: null == x
           ? _value.x
           : x // ignore: cast_nullable_to_non_nullable
               as double,
-      y: y == freezed
+      y: null == y
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
               as double,
-      index: index == freezed
+      index: null == index
           ? _value.index
           : index // ignore: cast_nullable_to_non_nullable
               as int,
-      clusterData: clusterData == freezed
+      clusterData: freezed == clusterData
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
               as ClusterDataBase?,
-      parentId: parentId == freezed
+      parentId: null == parentId
           ? _value.parentId
           : parentId // ignore: cast_nullable_to_non_nullable
               as int,
-      visitedAtZoom: visitedAtZoom == freezed
+      visitedAtZoom: null == visitedAtZoom
           ? _value.visitedAtZoom
           : visitedAtZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      lowestZoom: lowestZoom == freezed
+      lowestZoom: null == lowestZoom
           ? _value.lowestZoom
           : lowestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      highestZoom: highestZoom == freezed
+      highestZoom: null == highestZoom
           ? _value.highestZoom
           : highestZoom // ignore: cast_nullable_to_non_nullable
               as int,
@@ -625,6 +628,7 @@ class _$ImmutableLayerPoint<T> extends ImmutableLayerPoint<T>
 
   @JsonKey(ignore: true)
   @override
+  @pragma('vm:prefer-inline')
   _$$ImmutableLayerPointCopyWith<T, _$ImmutableLayerPoint<T>> get copyWith =>
       __$$ImmutableLayerPointCopyWithImpl<T, _$ImmutableLayerPoint<T>>(
           this, _$identity);
@@ -662,7 +666,7 @@ class _$ImmutableLayerPoint<T> extends ImmutableLayerPoint<T>
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(
+    TResult? Function(
             double x,
             double y,
             int childPointCount,
@@ -673,7 +677,7 @@ class _$ImmutableLayerPoint<T> extends ImmutableLayerPoint<T>
             int highestZoom,
             int parentId)?
         cluster,
-    TResult Function(
+    TResult? Function(
             T originalPoint,
             double x,
             double y,
@@ -735,8 +739,8 @@ class _$ImmutableLayerPoint<T> extends ImmutableLayerPoint<T>
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult Function(ImmutableLayerCluster<T> value)? cluster,
-    TResult Function(ImmutableLayerPoint<T> value)? point,
+    TResult? Function(ImmutableLayerCluster<T> value)? cluster,
+    TResult? Function(ImmutableLayerPoint<T> value)? point,
   }) {
     return point?.call(this);
   }

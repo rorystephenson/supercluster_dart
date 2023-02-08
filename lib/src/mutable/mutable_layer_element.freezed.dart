@@ -1,7 +1,7 @@
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
-// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'mutable_layer_element.dart';
 
@@ -68,7 +68,7 @@ mixin _$MutableLayerElement<T> {
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(
+    TResult? Function(
             String uuid,
             double x,
             double y,
@@ -81,7 +81,7 @@ mixin _$MutableLayerElement<T> {
             int highestZoom,
             String? parentUuid)?
         cluster,
-    TResult Function(
+    TResult? Function(
             String uuid,
             T originalPoint,
             double x,
@@ -135,8 +135,8 @@ mixin _$MutableLayerElement<T> {
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult Function(MutableLayerCluster<T> value)? cluster,
-    TResult Function(MutableLayerPoint<T> value)? point,
+    TResult? Function(MutableLayerCluster<T> value)? cluster,
+    TResult? Function(MutableLayerPoint<T> value)? point,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -156,7 +156,8 @@ mixin _$MutableLayerElement<T> {
 abstract class $MutableLayerElementCopyWith<T, $Res> {
   factory $MutableLayerElementCopyWith(MutableLayerElement<T> value,
           $Res Function(MutableLayerElement<T>) then) =
-      _$MutableLayerElementCopyWithImpl<T, $Res>;
+      _$MutableLayerElementCopyWithImpl<T, $Res, MutableLayerElement<T>>;
+  @useResult
   $Res call(
       {String uuid,
       double x,
@@ -171,69 +172,72 @@ abstract class $MutableLayerElementCopyWith<T, $Res> {
 }
 
 /// @nodoc
-class _$MutableLayerElementCopyWithImpl<T, $Res>
+class _$MutableLayerElementCopyWithImpl<T, $Res,
+        $Val extends MutableLayerElement<T>>
     implements $MutableLayerElementCopyWith<T, $Res> {
   _$MutableLayerElementCopyWithImpl(this._value, this._then);
 
-  final MutableLayerElement<T> _value;
   // ignore: unused_field
-  final $Res Function(MutableLayerElement<T>) _then;
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
 
+  @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? uuid = freezed,
-    Object? x = freezed,
-    Object? y = freezed,
-    Object? wX = freezed,
-    Object? wY = freezed,
+    Object? uuid = null,
+    Object? x = null,
+    Object? y = null,
+    Object? wX = null,
+    Object? wY = null,
     Object? clusterData = freezed,
-    Object? visitedAtZoom = freezed,
-    Object? lowestZoom = freezed,
-    Object? highestZoom = freezed,
+    Object? visitedAtZoom = null,
+    Object? lowestZoom = null,
+    Object? highestZoom = null,
     Object? parentUuid = freezed,
   }) {
     return _then(_value.copyWith(
-      uuid: uuid == freezed
+      uuid: null == uuid
           ? _value.uuid
           : uuid // ignore: cast_nullable_to_non_nullable
               as String,
-      x: x == freezed
+      x: null == x
           ? _value.x
           : x // ignore: cast_nullable_to_non_nullable
               as double,
-      y: y == freezed
+      y: null == y
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
               as double,
-      wX: wX == freezed
+      wX: null == wX
           ? _value.wX
           : wX // ignore: cast_nullable_to_non_nullable
               as double,
-      wY: wY == freezed
+      wY: null == wY
           ? _value.wY
           : wY // ignore: cast_nullable_to_non_nullable
               as double,
-      clusterData: clusterData == freezed
+      clusterData: freezed == clusterData
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
               as ClusterDataBase?,
-      visitedAtZoom: visitedAtZoom == freezed
+      visitedAtZoom: null == visitedAtZoom
           ? _value.visitedAtZoom
           : visitedAtZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      lowestZoom: lowestZoom == freezed
+      lowestZoom: null == lowestZoom
           ? _value.lowestZoom
           : lowestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      highestZoom: highestZoom == freezed
+      highestZoom: null == highestZoom
           ? _value.highestZoom
           : highestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      parentUuid: parentUuid == freezed
+      parentUuid: freezed == parentUuid
           ? _value.parentUuid
           : parentUuid // ignore: cast_nullable_to_non_nullable
               as String?,
-    ));
+    ) as $Val);
   }
 }
 
@@ -244,6 +248,7 @@ abstract class _$$MutableLayerClusterCopyWith<T, $Res>
           $Res Function(_$MutableLayerCluster<T>) then) =
       __$$MutableLayerClusterCopyWithImpl<T, $Res>;
   @override
+  @useResult
   $Res call(
       {String uuid,
       double x,
@@ -260,72 +265,69 @@ abstract class _$$MutableLayerClusterCopyWith<T, $Res>
 
 /// @nodoc
 class __$$MutableLayerClusterCopyWithImpl<T, $Res>
-    extends _$MutableLayerElementCopyWithImpl<T, $Res>
+    extends _$MutableLayerElementCopyWithImpl<T, $Res, _$MutableLayerCluster<T>>
     implements _$$MutableLayerClusterCopyWith<T, $Res> {
   __$$MutableLayerClusterCopyWithImpl(_$MutableLayerCluster<T> _value,
       $Res Function(_$MutableLayerCluster<T>) _then)
-      : super(_value, (v) => _then(v as _$MutableLayerCluster<T>));
+      : super(_value, _then);
 
-  @override
-  _$MutableLayerCluster<T> get _value =>
-      super._value as _$MutableLayerCluster<T>;
-
+  @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? uuid = freezed,
-    Object? x = freezed,
-    Object? y = freezed,
-    Object? wX = freezed,
-    Object? wY = freezed,
-    Object? childPointCount = freezed,
+    Object? uuid = null,
+    Object? x = null,
+    Object? y = null,
+    Object? wX = null,
+    Object? wY = null,
+    Object? childPointCount = null,
     Object? clusterData = freezed,
-    Object? visitedAtZoom = freezed,
-    Object? lowestZoom = freezed,
-    Object? highestZoom = freezed,
+    Object? visitedAtZoom = null,
+    Object? lowestZoom = null,
+    Object? highestZoom = null,
     Object? parentUuid = freezed,
   }) {
     return _then(_$MutableLayerCluster<T>(
-      uuid: uuid == freezed
+      uuid: null == uuid
           ? _value.uuid
           : uuid // ignore: cast_nullable_to_non_nullable
               as String,
-      x: x == freezed
+      x: null == x
           ? _value.x
           : x // ignore: cast_nullable_to_non_nullable
               as double,
-      y: y == freezed
+      y: null == y
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
               as double,
-      wX: wX == freezed
+      wX: null == wX
           ? _value.wX
           : wX // ignore: cast_nullable_to_non_nullable
               as double,
-      wY: wY == freezed
+      wY: null == wY
           ? _value.wY
           : wY // ignore: cast_nullable_to_non_nullable
               as double,
-      childPointCount: childPointCount == freezed
+      childPointCount: null == childPointCount
           ? _value.childPointCount
           : childPointCount // ignore: cast_nullable_to_non_nullable
               as int,
-      clusterData: clusterData == freezed
+      clusterData: freezed == clusterData
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
               as ClusterDataBase?,
-      visitedAtZoom: visitedAtZoom == freezed
+      visitedAtZoom: null == visitedAtZoom
           ? _value.visitedAtZoom
           : visitedAtZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      lowestZoom: lowestZoom == freezed
+      lowestZoom: null == lowestZoom
           ? _value.lowestZoom
           : lowestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      highestZoom: highestZoom == freezed
+      highestZoom: null == highestZoom
           ? _value.highestZoom
           : highestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      parentUuid: parentUuid == freezed
+      parentUuid: freezed == parentUuid
           ? _value.parentUuid
           : parentUuid // ignore: cast_nullable_to_non_nullable
               as String?,
@@ -381,6 +383,7 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
 
   @JsonKey(ignore: true)
   @override
+  @pragma('vm:prefer-inline')
   _$$MutableLayerClusterCopyWith<T, _$MutableLayerCluster<T>> get copyWith =>
       __$$MutableLayerClusterCopyWithImpl<T, _$MutableLayerCluster<T>>(
           this, _$identity);
@@ -422,7 +425,7 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(
+    TResult? Function(
             String uuid,
             double x,
             double y,
@@ -435,7 +438,7 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
             int highestZoom,
             String? parentUuid)?
         cluster,
-    TResult Function(
+    TResult? Function(
             String uuid,
             T originalPoint,
             double x,
@@ -503,8 +506,8 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult Function(MutableLayerCluster<T> value)? cluster,
-    TResult Function(MutableLayerPoint<T> value)? point,
+    TResult? Function(MutableLayerCluster<T> value)? cluster,
+    TResult? Function(MutableLayerPoint<T> value)? point,
   }) {
     return cluster?.call(this);
   }
@@ -584,6 +587,7 @@ abstract class _$$MutableLayerPointCopyWith<T, $Res>
           $Res Function(_$MutableLayerPoint<T>) then) =
       __$$MutableLayerPointCopyWithImpl<T, $Res>;
   @override
+  @useResult
   $Res call(
       {String uuid,
       T originalPoint,
@@ -600,71 +604,69 @@ abstract class _$$MutableLayerPointCopyWith<T, $Res>
 
 /// @nodoc
 class __$$MutableLayerPointCopyWithImpl<T, $Res>
-    extends _$MutableLayerElementCopyWithImpl<T, $Res>
+    extends _$MutableLayerElementCopyWithImpl<T, $Res, _$MutableLayerPoint<T>>
     implements _$$MutableLayerPointCopyWith<T, $Res> {
   __$$MutableLayerPointCopyWithImpl(_$MutableLayerPoint<T> _value,
       $Res Function(_$MutableLayerPoint<T>) _then)
-      : super(_value, (v) => _then(v as _$MutableLayerPoint<T>));
+      : super(_value, _then);
 
-  @override
-  _$MutableLayerPoint<T> get _value => super._value as _$MutableLayerPoint<T>;
-
+  @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? uuid = freezed,
+    Object? uuid = null,
     Object? originalPoint = freezed,
-    Object? x = freezed,
-    Object? y = freezed,
-    Object? wX = freezed,
-    Object? wY = freezed,
+    Object? x = null,
+    Object? y = null,
+    Object? wX = null,
+    Object? wY = null,
     Object? clusterData = freezed,
-    Object? visitedAtZoom = freezed,
-    Object? lowestZoom = freezed,
-    Object? highestZoom = freezed,
+    Object? visitedAtZoom = null,
+    Object? lowestZoom = null,
+    Object? highestZoom = null,
     Object? parentUuid = freezed,
   }) {
     return _then(_$MutableLayerPoint<T>(
-      uuid: uuid == freezed
+      uuid: null == uuid
           ? _value.uuid
           : uuid // ignore: cast_nullable_to_non_nullable
               as String,
-      originalPoint: originalPoint == freezed
+      originalPoint: freezed == originalPoint
           ? _value.originalPoint
           : originalPoint // ignore: cast_nullable_to_non_nullable
               as T,
-      x: x == freezed
+      x: null == x
           ? _value.x
           : x // ignore: cast_nullable_to_non_nullable
               as double,
-      y: y == freezed
+      y: null == y
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
               as double,
-      wX: wX == freezed
+      wX: null == wX
           ? _value.wX
           : wX // ignore: cast_nullable_to_non_nullable
               as double,
-      wY: wY == freezed
+      wY: null == wY
           ? _value.wY
           : wY // ignore: cast_nullable_to_non_nullable
               as double,
-      clusterData: clusterData == freezed
+      clusterData: freezed == clusterData
           ? _value.clusterData
           : clusterData // ignore: cast_nullable_to_non_nullable
               as ClusterDataBase?,
-      visitedAtZoom: visitedAtZoom == freezed
+      visitedAtZoom: null == visitedAtZoom
           ? _value.visitedAtZoom
           : visitedAtZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      lowestZoom: lowestZoom == freezed
+      lowestZoom: null == lowestZoom
           ? _value.lowestZoom
           : lowestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      highestZoom: highestZoom == freezed
+      highestZoom: null == highestZoom
           ? _value.highestZoom
           : highestZoom // ignore: cast_nullable_to_non_nullable
               as int,
-      parentUuid: parentUuid == freezed
+      parentUuid: freezed == parentUuid
           ? _value.parentUuid
           : parentUuid // ignore: cast_nullable_to_non_nullable
               as String?,
@@ -719,6 +721,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
 
   @JsonKey(ignore: true)
   @override
+  @pragma('vm:prefer-inline')
   _$$MutableLayerPointCopyWith<T, _$MutableLayerPoint<T>> get copyWith =>
       __$$MutableLayerPointCopyWithImpl<T, _$MutableLayerPoint<T>>(
           this, _$identity);
@@ -760,7 +763,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult Function(
+    TResult? Function(
             String uuid,
             double x,
             double y,
@@ -773,7 +776,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             int highestZoom,
             String? parentUuid)?
         cluster,
-    TResult Function(
+    TResult? Function(
             String uuid,
             T originalPoint,
             double x,
@@ -841,8 +844,8 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult Function(MutableLayerCluster<T> value)? cluster,
-    TResult Function(MutableLayerPoint<T> value)? point,
+    TResult? Function(MutableLayerCluster<T> value)? cluster,
+    TResult? Function(MutableLayerPoint<T> value)? point,
   }) {
     return point?.call(this);
   }
