@@ -217,8 +217,9 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     ];
 
     for (int z = firstClusteringZoom - 1; z >= minZoom; z--) {
-      layerModifications
-          .add(_trees[z].removeElementsAndAncestors(layerModifications.last));
+      layerModifications.add(
+        _trees[z].removeElementsAndAncestors(layerModifications.last),
+      );
     }
 
     layerModifications

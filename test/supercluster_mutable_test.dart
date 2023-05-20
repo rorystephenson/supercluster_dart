@@ -175,6 +175,48 @@ void main() {
     }
   });
 
+  test('add and remove point near a cluster', () {
+    final points = [
+      [53.3498, -6.2603], // lat, lon
+      [53.3488, -6.2613], // lat, lon
+    ];
+
+    final index = SuperclusterMutable<List<double>>(
+      extractClusterData: (point) => TestClusterData(1),
+      radius: 80,
+      getX: (coords) => coords[1],
+      getY: (coords) => coords[0],
+    )..load(points);
+
+    final thirdPoint = [53.347312, -6.24508]; // lat, lon
+
+    expect(layerElementsAtZoom(index, 15).length, 2);
+    expect(layerElementsAtZoom(index, 14).length, 1);
+    final originalCluster =
+        layerElementsAtZoom(index, 14).single as MutableLayerCluster;
+    expect(originalCluster.lowestZoom, 0);
+    expect(originalCluster.highestZoom, 14);
+
+    index.insert(thirdPoint);
+    expect(layerElementsAtZoom(index, 15).length, 3);
+    expect(layerElementsAtZoom(index, 14).length, 2);
+    expect(layerElementsAtZoom(index, 13).length, 2);
+    expect(layerElementsAtZoom(index, 12).length, 2);
+    expect(layerElementsAtZoom(index, 11).length, 1);
+    final originalClusterB =
+        layerElementsAtZoom(index, 14).whereType<MutableLayerCluster>().single;
+    expect(originalClusterB.highestZoom, 14);
+    expect(originalClusterB.lowestZoom, 12);
+
+    index.remove(thirdPoint);
+    expect(layerElementsAtZoom(index, 15).length, 2);
+    expect(layerElementsAtZoom(index, 14).length, 1);
+    final newCluster =
+        layerElementsAtZoom(index, 14).single as MutableLayerCluster;
+    expect(newCluster.lowestZoom, 0);
+    expect(newCluster.highestZoom, 14);
+  });
+
   test('insertion', () {
     final index = supercluster(Fixtures.features);
 

@@ -60,7 +60,6 @@ class LayerClusterer<T> {
       if (clusterableNeighbors.length + 1 < minPoints) {
         p.lowestZoom = zoom;
         clusters.add(p); // no neighbors, add a single point as cluster
-
       } else {
         ClusterDataBase? clusterData;
         for (final clusterableNeighbor in clusterableNeighbors) {

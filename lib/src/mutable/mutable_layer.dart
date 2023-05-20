@@ -64,7 +64,7 @@ class MutableLayer<T> {
       LayerModification<T> previousModification) {
     final result = LayerModification<T>(layer: this);
 
-    // Must search withing searchRadius * 2 because the a parent of a removed
+    // Must search withing searchRadius * 2 because the parent of a removed
     // layer element may be that far away if it's weighted position is as far
     // as possible from its position.
     final removalBounds =
@@ -98,7 +98,7 @@ class MutableLayer<T> {
               if (potentialChild.data.parentUuid == elementData.uuid) {
                 potentialChild.data.visitedAtZoom =
                     previousModification.layer.zoom;
-                potentialChild.data.highestZoom =
+                potentialChild.data.lowestZoom =
                     previousModification.layer.zoom;
                 result.recordOrphan(potentialChild.data);
               }
@@ -110,7 +110,7 @@ class MutableLayer<T> {
             if (matchingElement.isNotEmpty) {
               matchingElement.single.data.visitedAtZoom =
                   previousModification.layer.zoom;
-              matchingElement.single.data.highestZoom =
+              matchingElement.single.data.lowestZoom =
                   previousModification.layer.zoom;
             }
           }
