@@ -63,4 +63,19 @@ abstract class Supercluster<T> {
 
   /// Returns whether the specified point is in the supercluster's index.
   bool contains(T point);
+
+  /// This method exists for a very specific purpose. If you create a
+  /// Supercluster index in a separate isolate and your points are Objects dart
+  /// will create copies of the points rather than sharing them across
+  /// isolates. This means that when the created index is returned to the root
+  /// isolate the points are not the same instances as the original ones and
+  /// will not have the same hashCodes or be equal to their original
+  /// counterparts unless you have overriden hashCode/==.
+  ///
+  /// If you don't wish to override hashCode/== on your points you can use this
+  /// method to replace the copied points with the original ones. This method
+  /// should be called from the root isolate with the same [points] that were
+  /// passed to [load], in the same order, before adding/removing any of the
+  /// index's points.
+  void replacePoints(List<T> newPoints);
 }

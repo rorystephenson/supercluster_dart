@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:rbush/rbush.dart';
 import 'package:supercluster/src/mutable/layer_clusterer.dart';
 import 'package:supercluster/src/mutable/mutable_layer.dart';
+import 'package:supercluster/src/mutable/rbush_point.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../supercluster.dart';
@@ -55,24 +56,25 @@ class SuperclusterMutable<T> extends Supercluster<T> {
   @override
   void load(List<T> points) {
     // generate a cluster object for each point
-    var clusters = points
-        .map((point) => _initializePoint(point).positionRBushPoint())
-        .toList();
+    var elements = <RBushPoint<MutableLayerElement<T>>>[];
+    for (int i = 0; i < points.length; i++) {
+      elements.add(_initializePoint(points[i], i).positionRBushPoint());
+    }
 
     _trees[maxZoom + 1]
       ..clear()
-      ..load(clusters);
+      ..load(elements);
 
     // cluster points on max zoom, then cluster the results on previous zoom, etc.;
     // results in a cluster hierarchy across zoom levels
     for (var z = maxZoom; z >= minZoom; z--) {
-      clusters = _layerClusterer
-          .cluster(clusters, z, _trees[z + 1])
+      elements = _layerClusterer
+          .cluster(elements, z, _trees[z + 1])
           .map((c) => c.positionRBushPoint())
           .toList(); // create a new set of clusters for the zoom
       _trees[z]
         ..clear()
-        ..load(clusters); // index input points into an R-tree
+        ..load(elements); // index input points into an R-tree
     }
   }
 
@@ -105,13 +107,16 @@ class SuperclusterMutable<T> extends Supercluster<T> {
   /// An optimised function for changing a single point's data without changing
   /// the position of that point. Returns true if [oldPoint] is found and
   /// replaced.
-  bool modifyPointData(T oldPoint, T newPoint,
-      {bool updateParentClusters = true}) {
+  bool modifyPointData(
+    T oldPoint,
+    T newPoint, {
+    bool updateParentClusters = true,
+  }) {
     assert(
         getX(oldPoint) == getX(newPoint) && getY(oldPoint) == getY(newPoint));
 
     final baseLayerModification = _trees[maxZoom + 1]
-        .removePointWithoutClustering(_initializePoint(oldPoint));
+        .removePointWithoutClustering(_initializePoint(oldPoint, -1));
 
     if (baseLayerModification.removed.isEmpty) return false;
     final oldLayerPoint =
@@ -155,7 +160,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
   bool remove(T point) {
     final layerModifications = <LayerModification<T>>[];
     layerModifications.add(_trees[maxZoom + 1]
-        .removePointWithoutClustering(_initializePoint(point)));
+        .removePointWithoutClustering(_initializePoint(point, -1)));
     if (layerModifications.single.removed.isEmpty) return false;
 
     for (int z = maxZoom; z >= minZoom; z--) {
@@ -182,7 +187,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
 
   /// Insert [point]. Note that this may cause clusters to be created/changed.
   void insert(T point) {
-    final layerPoint = _initializePoint(point);
+    final layerPoint = _initializePoint(point, -1);
     _trees[maxZoom + 1].addPointWithoutClustering(layerPoint);
 
     int lowestZoomWhereInsertionDoesNotCluster = maxZoom + 1;
@@ -239,7 +244,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
 
   @override
   bool contains(T point) {
-    return _trees[maxZoom + 1].containsPoint(_initializePoint(point));
+    return _trees[maxZoom + 1].containsPoint(_initializePoint(point, -1));
   }
 
   List<MutableLayerElement<T>> childrenOf(MutableLayerCluster<T> cluster) {
@@ -267,14 +272,19 @@ class SuperclusterMutable<T> extends Supercluster<T> {
             .reduce((value, element) => value?.combine(element!));
   }
 
+  @override
+  void replacePoints(List<T> newPoints) =>
+      _trees[maxZoom + 1].replacePoints(newPoints);
+
   int _limitZoom(int zoom) {
     return max(minZoom, min(zoom, maxZoom + 1));
   }
 
-  MutableLayerPoint<T> _initializePoint(T originalPoint) =>
+  MutableLayerPoint<T> _initializePoint(T originalPoint, int index) =>
       MutableLayerElement.initializePoint(
         uuid: generateUuid(),
         point: originalPoint,
+        index: index,
         lon: getX(originalPoint),
         lat: getY(originalPoint),
         clusterData: extractClusterData?.call(originalPoint),

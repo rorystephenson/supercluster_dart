@@ -1,3 +1,10 @@
+## 2.2.0
+
+- FEATURE: Add replacePoints method which allows the index's points to be replaced with the original
+  ones when a supercluster index is created in a separate isolate.
+- BUGFIX: Fix highestZoom/lowestZoom values when inserting in a mutable supercluster causes a new
+  cluster to form.
+
 ## 2.1.1
 
 - BUGFIX: SuperclusterMutable now removes existing points when calling load(). This was the

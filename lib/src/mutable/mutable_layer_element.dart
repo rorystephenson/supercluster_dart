@@ -29,7 +29,8 @@ class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
   @With.fromString("LayerPoint<T>")
   factory MutableLayerElement.point({
     required String uuid,
-    required final T originalPoint,
+    required T originalPoint,
+    required final int index, // Only useful for replacePoints
     required double x,
     required double y,
     required double wX,
@@ -66,6 +67,7 @@ class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
   static MutableLayerPoint<T> initializePoint<T>({
     required String uuid,
     required T point,
+    required int index,
     required double lon,
     required double lat,
     required int zoom,
@@ -77,6 +79,7 @@ class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
     return MutableLayerPoint(
       uuid: uuid,
       originalPoint: point,
+      index: index,
       x: x,
       y: y,
       wX: x,

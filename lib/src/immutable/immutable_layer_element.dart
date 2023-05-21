@@ -26,7 +26,7 @@ class ImmutableLayerElement<T>
 
   @With.fromString("LayerPoint<T>")
   factory ImmutableLayerElement.point({
-    required final T originalPoint,
+    required T originalPoint,
     required final double x,
     required final double y,
     required final int index,

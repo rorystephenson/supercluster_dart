@@ -54,6 +54,7 @@ mixin _$MutableLayerElement<T> {
     required TResult Function(
             String uuid,
             T originalPoint,
+            int index,
             double x,
             double y,
             double wX,
@@ -84,6 +85,7 @@ mixin _$MutableLayerElement<T> {
     TResult? Function(
             String uuid,
             T originalPoint,
+            int index,
             double x,
             double y,
             double wX,
@@ -114,6 +116,7 @@ mixin _$MutableLayerElement<T> {
     TResult Function(
             String uuid,
             T originalPoint,
+            int index,
             double x,
             double y,
             double wX,
@@ -407,6 +410,7 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
     required TResult Function(
             String uuid,
             T originalPoint,
+            int index,
             double x,
             double y,
             double wX,
@@ -441,6 +445,7 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
     TResult? Function(
             String uuid,
             T originalPoint,
+            int index,
             double x,
             double y,
             double wX,
@@ -475,6 +480,7 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
     TResult Function(
             String uuid,
             T originalPoint,
+            int index,
             double x,
             double y,
             double wX,
@@ -591,6 +597,7 @@ abstract class _$$MutableLayerPointCopyWith<T, $Res>
   $Res call(
       {String uuid,
       T originalPoint,
+      int index,
       double x,
       double y,
       double wX,
@@ -615,6 +622,7 @@ class __$$MutableLayerPointCopyWithImpl<T, $Res>
   $Res call({
     Object? uuid = null,
     Object? originalPoint = freezed,
+    Object? index = null,
     Object? x = null,
     Object? y = null,
     Object? wX = null,
@@ -634,6 +642,10 @@ class __$$MutableLayerPointCopyWithImpl<T, $Res>
           ? _value.originalPoint
           : originalPoint // ignore: cast_nullable_to_non_nullable
               as T,
+      index: null == index
+          ? _value.index
+          : index // ignore: cast_nullable_to_non_nullable
+              as int,
       x: null == x
           ? _value.x
           : x // ignore: cast_nullable_to_non_nullable
@@ -680,6 +692,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
   _$MutableLayerPoint(
       {required this.uuid,
       required this.originalPoint,
+      required this.index,
       required this.x,
       required this.y,
       required this.wX,
@@ -694,7 +707,9 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
   @override
   String uuid;
   @override
-  final T originalPoint;
+  T originalPoint;
+  @override
+  final int index;
   @override
   double x;
   @override
@@ -716,7 +731,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
 
   @override
   String toString() {
-    return 'MutableLayerElement<$T>.point(uuid: $uuid, originalPoint: $originalPoint, x: $x, y: $y, wX: $wX, wY: $wY, clusterData: $clusterData, visitedAtZoom: $visitedAtZoom, lowestZoom: $lowestZoom, highestZoom: $highestZoom, parentUuid: $parentUuid)';
+    return 'MutableLayerElement<$T>.point(uuid: $uuid, originalPoint: $originalPoint, index: $index, x: $x, y: $y, wX: $wX, wY: $wY, clusterData: $clusterData, visitedAtZoom: $visitedAtZoom, lowestZoom: $lowestZoom, highestZoom: $highestZoom, parentUuid: $parentUuid)';
   }
 
   @JsonKey(ignore: true)
@@ -745,6 +760,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
     required TResult Function(
             String uuid,
             T originalPoint,
+            int index,
             double x,
             double y,
             double wX,
@@ -756,8 +772,8 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             String? parentUuid)
         point,
   }) {
-    return point(uuid, originalPoint, x, y, wX, wY, clusterData, visitedAtZoom,
-        lowestZoom, highestZoom, parentUuid);
+    return point(uuid, originalPoint, index, x, y, wX, wY, clusterData,
+        visitedAtZoom, lowestZoom, highestZoom, parentUuid);
   }
 
   @override
@@ -779,6 +795,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
     TResult? Function(
             String uuid,
             T originalPoint,
+            int index,
             double x,
             double y,
             double wX,
@@ -790,7 +807,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             String? parentUuid)?
         point,
   }) {
-    return point?.call(uuid, originalPoint, x, y, wX, wY, clusterData,
+    return point?.call(uuid, originalPoint, index, x, y, wX, wY, clusterData,
         visitedAtZoom, lowestZoom, highestZoom, parentUuid);
   }
 
@@ -813,6 +830,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
     TResult Function(
             String uuid,
             T originalPoint,
+            int index,
             double x,
             double y,
             double wX,
@@ -826,7 +844,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
     required TResult orElse(),
   }) {
     if (point != null) {
-      return point(uuid, originalPoint, x, y, wX, wY, clusterData,
+      return point(uuid, originalPoint, index, x, y, wX, wY, clusterData,
           visitedAtZoom, lowestZoom, highestZoom, parentUuid);
     }
     return orElse();
@@ -868,7 +886,8 @@ abstract class MutableLayerPoint<T> extends MutableLayerElement<T>
     implements LayerPoint<T> {
   factory MutableLayerPoint(
       {required String uuid,
-      required final T originalPoint,
+      required T originalPoint,
+      required final int index,
       required double x,
       required double y,
       required double wX,
@@ -884,6 +903,8 @@ abstract class MutableLayerPoint<T> extends MutableLayerElement<T>
   String get uuid;
   set uuid(String value);
   T get originalPoint;
+  set originalPoint(T value);
+  int get index;
   @override
   double get x;
   set x(double value);

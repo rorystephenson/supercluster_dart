@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:compute/compute.dart';
 import 'package:supercluster/supercluster.dart';
 import 'package:test/test.dart';
 
@@ -87,6 +88,17 @@ void main() {
         maxZoom: maxZoom,
       )..load(points);
 
+  SuperclusterMutable<TestPoint> supercluster3(
+          SuperclusterArgs superclusterArgs) =>
+      SuperclusterMutable<TestPoint>(
+        getX: TestPoint.getX,
+        getY: TestPoint.getY,
+        minPoints: superclusterArgs.minPoints,
+        radius: superclusterArgs.radius,
+        extent: superclusterArgs.extent,
+        maxZoom: superclusterArgs.maxZoom,
+      )..load(superclusterArgs.points);
+
   test('clusters points', () {
     final index = supercluster(Fixtures.features);
     expect(pointCountsAtZooms(index), [
@@ -115,6 +127,28 @@ void main() {
     final index = supercluster(Fixtures.features);
     index.load([]);
     expect(numPointsAtZoom(index, index.maxZoom), 0);
+  });
+
+  test('replacePoints', () async {
+    final testPoints = [
+      TestPoint(longitude: 9.203368, latitude: 45.460982), // Milano
+      TestPoint(longitude: 9.218777, latitude: 45.466276), // Milano east
+      TestPoint(longitude: 9.507878, latitude: 45.303647), // Lodi
+      TestPoint(longitude: 10.222456, latitude: 45.534990), // Brescia
+      TestPoint(longitude: 10.419535, latitude: 45.511298), // Bedizzole
+    ];
+    final index =
+        await compute(supercluster3, SuperclusterArgs(points: testPoints));
+    expect(index.getLeaves().any(testPoints.contains), isFalse);
+    index.replacePoints(testPoints);
+    expect(index.getLeaves().any((e) => !testPoints.contains(e)), isFalse);
+
+    for (int i = index.minZoom; i <= index.maxZoom + 1; i++) {
+      final pointsAtZoom = layerElementsAtZoom(index, i)
+          .whereType<MutableLayerPoint<TestPoint>>();
+      expect(pointsAtZoom.any((e) => !testPoints.contains(e.originalPoint)),
+          isFalse);
+    }
   });
 
   test('clusters points with a minimum cluster size', () {
@@ -444,5 +478,23 @@ void main() {
     feature['geometry']['coordinates'][0] =
         feature['geometry']['coordinates'][0] + 1;
     expect(index.contains(feature), isFalse);
+  });
+}
+
+class SuperclusterArgs {
+  final List<TestPoint> points;
+  final int? minPoints;
+  final int? maxEntries;
+  final int? radius;
+  final int? extent;
+  final int? maxZoom;
+
+  SuperclusterArgs({
+    required this.points,
+    this.minPoints,
+    this.maxEntries,
+    this.radius,
+    this.extent,
+    this.maxZoom,
   });
 }

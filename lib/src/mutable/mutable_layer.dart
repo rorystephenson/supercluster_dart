@@ -251,4 +251,17 @@ class MutableLayer<T> {
       );
     }
   }
+
+  /// This will replace the inner points with the provided this one. It should
+  /// only be called on the (maxZoom + 1) layer since it contains all of the
+  /// points unclustered. See [Supercluster.replacePoints] for more information
+  /// on what this is used for.
+  void replacePoints(List<T> points) {
+    final allElements = all().toList();
+    assert(allElements.length == points.length);
+    for (int i = 0; i < points.length; i++) {
+      final mutablePoint = allElements[i] as MutableLayerPoint<T>;
+      mutablePoint.originalPoint = points[mutablePoint.index];
+    }
+  }
 }

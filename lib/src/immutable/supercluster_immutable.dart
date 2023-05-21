@@ -1,14 +1,13 @@
 import 'dart:math';
 
-import 'package:kdbush/kdbush.dart';
+import 'package:supercluster/src/immutable/immutable_layer.dart';
 import 'package:supercluster/src/util.dart' as util;
 
 import '../../supercluster.dart';
 
 class SuperclusterImmutable<T> extends Supercluster<T> {
-  List<T> points = [];
-
-  late final List<KDBush<ImmutableLayerElement<T>, double>?> _trees;
+  late final List<ImmutableLayer<T>?> _trees;
+  late int _length;
 
   SuperclusterImmutable({
     required super.getX,
@@ -24,34 +23,26 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     _trees = List.filled(maxZoom + 2, null);
   }
 
+  int get length => _length;
+
   @override
   void load(List<T> points) {
-    this.points = points;
+    _length = points.length;
 
     // generate a cluster object for each point and index input points into a KD-tree
-    var clusters = <ImmutableLayerElement<T>>[];
+    var elements = <ImmutableLayerElement<T>>[];
     for (var i = 0; i < points.length; i++) {
-      clusters.add(_initializePoint(i, points[i]));
+      elements.add(_initializePoint(i, points[i]));
     }
 
-    _trees[maxZoom + 1] = KDBush<ImmutableLayerElement<T>, double>(
-      points: clusters,
-      getX: ImmutableLayerElement.getX,
-      getY: ImmutableLayerElement.getY,
-      nodeSize: nodeSize,
-    );
+    _trees[maxZoom + 1] = ImmutableLayer(elements, nodeSize: nodeSize);
 
     // cluster points on max zoom, then cluster the results on previous zoom, etc.;
     // results in a cluster hierarchy across zoom levels
     for (var z = maxZoom; z >= minZoom; z--) {
       // create a new set of clusters for the zoom and index them with a KD-tree
-      clusters = _cluster(clusters, z);
-      _trees[z] = KDBush<ImmutableLayerElement<T>, double>(
-        points: clusters,
-        getX: ImmutableLayerElement.getX,
-        getY: ImmutableLayerElement.getY,
-        nodeSize: nodeSize,
-      );
+      elements = _cluster(elements, z);
+      _trees[z] = ImmutableLayer(elements, nodeSize: nodeSize);
     }
   }
 
@@ -88,24 +79,12 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
       return easternHem..addAll(westernHem);
     }
 
-    final tree = _trees[_limitZoom(zoom)]!;
-    final ids = tree.withinBounds(
-      util.lngX(minLng),
-      util.latY(maxLat),
-      util.lngX(maxLng),
-      util.latY(minLat),
-    );
-    final clusters = <ImmutableLayerElement<T>>[];
-    for (final id in ids) {
-      clusters.add(tree.points[id]);
-    }
-    return clusters;
+    return _trees[_limitZoom(zoom)]!
+        .withinBounds(minLng, maxLat, maxLng, minLat);
   }
 
   @override
-  Iterable<T> getLeaves() => _trees[maxZoom + 1]!
-      .points
-      .map((e) => (e as ImmutableLayerPoint<T>).originalPoint);
+  Iterable<T> getLeaves() => _trees[maxZoom + 1]!.originalPoints;
 
   List<ImmutableLayerElement<T>> childrenOf(int clusterId) {
     final originId = _getOriginId(clusterId);
@@ -115,22 +94,18 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     final index = _trees[originZoom];
     if (index == null) throw errorMsg;
 
-    if (originId >= index.points.length) throw errorMsg;
-    final origin = index.points[originId];
+    if (originId >= index.length) throw errorMsg;
+    final origin = index.elementAt(originId);
 
     final r = radius / (extent * pow(2, originZoom - 1));
-    final ids = index.withinRadius(origin.x, origin.y, r);
-    final children = <ImmutableLayerElement<T>>[];
-    for (final id in ids) {
-      final c = index.points[id];
-      if (c.parentId == clusterId) {
-        children.add(c);
-      }
-    }
+
+    final children = index
+        .withinRadius(origin.x, origin.y, r)
+        .where((element) => element.parentId == clusterId);
 
     if (children.isEmpty) throw errorMsg;
 
-    return children;
+    return children.toList();
   }
 
   List<ImmutableLayerPoint<T>> pointsWithin(
@@ -155,23 +130,21 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     return expansionZoom;
   }
 
-  ImmutableLayerCluster<T>? parentOf(
-      ImmutableLayerElement<T> clusterOrMapPoint) {
-    if (clusterOrMapPoint.parentId == -1) return null;
+  ImmutableLayerCluster<T>? parentOf(ImmutableLayerElement<T> element) {
+    if (element.parentId == -1) return null;
+    final parentZoom = getOriginZoom(element.parentId) - 1;
 
-    final parentZoom = getOriginZoom(clusterOrMapPoint.parentId) - 1;
-
-    return _trees[parentZoom]!.points.firstWhere(
-          (e) =>
-              e is ImmutableLayerCluster<T> &&
-              e.id == clusterOrMapPoint.parentId,
-        ) as ImmutableLayerCluster<T>;
+    return _trees[parentZoom]!.parentOf(element);
   }
 
   /// Returns the zoom level at which the cluster with the given id appears
   int getOriginZoom(int clusterId) {
-    return (clusterId - points.length) % 32;
+    return (clusterId - _length) % 32;
   }
+
+  @override
+  void replacePoints(List<T> newPoints) =>
+      _trees[maxZoom + 1]!.replacePoints(newPoints);
 
   @override
   bool contains(T point) {
@@ -185,7 +158,9 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
         latitude + 0.000001,
         maxZoom + 1)) {
       if (searchResult is ImmutableLayerPoint<T> &&
-          points[searchResult.index] == point) return true;
+          searchResult.originalPoint == point) {
+        return true;
+      }
     }
 
     return false;
@@ -231,7 +206,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     List<ImmutableLayerElement<T>> points,
     int zoom,
   ) {
-    final clusters = <ImmutableLayerElement<T>>[];
+    final elements = <ImmutableLayerElement<T>>[];
     final r = radius / (extent * pow(2, zoom));
 
     // loop through each point
@@ -243,16 +218,15 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
 
       // find all nearby points
       final tree = _trees[zoom + 1]!;
-      final neighborIds = tree.withinRadius(p.x, p.y, r);
+      final neighbors = tree.withinRadius(p.x, p.y, r);
 
       final numPointsOrigin = p.numPoints;
       var numPoints = numPointsOrigin;
 
       // count the number of points in a potential cluster
-      for (final neighborId in neighborIds) {
-        final b = tree.points[neighborId];
+      for (final neighbor in neighbors) {
         // filter out neighbors that are already processed
-        if (b.visitedAtZoom > zoom) numPoints += b.numPoints;
+        if (neighbor.visitedAtZoom > zoom) numPoints += neighbor.numPoints;
       }
 
       // if there were neighbors to merge, and there are enough points to form a cluster
@@ -264,30 +238,28 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
             (extractClusterData != null ? _extractClusterData(p) : null);
 
         // encode both zoom and point index on which the cluster originated -- offset by total length of features
-        final id = (i << 5) + (zoom + 1) + this.points.length;
+        final id = (i << 5) + (zoom + 1) + _length;
 
-        for (final neighborId in neighborIds) {
-          final b = tree.points[neighborId];
-
-          if (b.visitedAtZoom <= zoom) continue;
-          b.visitedAtZoom =
+        for (final neighbor in neighbors) {
+          if (neighbor.visitedAtZoom <= zoom) continue;
+          neighbor.visitedAtZoom =
               zoom; // save the zoom (so it doesn't get processed twice)
 
-          final numPoints2 = b.numPoints;
-          wx += b.x *
+          final numPoints2 = neighbor.numPoints;
+          wx += neighbor.x *
               numPoints2; // accumulate coordinates for calculating weighted center
-          wy += b.y * numPoints2;
+          wy += neighbor.y * numPoints2;
 
-          b.parentId = id;
+          neighbor.parentId = id;
 
           if (extractClusterData != null) {
             clusterData ??= _extractClusterData(p);
-            clusterData = clusterData.combine(_extractClusterData(b));
+            clusterData = clusterData.combine(_extractClusterData(neighbor));
           }
         }
 
         p.parentId = id;
-        clusters.add(
+        elements.add(
           ImmutableLayerElement.initializeCluster(
             clusterData: clusterData,
             id: id,
@@ -299,22 +271,21 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
         );
       } else {
         // left points as unclustered
-        clusters.add(p);
+        elements.add(p);
         p.lowestZoom = zoom;
 
         if (numPoints > 1) {
-          for (final neighborId in neighborIds) {
-            final b = tree.points[neighborId];
-            if (b.visitedAtZoom <= zoom) continue;
-            b.visitedAtZoom = zoom;
-            clusters.add(b);
-            b.lowestZoom = zoom;
+          for (final neighbor in neighbors) {
+            if (neighbor.visitedAtZoom <= zoom) continue;
+            neighbor.visitedAtZoom = zoom;
+            elements.add(neighbor);
+            neighbor.lowestZoom = zoom;
           }
         }
       }
     }
 
-    return clusters;
+    return elements;
   }
 
   ClusterDataBase _extractClusterData(
@@ -326,7 +297,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
 
   // get index of the point from which the cluster originated
   int _getOriginId(int clusterId) {
-    return (clusterId - points.length) >> 5;
+    return (clusterId - _length) >> 5;
   }
 
   ImmutableLayerPoint<T> _initializePoint(int index, T point) {
@@ -344,13 +315,6 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
   }
 
   @override
-  ClusterDataBase? aggregatedClusterData() {
-    final topLevelClusterData =
-        _trees[minZoom]!.points.map((e) => e.clusterData);
-
-    return topLevelClusterData.isEmpty
-        ? null
-        : topLevelClusterData
-            .reduce((value, element) => value?.combine(element!));
-  }
+  ClusterDataBase? aggregatedClusterData() =>
+      _trees[minZoom]!.aggregatedClusterData;
 }

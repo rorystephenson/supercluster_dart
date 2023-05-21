@@ -602,7 +602,7 @@ class _$ImmutableLayerPoint<T> extends ImmutableLayerPoint<T>
       : super._();
 
   @override
-  final T originalPoint;
+  T originalPoint;
   @override
   final double x;
   @override
@@ -762,7 +762,7 @@ class _$ImmutableLayerPoint<T> extends ImmutableLayerPoint<T>
 abstract class ImmutableLayerPoint<T> extends ImmutableLayerElement<T>
     implements LayerPoint<T> {
   factory ImmutableLayerPoint(
-      {required final T originalPoint,
+      {required T originalPoint,
       required final double x,
       required final double y,
       required final int index,
@@ -774,6 +774,7 @@ abstract class ImmutableLayerPoint<T> extends ImmutableLayerElement<T>
   ImmutableLayerPoint._() : super._();
 
   T get originalPoint;
+  set originalPoint(T value);
   @override
   double get x;
   @override
