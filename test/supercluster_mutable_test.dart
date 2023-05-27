@@ -467,17 +467,17 @@ void main() {
   test('contains', () {
     final index = supercluster(Fixtures.features);
     for (final feature in Fixtures.features) {
-      expect(index.contains(feature), isTrue);
+      expect(index.containsPoint(feature), isTrue);
     }
 
     var feature = Map<String, dynamic>.from(Fixtures.features.first);
     feature['properties']['name'] = 'Changed name';
-    expect(index.contains(feature), isFalse);
+    expect(index.containsPoint(feature), isFalse);
 
     feature = Map<String, dynamic>.from(Fixtures.features.first);
     feature['geometry']['coordinates'][0] =
         feature['geometry']['coordinates'][0] + 1;
-    expect(index.contains(feature), isFalse);
+    expect(index.containsPoint(feature), isFalse);
   });
 }
 

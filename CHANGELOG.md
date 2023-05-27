@@ -1,3 +1,16 @@
+## WIP
+
+- FEATURE: The following methods are now available for both SuperclusterImmutable and
+  SuperclusterMutable:
+    - parentOf
+    - childrenOf
+    - layerPointOf
+- BREAKING: Supercluster.contains has been renamed to Supercluster.containsPoint
+- BREAKING: SuperclusterImmutable.childrenOf has been renamed to
+  SuperclusterImmutable.childrenOfById.
+
+
+
 ## 2.2.0
 
 - FEATURE: Add replacePoints method which allows the index's points to be replaced with the original

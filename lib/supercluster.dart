@@ -1,6 +1,3 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
 library supercluster;
 
 import 'supercluster.dart';
@@ -57,12 +54,21 @@ abstract class Supercluster<T> {
     int zoom,
   );
 
+  /// Returns the parent cluster if [element] has one.
+  LayerCluster<T>? parentOf(LayerElement<T> element);
+
+  /// Returns the children of the given [LayerCluster]
+  List<LayerElement<T>> childrenOf(LayerCluster<T> cluster);
+
   Iterable<T> getLeaves();
 
   ClusterDataBase? aggregatedClusterData();
 
   /// Returns whether the specified point is in the supercluster's index.
-  bool contains(T point);
+  bool containsPoint(T point);
+
+  /// Returns the LayerPoint, if any, which contains the given [point].
+  LayerPoint<T>? layerPointOf(T point);
 
   /// This method exists for a very specific purpose. If you create a
   /// Supercluster index in a separate isolate and your points are Objects dart

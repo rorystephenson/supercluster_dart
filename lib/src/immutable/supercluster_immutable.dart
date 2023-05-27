@@ -35,14 +35,24 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
       elements.add(_initializePoint(i, points[i]));
     }
 
-    _trees[maxZoom + 1] = ImmutableLayer(elements, nodeSize: nodeSize);
+    _trees[maxZoom + 1] = ImmutableLayer(
+      elements,
+      getX: getX,
+      getY: getY,
+      nodeSize: nodeSize,
+    );
 
     // cluster points on max zoom, then cluster the results on previous zoom, etc.;
     // results in a cluster hierarchy across zoom levels
     for (var z = maxZoom; z >= minZoom; z--) {
       // create a new set of clusters for the zoom and index them with a KD-tree
       elements = _cluster(elements, z);
-      _trees[z] = ImmutableLayer(elements, nodeSize: nodeSize);
+      _trees[z] = ImmutableLayer(
+        elements,
+        getX: getX,
+        getY: getY,
+        nodeSize: nodeSize,
+      );
     }
   }
 
@@ -54,39 +64,18 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     double northLat,
     int zoom,
   ) {
-    return _searchImpl(westLng, southLat, eastLng, northLat, _limitZoom(zoom));
-  }
-
-  List<ImmutableLayerElement<T>> _searchImpl(
-    double westLng,
-    double southLat,
-    double eastLng,
-    double northLat,
-    int zoom,
-  ) {
-    var minLng = ((westLng + 180) % 360 + 360) % 360 - 180;
-    final minLat = max(-90.0, min(90.0, southLat));
-    var maxLng =
-        eastLng == 180 ? 180.0 : ((eastLng + 180) % 360 + 360) % 360 - 180;
-    final maxLat = max(-90.0, min(90.0, northLat));
-
-    if (eastLng - westLng >= 360) {
-      minLng = -180.0;
-      maxLng = 180.0;
-    } else if (minLng > maxLng) {
-      final easternHem = search(minLng, minLat, 180, maxLat, zoom);
-      final westernHem = search(-180, minLat, maxLng, maxLat, zoom);
-      return easternHem..addAll(westernHem);
-    }
-
-    return _trees[_limitZoom(zoom)]!
-        .withinBounds(minLng, maxLat, maxLng, minLat);
+    zoom = _limitZoom(zoom);
+    return _trees[zoom]!.search(westLng, southLat, eastLng, northLat);
   }
 
   @override
   Iterable<T> getLeaves() => _trees[maxZoom + 1]!.originalPoints;
 
-  List<ImmutableLayerElement<T>> childrenOf(int clusterId) {
+  @override
+  List<ImmutableLayerElement<T>> childrenOf(LayerCluster<T> cluster) =>
+      childrenOfById((cluster as ImmutableLayerCluster<T>).id);
+
+  List<ImmutableLayerElement<T>> childrenOfById(int clusterId) {
     final originId = _getOriginId(clusterId);
     final originZoom = getOriginZoom(clusterId);
     final errorMsg = 'No cluster with the specified id.';
@@ -122,7 +111,7 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
   int expansionZoomOf(int clusterId) {
     var expansionZoom = getOriginZoom(clusterId) - 1;
     while (expansionZoom <= maxZoom) {
-      final children = childrenOf(clusterId);
+      final children = childrenOfById(clusterId);
       expansionZoom++;
       if (children.length != 1) break;
       clusterId = (children[0] as ImmutableLayerCluster).id;
@@ -130,7 +119,10 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
     return expansionZoom;
   }
 
-  ImmutableLayerCluster<T>? parentOf(ImmutableLayerElement<T> element) {
+  @override
+  ImmutableLayerCluster<T>? parentOf(LayerElement<T> element) {
+    element as ImmutableLayerElement<T>;
+
     if (element.parentId == -1) return null;
     final parentZoom = getOriginZoom(element.parentId) - 1;
 
@@ -147,28 +139,16 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
       _trees[maxZoom + 1]!.replacePoints(newPoints);
 
   @override
-  bool contains(T point) {
-    final longitude = getX(point);
-    final latitude = getY(point);
+  bool containsPoint(T point) => _trees[maxZoom + 1]!.containsPoint(point);
 
-    for (final searchResult in _searchImpl(
-        longitude - 0.000001,
-        latitude - 0.000001,
-        longitude + 0.000001,
-        latitude + 0.000001,
-        maxZoom + 1)) {
-      if (searchResult is ImmutableLayerPoint<T> &&
-          searchResult.originalPoint == point) {
-        return true;
-      }
-    }
-
-    return false;
+  @override
+  ImmutableLayerPoint<T>? layerPointOf(T point) {
+    return _trees[maxZoom + 1]!.layerPointOf(point);
   }
 
   int _appendLeaves(List<ImmutableLayerPoint<T>> result, int clusterId,
       int limit, int offset, int skipped) {
-    final children = childrenOf(clusterId);
+    final children = childrenOfById(clusterId);
 
     for (final child in children) {
       final cluster = child is ImmutableLayerCluster

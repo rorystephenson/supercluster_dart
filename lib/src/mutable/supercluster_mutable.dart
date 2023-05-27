@@ -243,11 +243,46 @@ class SuperclusterMutable<T> extends Supercluster<T> {
   }
 
   @override
-  bool contains(T point) {
+  bool containsPoint(T point) {
     return _trees[maxZoom + 1].containsPoint(_initializePoint(point, -1));
   }
 
-  List<MutableLayerElement<T>> childrenOf(MutableLayerCluster<T> cluster) {
+  @override
+  MutableLayerCluster<T>? parentOf(LayerElement<T> element) {
+    element as MutableLayerElement<T>;
+
+    if (element.parentUuid == null) return null;
+
+    final parentZoom = element.lowestZoom - 1;
+
+    final parentTree = _trees[parentZoom];
+    final searchRadius = parentTree.searchRadius;
+
+    final potentialParents = _trees[parentZoom].search(
+      RBushBox(
+        minX: element.x - searchRadius,
+        minY: element.y - searchRadius,
+        maxX: element.x + searchRadius,
+        maxY: element.y + searchRadius,
+      ),
+    );
+
+    for (final potentialParent in potentialParents) {
+      if (potentialParent.data.uuid == element.parentUuid) {
+        return potentialParent.data as MutableLayerCluster<T>;
+      }
+    }
+
+    return null;
+  }
+
+  @override
+  MutableLayerPoint<T>? layerPointOf(T point) {
+    return _trees[maxZoom + 1].layerPointOf(_initializePoint(point, -1));
+  }
+
+  @override
+  List<MutableLayerElement<T>> childrenOf(LayerCluster<T> cluster) {
     final r = util.searchRadius(radius, extent, cluster.highestZoom);
 
     return _trees[cluster.lowestZoom + 1]

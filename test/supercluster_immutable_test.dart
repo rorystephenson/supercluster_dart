@@ -70,7 +70,7 @@ void main() {
 
   test('returns children of a cluster', () {
     final index = supercluster(Fixtures.features);
-    final childCounts = index.childrenOf(163).map((p) => p.numPoints);
+    final childCounts = index.childrenOfById(163).map((p) => p.numPoints);
     expect(childCounts.toList(), equals([6, 7, 2, 1]));
   });
 
@@ -214,17 +214,17 @@ void main() {
     final index = supercluster(Fixtures.features);
 
     for (final feature in Fixtures.features) {
-      expect(index.contains(feature), isTrue);
+      expect(index.containsPoint(feature), isTrue);
     }
 
     var feature = Map<String, dynamic>.from(Fixtures.features.first);
     feature['properties']['name'] = 'Changed name';
-    expect(index.contains(feature), isFalse);
+    expect(index.containsPoint(feature), isFalse);
 
     feature = Map<String, dynamic>.from(Fixtures.features.first);
     feature['geometry']['coordinates'][0] =
         feature['geometry']['coordinates'][0] + 1;
-    expect(index.contains(feature), isFalse);
+    expect(index.containsPoint(feature), isFalse);
   });
 }
 
