@@ -1,3 +1,7 @@
+## 2.4.0
+
+Requires dart 3.
+
 ## 2.3.0
 
 - FEATURE: The following methods are now available for both SuperclusterImmutable and
