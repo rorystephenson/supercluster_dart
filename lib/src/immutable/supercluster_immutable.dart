@@ -225,10 +225,8 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
           neighbor.visitedAtZoom =
               zoom; // save the zoom (so it doesn't get processed twice)
 
-          final numPoints2 = neighbor.numPoints;
-          wx += neighbor.x *
-              numPoints2; // accumulate coordinates for calculating weighted center
-          wy += neighbor.y * numPoints2;
+          wx += neighbor.x * neighbor.numPoints;
+          wy += neighbor.y * neighbor.numPoints;
 
           neighbor.parentId = id;
 

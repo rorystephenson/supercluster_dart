@@ -35,42 +35,41 @@ class LayerClusterer<T> {
       if (p.visitedAtZoom <= zoom) continue;
       p.visitedAtZoom = zoom;
 
-      final bboxNeighbors = previousLayer.search(RBushBox(
-        minX: p.wX - r,
-        minY: p.wY - r,
-        maxX: p.wX + r,
-        maxY: p.wY + r,
+      final neighbors = previousLayer.search(RBushBox(
+        minX: p.x - r,
+        minY: p.y - r,
+        maxX: p.x + r,
+        maxY: p.y + r,
       ));
 
       final clusterableNeighbors = <MutableLayerElement<T>>[];
 
       var numPoints = p.numPoints;
-      var wx = p.wX * numPoints;
-      var wy = p.wY * numPoints;
+      var wx = p.x * p.numPoints;
+      var wy = p.y * p.numPoints;
       final potentialClusterUuid = generateUuid();
 
-      for (final bboxNeighbor in bboxNeighbors) {
-        var b = bboxNeighbor.data;
-        // filter out neighbors that are too far or already processed
+      for (final neighbor in neighbors) {
+        var b = neighbor.data;
+        // Filter out neighbors that are too far or already processed
         if (zoom < b.visitedAtZoom && util.distSq(p, b) <= r * r) {
           clusterableNeighbors.add(b);
+          numPoints += b.numPoints;
         }
       }
 
-      if (clusterableNeighbors.length + 1 < minPoints) {
+      if (numPoints == p.numPoints || numPoints < minPoints) {
+        // No neighbors, add a single point as cluster
         p.lowestZoom = zoom;
-        clusters.add(p); // no neighbors, add a single point as cluster
+        clusters.add(p);
       } else {
         ClusterDataBase? clusterData;
         for (final clusterableNeighbor in clusterableNeighbors) {
           clusterableNeighbor.parentUuid = potentialClusterUuid;
           clusterableNeighbor.visitedAtZoom =
               zoom; // save the zoom (so it doesn't get processed twice)
-          wx += clusterableNeighbor.wX *
-              clusterableNeighbor
-                  .numPoints; // accumulate coordinates for calculating weighted center
-          wy += clusterableNeighbor.wY * clusterableNeighbor.numPoints;
-          numPoints += clusterableNeighbor.numPoints;
+          wx += clusterableNeighbor.x * clusterableNeighbor.numPoints;
+          wy += clusterableNeighbor.y * clusterableNeighbor.numPoints;
 
           if (extractClusterData != null) {
             clusterData ??= _extractClusterData(p);
@@ -83,16 +82,14 @@ class LayerClusterer<T> {
         p.parentUuid = potentialClusterUuid;
         final cluster = MutableLayerElement.initializeCluster<T>(
           uuid: potentialClusterUuid,
-          x: p.x,
-          y: p.y,
+          x: wx / numPoints,
+          y: wy / numPoints,
+          originX: p.x,
+          originY: p.y,
           childPointCount: numPoints,
           zoom: zoom,
           clusterData: clusterData,
         );
-
-        // save weighted cluster center for display
-        cluster.wX = wx / numPoints;
-        cluster.wY = wy / numPoints;
 
         clusters.add(cluster);
       }

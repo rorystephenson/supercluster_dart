@@ -22,10 +22,6 @@ mixin _$MutableLayerElement<T> {
   set x(double value) => throw _privateConstructorUsedError;
   double get y => throw _privateConstructorUsedError;
   set y(double value) => throw _privateConstructorUsedError;
-  double get wX => throw _privateConstructorUsedError;
-  set wX(double value) => throw _privateConstructorUsedError;
-  double get wY => throw _privateConstructorUsedError;
-  set wY(double value) => throw _privateConstructorUsedError;
   ClusterDataBase? get clusterData => throw _privateConstructorUsedError;
   set clusterData(ClusterDataBase? value) => throw _privateConstructorUsedError;
   int get visitedAtZoom => throw _privateConstructorUsedError;
@@ -42,8 +38,8 @@ mixin _$MutableLayerElement<T> {
             String uuid,
             double x,
             double y,
-            double wX,
-            double wY,
+            double originX,
+            double originY,
             int childPointCount,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
@@ -57,8 +53,6 @@ mixin _$MutableLayerElement<T> {
             int index,
             double x,
             double y,
-            double wX,
-            double wY,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
             int lowestZoom,
@@ -73,8 +67,8 @@ mixin _$MutableLayerElement<T> {
             String uuid,
             double x,
             double y,
-            double wX,
-            double wY,
+            double originX,
+            double originY,
             int childPointCount,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
@@ -88,8 +82,6 @@ mixin _$MutableLayerElement<T> {
             int index,
             double x,
             double y,
-            double wX,
-            double wY,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
             int lowestZoom,
@@ -104,8 +96,8 @@ mixin _$MutableLayerElement<T> {
             String uuid,
             double x,
             double y,
-            double wX,
-            double wY,
+            double originX,
+            double originY,
             int childPointCount,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
@@ -119,8 +111,6 @@ mixin _$MutableLayerElement<T> {
             int index,
             double x,
             double y,
-            double wX,
-            double wY,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
             int lowestZoom,
@@ -165,8 +155,6 @@ abstract class $MutableLayerElementCopyWith<T, $Res> {
       {String uuid,
       double x,
       double y,
-      double wX,
-      double wY,
       ClusterDataBase? clusterData,
       int visitedAtZoom,
       int lowestZoom,
@@ -191,8 +179,6 @@ class _$MutableLayerElementCopyWithImpl<T, $Res,
     Object? uuid = null,
     Object? x = null,
     Object? y = null,
-    Object? wX = null,
-    Object? wY = null,
     Object? clusterData = freezed,
     Object? visitedAtZoom = null,
     Object? lowestZoom = null,
@@ -211,14 +197,6 @@ class _$MutableLayerElementCopyWithImpl<T, $Res,
       y: null == y
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
-              as double,
-      wX: null == wX
-          ? _value.wX
-          : wX // ignore: cast_nullable_to_non_nullable
-              as double,
-      wY: null == wY
-          ? _value.wY
-          : wY // ignore: cast_nullable_to_non_nullable
               as double,
       clusterData: freezed == clusterData
           ? _value.clusterData
@@ -256,8 +234,8 @@ abstract class _$$MutableLayerClusterCopyWith<T, $Res>
       {String uuid,
       double x,
       double y,
-      double wX,
-      double wY,
+      double originX,
+      double originY,
       int childPointCount,
       ClusterDataBase? clusterData,
       int visitedAtZoom,
@@ -280,8 +258,8 @@ class __$$MutableLayerClusterCopyWithImpl<T, $Res>
     Object? uuid = null,
     Object? x = null,
     Object? y = null,
-    Object? wX = null,
-    Object? wY = null,
+    Object? originX = null,
+    Object? originY = null,
     Object? childPointCount = null,
     Object? clusterData = freezed,
     Object? visitedAtZoom = null,
@@ -302,13 +280,13 @@ class __$$MutableLayerClusterCopyWithImpl<T, $Res>
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
               as double,
-      wX: null == wX
-          ? _value.wX
-          : wX // ignore: cast_nullable_to_non_nullable
+      originX: null == originX
+          ? _value.originX
+          : originX // ignore: cast_nullable_to_non_nullable
               as double,
-      wY: null == wY
-          ? _value.wY
-          : wY // ignore: cast_nullable_to_non_nullable
+      originY: null == originY
+          ? _value.originY
+          : originY // ignore: cast_nullable_to_non_nullable
               as double,
       childPointCount: null == childPointCount
           ? _value.childPointCount
@@ -346,8 +324,8 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
       {required this.uuid,
       required this.x,
       required this.y,
-      required this.wX,
-      required this.wY,
+      required this.originX,
+      required this.originY,
       required this.childPointCount,
       this.clusterData,
       required this.visitedAtZoom,
@@ -363,9 +341,9 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
   @override
   double y;
   @override
-  double wX;
+  double originX;
   @override
-  double wY;
+  double originY;
   @override
   int childPointCount;
   @override
@@ -381,7 +359,7 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
 
   @override
   String toString() {
-    return 'MutableLayerElement<$T>.cluster(uuid: $uuid, x: $x, y: $y, wX: $wX, wY: $wY, childPointCount: $childPointCount, clusterData: $clusterData, visitedAtZoom: $visitedAtZoom, lowestZoom: $lowestZoom, highestZoom: $highestZoom, parentUuid: $parentUuid)';
+    return 'MutableLayerElement<$T>.cluster(uuid: $uuid, x: $x, y: $y, originX: $originX, originY: $originY, childPointCount: $childPointCount, clusterData: $clusterData, visitedAtZoom: $visitedAtZoom, lowestZoom: $lowestZoom, highestZoom: $highestZoom, parentUuid: $parentUuid)';
   }
 
   @JsonKey(ignore: true)
@@ -398,8 +376,8 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
             String uuid,
             double x,
             double y,
-            double wX,
-            double wY,
+            double originX,
+            double originY,
             int childPointCount,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
@@ -413,8 +391,6 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
             int index,
             double x,
             double y,
-            double wX,
-            double wY,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
             int lowestZoom,
@@ -422,7 +398,7 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
             String? parentUuid)
         point,
   }) {
-    return cluster(uuid, x, y, wX, wY, childPointCount, clusterData,
+    return cluster(uuid, x, y, originX, originY, childPointCount, clusterData,
         visitedAtZoom, lowestZoom, highestZoom, parentUuid);
   }
 
@@ -433,8 +409,8 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
             String uuid,
             double x,
             double y,
-            double wX,
-            double wY,
+            double originX,
+            double originY,
             int childPointCount,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
@@ -448,8 +424,6 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
             int index,
             double x,
             double y,
-            double wX,
-            double wY,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
             int lowestZoom,
@@ -457,8 +431,8 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
             String? parentUuid)?
         point,
   }) {
-    return cluster?.call(uuid, x, y, wX, wY, childPointCount, clusterData,
-        visitedAtZoom, lowestZoom, highestZoom, parentUuid);
+    return cluster?.call(uuid, x, y, originX, originY, childPointCount,
+        clusterData, visitedAtZoom, lowestZoom, highestZoom, parentUuid);
   }
 
   @override
@@ -468,8 +442,8 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
             String uuid,
             double x,
             double y,
-            double wX,
-            double wY,
+            double originX,
+            double originY,
             int childPointCount,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
@@ -483,8 +457,6 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
             int index,
             double x,
             double y,
-            double wX,
-            double wY,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
             int lowestZoom,
@@ -494,7 +466,7 @@ class _$MutableLayerCluster<T> extends MutableLayerCluster<T>
     required TResult orElse(),
   }) {
     if (cluster != null) {
-      return cluster(uuid, x, y, wX, wY, childPointCount, clusterData,
+      return cluster(uuid, x, y, originX, originY, childPointCount, clusterData,
           visitedAtZoom, lowestZoom, highestZoom, parentUuid);
     }
     return orElse();
@@ -538,8 +510,8 @@ abstract class MutableLayerCluster<T> extends MutableLayerElement<T>
       {required String uuid,
       required double x,
       required double y,
-      required double wX,
-      required double wY,
+      required double originX,
+      required double originY,
       required int childPointCount,
       ClusterDataBase? clusterData,
       required int visitedAtZoom,
@@ -557,12 +529,10 @@ abstract class MutableLayerCluster<T> extends MutableLayerElement<T>
   @override
   double get y;
   set y(double value);
-  @override
-  double get wX;
-  set wX(double value);
-  @override
-  double get wY;
-  set wY(double value);
+  double get originX;
+  set originX(double value);
+  double get originY;
+  set originY(double value);
   int get childPointCount;
   set childPointCount(int value);
   @override
@@ -600,8 +570,6 @@ abstract class _$$MutableLayerPointCopyWith<T, $Res>
       int index,
       double x,
       double y,
-      double wX,
-      double wY,
       ClusterDataBase? clusterData,
       int visitedAtZoom,
       int lowestZoom,
@@ -625,8 +593,6 @@ class __$$MutableLayerPointCopyWithImpl<T, $Res>
     Object? index = null,
     Object? x = null,
     Object? y = null,
-    Object? wX = null,
-    Object? wY = null,
     Object? clusterData = freezed,
     Object? visitedAtZoom = null,
     Object? lowestZoom = null,
@@ -653,14 +619,6 @@ class __$$MutableLayerPointCopyWithImpl<T, $Res>
       y: null == y
           ? _value.y
           : y // ignore: cast_nullable_to_non_nullable
-              as double,
-      wX: null == wX
-          ? _value.wX
-          : wX // ignore: cast_nullable_to_non_nullable
-              as double,
-      wY: null == wY
-          ? _value.wY
-          : wY // ignore: cast_nullable_to_non_nullable
               as double,
       clusterData: freezed == clusterData
           ? _value.clusterData
@@ -695,8 +653,6 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
       required this.index,
       required this.x,
       required this.y,
-      required this.wX,
-      required this.wY,
       this.clusterData,
       required this.visitedAtZoom,
       required this.lowestZoom,
@@ -710,14 +666,11 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
   T originalPoint;
   @override
   final int index;
+// Only useful for replacePoints
   @override
   double x;
   @override
   double y;
-  @override
-  double wX;
-  @override
-  double wY;
   @override
   ClusterDataBase? clusterData;
   @override
@@ -731,7 +684,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
 
   @override
   String toString() {
-    return 'MutableLayerElement<$T>.point(uuid: $uuid, originalPoint: $originalPoint, index: $index, x: $x, y: $y, wX: $wX, wY: $wY, clusterData: $clusterData, visitedAtZoom: $visitedAtZoom, lowestZoom: $lowestZoom, highestZoom: $highestZoom, parentUuid: $parentUuid)';
+    return 'MutableLayerElement<$T>.point(uuid: $uuid, originalPoint: $originalPoint, index: $index, x: $x, y: $y, clusterData: $clusterData, visitedAtZoom: $visitedAtZoom, lowestZoom: $lowestZoom, highestZoom: $highestZoom, parentUuid: $parentUuid)';
   }
 
   @JsonKey(ignore: true)
@@ -748,8 +701,8 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             String uuid,
             double x,
             double y,
-            double wX,
-            double wY,
+            double originX,
+            double originY,
             int childPointCount,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
@@ -763,8 +716,6 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             int index,
             double x,
             double y,
-            double wX,
-            double wY,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
             int lowestZoom,
@@ -772,8 +723,8 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             String? parentUuid)
         point,
   }) {
-    return point(uuid, originalPoint, index, x, y, wX, wY, clusterData,
-        visitedAtZoom, lowestZoom, highestZoom, parentUuid);
+    return point(uuid, originalPoint, index, x, y, clusterData, visitedAtZoom,
+        lowestZoom, highestZoom, parentUuid);
   }
 
   @override
@@ -783,8 +734,8 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             String uuid,
             double x,
             double y,
-            double wX,
-            double wY,
+            double originX,
+            double originY,
             int childPointCount,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
@@ -798,8 +749,6 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             int index,
             double x,
             double y,
-            double wX,
-            double wY,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
             int lowestZoom,
@@ -807,7 +756,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             String? parentUuid)?
         point,
   }) {
-    return point?.call(uuid, originalPoint, index, x, y, wX, wY, clusterData,
+    return point?.call(uuid, originalPoint, index, x, y, clusterData,
         visitedAtZoom, lowestZoom, highestZoom, parentUuid);
   }
 
@@ -818,8 +767,8 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             String uuid,
             double x,
             double y,
-            double wX,
-            double wY,
+            double originX,
+            double originY,
             int childPointCount,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
@@ -833,8 +782,6 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
             int index,
             double x,
             double y,
-            double wX,
-            double wY,
             ClusterDataBase? clusterData,
             int visitedAtZoom,
             int lowestZoom,
@@ -844,8 +791,8 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
     required TResult orElse(),
   }) {
     if (point != null) {
-      return point(uuid, originalPoint, index, x, y, wX, wY, clusterData,
-          visitedAtZoom, lowestZoom, highestZoom, parentUuid);
+      return point(uuid, originalPoint, index, x, y, clusterData, visitedAtZoom,
+          lowestZoom, highestZoom, parentUuid);
     }
     return orElse();
   }
@@ -890,8 +837,6 @@ abstract class MutableLayerPoint<T> extends MutableLayerElement<T>
       required final int index,
       required double x,
       required double y,
-      required double wX,
-      required double wY,
       ClusterDataBase? clusterData,
       required int visitedAtZoom,
       required int lowestZoom,
@@ -905,18 +850,12 @@ abstract class MutableLayerPoint<T> extends MutableLayerElement<T>
   T get originalPoint;
   set originalPoint(T value);
   int get index;
-  @override
-  double get x;
+  @override // Only useful for replacePoints
+  double get x; // Only useful for replacePoints
   set x(double value);
   @override
   double get y;
   set y(double value);
-  @override
-  double get wX;
-  set wX(double value);
-  @override
-  double get wY;
-  set wY(double value);
   @override
   ClusterDataBase? get clusterData;
   set clusterData(ClusterDataBase? value);

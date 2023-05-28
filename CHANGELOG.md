@@ -1,4 +1,4 @@
-## WIP
+## 2.3.0
 
 - FEATURE: The following methods are now available for both SuperclusterImmutable and
   SuperclusterMutable:
@@ -8,8 +8,10 @@
 - BREAKING: Supercluster.contains has been renamed to Supercluster.containsPoint
 - BREAKING: SuperclusterImmutable.childrenOf has been renamed to
   SuperclusterImmutable.childrenOfById.
-
-
+- BREAKING: MutableLayerPoint's weighted x/y (wX/wY) have been removed. They are equivalent x/y. 
+- BREAKING: MutableLayerCluster's x/y is now originX/originY and the wX/wY is now x/y. This brings
+            MutableLayerCluster in line with ImmutableLayerCluster and means that the x/y of a
+            LayerElement is always the coordinate with which it is stored in the index.
 
 ## 2.2.0
 

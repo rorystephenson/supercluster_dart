@@ -14,7 +14,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
   late final List<MutableLayer<T>> _trees;
   late final LayerClusterer<T> _layerClusterer;
 
-  late final String Function() generateUuid;
+  final String Function() generateUuid;
 
   SuperclusterMutable({
     required super.getX,
@@ -27,8 +27,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     super.extent,
     super.nodeSize = 16,
     super.extractClusterData,
-  })  : assert(minPoints == null || minPoints > 1),
-        generateUuid = generateUuid ?? (() => Uuid().v4()) {
+  }) : generateUuid = generateUuid ?? (() => Uuid().v4()) {
     _layerClusterer = LayerClusterer(
       minPoints: minPoints,
       radius: radius,
@@ -58,7 +57,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     // generate a cluster object for each point
     var elements = <RBushPoint<MutableLayerElement<T>>>[];
     for (int i = 0; i < points.length; i++) {
-      elements.add(_initializePoint(points[i], i).positionRBushPoint());
+      elements.add(_initializePoint(points[i], i).indexRBushPoint());
     }
 
     _trees[maxZoom + 1]
@@ -70,7 +69,7 @@ class SuperclusterMutable<T> extends Supercluster<T> {
     for (var z = maxZoom; z >= minZoom; z--) {
       elements = _layerClusterer
           .cluster(elements, z, _trees[z + 1])
-          .map((c) => c.positionRBushPoint())
+          .map((c) => c.indexRBushPoint())
           .toList(); // create a new set of clusters for the zoom
       _trees[z]
         ..clear()
@@ -283,14 +282,15 @@ class SuperclusterMutable<T> extends Supercluster<T> {
 
   @override
   List<MutableLayerElement<T>> childrenOf(LayerCluster<T> cluster) {
-    final r = util.searchRadius(radius, extent, cluster.highestZoom);
+    cluster as MutableLayerCluster<T>;
+    final r = _trees[cluster.highestZoom].searchRadius;
 
-    return _trees[cluster.lowestZoom + 1]
+    return _trees[cluster.highestZoom + 1]
         .search(RBushBox(
-          minX: cluster.x - r,
-          minY: cluster.y - r,
-          maxX: cluster.x + r,
-          maxY: cluster.y + r,
+          minX: cluster.originX - r,
+          minY: cluster.originY - r,
+          maxX: cluster.originX + r,
+          maxY: cluster.originY + r,
         ))
         .where((element) => element.data.parentUuid == cluster.uuid)
         .map((e) => e.data)

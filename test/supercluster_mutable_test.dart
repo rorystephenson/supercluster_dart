@@ -103,7 +103,7 @@ void main() {
     final index = supercluster(Fixtures.features);
     expect(pointCountsAtZooms(index), [
       32,
-      62,
+      61,
       100,
       137,
       149,
@@ -154,9 +154,9 @@ void main() {
   test('clusters points with a minimum cluster size', () {
     final index = supercluster(Fixtures.features, minPoints: 5);
     expect(pointCountsAtZooms(index), [
-      50,
+      47,
       117,
-      147,
+      145,
       151,
       162,
       162,
@@ -180,7 +180,7 @@ void main() {
     index.remove(Fixtures.features[10]);
     expect(pointCountsAtZooms(index), [
       32,
-      62,
+      61,
       99,
       136,
       148,
@@ -342,10 +342,10 @@ void main() {
     }
     index.remove(Fixtures.features[10]);
     expect(pointCountsAtZooms(index), [
-      40,
-      64,
-      101,
-      137,
+      42,
+      67,
+      100,
+      138,
       148,
       158,
       161,
@@ -405,7 +405,7 @@ void main() {
 
     final expectedLayerElementCounts = [
       32,
-      62,
+      61,
       100,
       137,
       149,

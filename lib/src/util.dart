@@ -29,8 +29,8 @@ double yLat(y) {
 // TODO: Make the distance measure customisable e.g. haversine
 // squared distance between two points
 double distSq(MutableLayerElement a, MutableLayerElement b) {
-  var dx = a.wX - b.wX;
-  var dy = a.wY - b.wY;
+  var dx = a.x - b.x;
+  var dy = a.y - b.y;
   return dx * dx + dy * dy;
 }
 

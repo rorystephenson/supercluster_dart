@@ -1,4 +1,3 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:rbush/rbush.dart';
 import 'package:supercluster/src/mutable/layer_element_modification.dart';
 import 'package:supercluster/src/mutable/rbush_point.dart';
@@ -40,12 +39,12 @@ class MutableLayer<T> {
       layerPoint.visitedAtZoom = zoom;
     }
 
-    _innerTree.insert(layerPoint.positionRBushPoint());
+    _innerTree.insert(layerPoint.indexRBushPoint());
   }
 
   LayerModification<T> removePointWithoutClustering(
       MutableLayerPoint<T> point) {
-    final searchResults = _innerTree.search(point.positionRBushPoint());
+    final searchResults = _innerTree.search(point.indexRBushPoint());
 
     final index = searchResults.indexWhere((element) {
       final data = element.data;
@@ -64,9 +63,9 @@ class MutableLayer<T> {
       LayerModification<T> previousModification) {
     final result = LayerModification<T>(layer: this);
 
-    // Must search withing searchRadius * 2 because the parent of a removed
-    // layer element may be that far away if it's weighted position is as far
-    // as possible from its position.
+    // Radius is 2x searchRadius because a cluster may be that far away from
+    // a point with a very low relative weight compared to the cluster's other
+    // points.
     final removalBounds =
         _boundary(previousModification.removed).expandBy(searchRadius * 2);
     final elementsWithinRemovalBounds = _innerTree.search(removalBounds);
@@ -126,31 +125,35 @@ class MutableLayer<T> {
     return result;
   }
 
+  // This rebuilds a layer after elements were [removed] from [previousLayer].
+  // It will attempt to build new clusters in the bounds of said removals.
   void rebuildLayer(
     LayerClusterer<T> layerClusterer,
     MutableLayer<T> previousLayer,
     List<MutableLayerElement<T>> removed,
   ) {
-    // Must search withing searchRadius * 2 because the a parent of a removed
-    // layer element may be that far away if it's weighted position is as far
-    // as possible from its position.
-    final removalBounds = _boundary(removed).expandBy(searchRadius * 2);
+    // Radius is NOT 2x because we are looking for potential clustering
+    // candidates which can only be searchRadius away from a child. Only once
+    // the x/y is weighted based on the contained points can a cluster be more
+    // than searchRadius away from its points (its originX/originY remain the
+    // original search center).
+    final removalBounds = _boundary(removed).expandBy(searchRadius);
     final points = previousLayer
         .search(removalBounds)
         .where((element) => element.data.visitedAtZoom > zoom)
-        .map((e) => e.data.positionRBushPoint())
+        .map((e) => e.data.indexRBushPoint())
         .toList();
     final result = layerClusterer
         .cluster(points, zoom, previousLayer)
-        .map((e) => e.positionRBushPoint())
+        .map((e) => e.indexRBushPoint())
         .toList();
     load(result);
   }
 
   List<MutableLayerElement<T>> elementsToClusterWith(
       MutableLayerPoint<T> layerPoint) {
-    final nearbyElements = _innerTree
-        .search(layerPoint.positionRBushPoint().expandBy(searchRadius));
+    final nearbyElements =
+        _innerTree.search(layerPoint.indexRBushPoint().expandBy(searchRadius));
 
     if (nearbyElements.isEmpty) {
       return [];
@@ -168,19 +171,13 @@ class MutableLayer<T> {
   List<MutableLayerElement<T>> descendants(
       MutableLayerCluster<T> layerCluster) {
     return _innerTree
-        .search(layerCluster.positionRBushPoint().expandBy(searchRadius * 2))
+        .search(layerCluster.originRBushPoint().expandBy(searchRadius))
         .where((element) =>
             element.data.uuid == layerCluster.uuid ||
             element.data.parentUuid == layerCluster.uuid)
         .map((e) => e.data)
         .toList();
   }
-
-  @visibleForTesting
-  int get numPoints => _innerTree.all().fold(
-        0,
-        (previousValue, element) => previousValue + element.data.numPoints,
-      );
 
   Iterable<MutableLayerElement<T>> all() {
     return _innerTree.all().map((e) => e.data);
@@ -190,7 +187,7 @@ class MutableLayer<T> {
       layerPointOf(layerPoint) != null;
 
   MutableLayerPoint<T>? layerPointOf(MutableLayerPoint<T> layerPoint) {
-    for (final element in _innerTree.search(layerPoint.positionRBushPoint())) {
+    for (final element in _innerTree.search(layerPoint.indexRBushPoint())) {
       final data = element.data;
       if (data is MutableLayerPoint<T> &&
           data.originalPoint == layerPoint.originalPoint) {
@@ -201,11 +198,11 @@ class MutableLayer<T> {
     return null;
   }
 
-  RBushBox _boundary(List<MutableLayerElement<T>> clusterOrPoints) {
-    RBushBox result = clusterOrPoints.first.positionRBushPoint();
+  RBushBox _boundary(List<MutableLayerElement<T>> elements) {
+    RBushBox result = elements.first.indexRBushPoint();
 
-    for (final clusterOrPoint in clusterOrPoints.skip(1)) {
-      result.extend(clusterOrPoint.positionRBushPoint());
+    for (final element in elements.skip(1)) {
+      result.extend(element.indexRBushPoint());
     }
 
     return result;
@@ -214,6 +211,9 @@ class MutableLayer<T> {
   LayerElementModification<T> modifyElementAndAncestors(
       LayerClusterer<T> layerClusterer,
       LayerElementModification<T> lastModification) {
+    // Radius is 2x searchRadius because a cluster may be that far away from
+    // a point with a very low relative weight compared to the cluster's other
+    // points.
     final removalBounds = _boundary([lastModification.oldLayerElement])
         .expandBy(searchRadius * 2);
     final parentOrMatchingRBushElement = search(removalBounds).firstWhere(
@@ -223,8 +223,8 @@ class MutableLayer<T> {
 
     if (parentOrMatchingRBushElement.data.uuid ==
         lastModification.oldLayerElement.uuid) {
-      _innerTree.remove(lastModification.oldLayerElement.positionRBushPoint());
-      _innerTree.insert(lastModification.newLayerElement.positionRBushPoint());
+      _innerTree.remove(lastModification.oldLayerElement.indexRBushPoint());
+      _innerTree.insert(lastModification.newLayerElement.indexRBushPoint());
       return LayerElementModification(
         layer: this,
         oldLayerElement: lastModification.oldLayerElement,
@@ -246,7 +246,7 @@ class MutableLayer<T> {
       final newLayerElement = removedElement.copyWith(
         clusterData: updatedClusterData,
       );
-      _innerTree.insert(newLayerElement.positionRBushPoint());
+      _innerTree.insert(newLayerElement.indexRBushPoint());
       return LayerElementModification(
         layer: this,
         oldLayerElement: removedElement,
