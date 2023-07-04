@@ -1,7 +1,17 @@
 import 'package:rbush/rbush.dart';
 
 class RBushPoint<T> extends RBushElement<T> {
+  final String uuid;
+
+  static RBushPoint<T> cast<S, T>(RBushPoint<S> point) => RBushPoint(
+        uuid: point.uuid,
+        x: point.x,
+        y: point.y,
+        data: point.data as T,
+      );
+
   RBushPoint({
+    required this.uuid,
     required double x,
     required double y,
     required T data,
@@ -20,20 +30,9 @@ class RBushPoint<T> extends RBushElement<T> {
   @override
   bool operator ==(Object other) {
     if (other is! RBushPoint<T>) return false;
-    return x == other.x && y == other.y && data == other.data;
+    return uuid == other.uuid;
   }
 
   @override
-  int get hashCode => x.hashCode + y.hashCode + data.hashCode;
-}
-
-extension RBushBoxExtension on RBushBox {
-  RBushBox expandBy(double expandBy) {
-    return RBushBox(
-      minX: minX - expandBy,
-      minY: minY - expandBy,
-      maxX: maxX + expandBy,
-      maxY: maxY + expandBy,
-    );
-  }
+  int get hashCode => uuid.hashCode;
 }

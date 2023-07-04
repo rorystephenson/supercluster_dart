@@ -1,28 +1,41 @@
-import 'package:rbush/rbush.dart';
-import 'package:supercluster/src/mutable/layer_element_modification.dart';
-import 'package:supercluster/src/mutable/rbush_point.dart';
+import 'dart:collection';
+import 'dart:math';
 
-import 'layer_clusterer.dart';
-import 'layer_modification.dart';
-import 'mutable_layer_element.dart';
+import 'package:rbush/rbush.dart';
+import 'package:supercluster/src/mutable/boundary_extensions.dart';
+import 'package:supercluster/src/mutable/layer_element_modification.dart';
+import 'package:supercluster/src/mutable/layer_modification.dart';
+import 'package:supercluster/src/mutable/mutable_layer_element.dart';
+import 'package:supercluster/src/mutable/rbush_element_set.dart';
+import 'package:supercluster/src/mutable/rbush_point.dart';
 
 class MutableLayer<T> {
   final int zoom;
-  final double searchRadius;
+
+  // Radius for clustering.
+  final double r;
+
+  // Squared cluster radius, for distance comparison.
+  final double r2;
 
   final RBush<MutableLayerElement<T>> _innerTree;
 
   MutableLayer({
     required int nodeSize,
     required this.zoom,
-    required this.searchRadius,
-  }) : _innerTree = RBush(nodeSize);
+    required this.r,
+  })  : _innerTree = RBush(nodeSize),
+        r2 = r * r;
 
   void clear() {
     _innerTree.clear();
   }
 
   void load(List<RBushElement<MutableLayerElement<T>>> elements) {
+    assert(
+      !elements
+          .any((element) => element is! RBushPoint<MutableLayerElement<T>>),
+    );
     _innerTree.load(elements);
   }
 
@@ -30,44 +43,45 @@ class MutableLayer<T> {
     return _innerTree.search(rBushBox);
   }
 
-  void addPointWithoutClustering(
-    MutableLayerPoint<T> layerPoint, {
+  void addWithoutClustering(
+    RBushPoint<MutableLayerElement<T>> layerPoint, {
     bool updateZooms = true,
   }) {
     if (updateZooms) {
-      layerPoint.lowestZoom = zoom;
-      layerPoint.visitedAtZoom = zoom;
+      layerPoint.data.lowestZoom = zoom;
+      layerPoint.data.visitedAtZoom = zoom;
     }
 
-    _innerTree.insert(layerPoint.indexRBushPoint());
+    _innerTree.insert(layerPoint);
   }
 
-  LayerModification<T> removePointWithoutClustering(
-      MutableLayerPoint<T> point) {
+  RBushElement<MutableLayerPoint<T>>? removePointWithoutClustering(
+    MutableLayerPoint<T> point,
+  ) {
     final searchResults = _innerTree.search(point.indexRBushPoint());
 
-    final index = searchResults.indexWhere((element) {
+    final removalIndex = searchResults.indexWhere((element) {
       final data = element.data;
       return data is MutableLayerPoint<T> &&
           data.originalPoint == point.originalPoint;
     });
 
-    if (index == -1) return LayerModification<T>(layer: this);
-
-    _innerTree.remove(searchResults[index]);
-    return LayerModification<T>(layer: this)
-      ..recordRemoval(searchResults[index].data as MutableLayerPoint<T>);
+    if (removalIndex == -1) return null;
+    _innerTree.remove(searchResults[removalIndex]);
+    return RBushPoint.cast<MutableLayerElement<T>, MutableLayerPoint<T>>(
+      searchResults[removalIndex] as RBushPoint<MutableLayerElement<T>>,
+    );
   }
 
-  LayerModification<T> removeElementsAndAncestors(
-      LayerModification<T> previousModification) {
+  LayerModification<T> removeElementsAndParents(
+    LayerModification<T> previousModification,
+  ) {
     final result = LayerModification<T>(layer: this);
 
     // Radius is 2x searchRadius because a cluster may be that far away from
     // a point with a very low relative weight compared to the cluster's other
     // points.
-    final removalBounds =
-        _boundary(previousModification.removed).expandBy(searchRadius * 2);
+    final removalBounds = previousModification.removed.paddedBoundary(r * 2);
     final elementsWithinRemovalBounds = _innerTree.search(removalBounds);
 
     for (final removal in previousModification.removed) {
@@ -85,13 +99,14 @@ class MutableLayer<T> {
           removed = true;
 
           _innerTree.remove(elementWithinRemovalBounds);
+          elementData.visitedAtZoom = max(elementData.visitedAtZoom, zoom + 1);
           result.recordRemoval(elementData);
 
           if (elementData.uuid == removal.parentUuid) {
             // Search the next layer down nullify the parent uuids of the children
             // and set their zoom value.
             final potentialChildren = previousModification.layer
-                .search(elementWithinRemovalBounds.expandBy(searchRadius * 2));
+                .search(elementWithinRemovalBounds.expandBy(r * 2));
 
             for (final potentialChild in potentialChildren) {
               if (potentialChild.data.parentUuid == elementData.uuid) {
@@ -125,53 +140,72 @@ class MutableLayer<T> {
     return result;
   }
 
-  // This rebuilds a layer after elements were [removed] from [previousLayer].
-  // It will attempt to build new clusters in the bounds of said removals.
-  void rebuildLayer(
-    LayerClusterer<T> layerClusterer,
-    MutableLayer<T> previousLayer,
-    List<MutableLayerElement<T>> removed,
-  ) {
-    // Radius is NOT 2x because we are looking for potential clustering
-    // candidates which can only be searchRadius away from a child. Only once
-    // the x/y is weighted based on the contained points can a cluster be more
-    // than searchRadius away from its points (its originX/originY remain the
-    // original search center).
-    final removalBounds = _boundary(removed).expandBy(searchRadius);
-    final points = previousLayer
-        .search(removalBounds)
-        .where((element) => element.data.visitedAtZoom > zoom)
-        .map((e) => e.data.indexRBushPoint())
-        .toList();
-    final result = layerClusterer
-        .cluster(points, zoom, previousLayer)
-        .map((e) => e.indexRBushPoint())
-        .toList();
-    load(result);
+  RBushElementSet<T> removeAncestors(RBushElementSet<T> descendants) {
+    final removedAncestors = <RBushElement<MutableLayerElement<T>>>{};
+    final visited = <RBushElement<MutableLayerElement<T>>>{};
+
+    for (final descendant in descendants) {
+      // Radius is 2x searchRadius because a cluster may be that far away from
+      // a point with a very low relative weight compared to the cluster's other
+      // points.
+      // TODO not * 2 because we should have all the cluster's children and one
+      // of them is the origin
+      final ancestorBounds = descendant.expandBy(r);
+
+      final ancestorPoints = _innerTree.search(ancestorBounds).where(
+          (element) =>
+              !visited.contains(element) &&
+                  element.data.uuid == descendant.data.uuid ||
+              element.data.uuid == descendant.data.parentUuid);
+      for (final ancestorPoint in ancestorPoints) {
+        ancestorPoint.data
+          ..visitedAtZoom = max(
+            zoom + 1,
+            ancestorPoint.data.visitedAtZoom,
+          )
+          ..lowestZoom = max(ancestorPoint.data.lowestZoom, zoom + 1);
+
+        removedAncestors.add(ancestorPoint);
+        _innerTree.remove(ancestorPoint);
+      }
+    }
+
+    return removedAncestors;
   }
 
-  List<MutableLayerElement<T>> elementsToClusterWith(
-      MutableLayerPoint<T> layerPoint) {
-    final nearbyElements =
-        _innerTree.search(layerPoint.indexRBushPoint().expandBy(searchRadius));
+  /// Recursively visits all the elements withing [parentClusterRadius] of
+  /// [elements] and marks them as visited. Returns a set containing the input
+  /// [elements] plus all visited elements.
+  RBushElementSet<T> visitContiguous(
+    double parentClusterRadius,
+    RBushElementSet<T> elements,
+  ) {
+    final result = <RBushElement<MutableLayerElement<T>>>{};
+    final searchQueue =
+        Queue<RBushElement<MutableLayerElement<T>>>.from(elements);
+    while (searchQueue.isNotEmpty) {
+      final searchElement = searchQueue.removeFirst();
+      final searchBounds = searchElement.expandBy(parentClusterRadius);
 
-    if (nearbyElements.isEmpty) {
-      return [];
+      for (final contiguousPoint in _innerTree.search(searchBounds)) {
+        final unvisited = !result.contains(contiguousPoint);
+        if (unvisited) {
+          contiguousPoint.data.visitedAtZoom =
+              max(zoom, contiguousPoint.data.visitedAtZoom);
+          result.add(contiguousPoint);
+          searchQueue.addLast(contiguousPoint);
+        }
+      }
     }
-
-    final clusterIndex = nearbyElements
-        .indexWhere((element) => element.data is MutableLayerCluster<T>);
-    if (clusterIndex != -1) {
-      return [nearbyElements[clusterIndex].data];
-    } else {
-      return nearbyElements.map((e) => e.data).toList();
-    }
+    return result;
   }
 
   List<MutableLayerElement<T>> descendants(
-      MutableLayerCluster<T> layerCluster) {
+    double clusterRadius,
+    MutableLayerCluster<T> layerCluster,
+  ) {
     return _innerTree
-        .search(layerCluster.originRBushPoint().expandBy(searchRadius))
+        .search(layerCluster.descendantsBounds(clusterRadius))
         .where((element) =>
             element.data.uuid == layerCluster.uuid ||
             element.data.parentUuid == layerCluster.uuid)
@@ -198,24 +232,14 @@ class MutableLayer<T> {
     return null;
   }
 
-  RBushBox _boundary(List<MutableLayerElement<T>> elements) {
-    RBushBox result = elements.first.indexRBushPoint();
-
-    for (final element in elements.skip(1)) {
-      result.extend(element.indexRBushPoint());
-    }
-
-    return result;
-  }
-
-  LayerElementModification<T> modifyElementAndAncestors(
-      LayerClusterer<T> layerClusterer,
-      LayerElementModification<T> lastModification) {
+  LayerElementModification<T> modifyElementAndParents(
+    LayerElementModification<T> lastModification,
+  ) {
     // Radius is 2x searchRadius because a cluster may be that far away from
     // a point with a very low relative weight compared to the cluster's other
     // points.
-    final removalBounds = _boundary([lastModification.oldLayerElement])
-        .expandBy(searchRadius * 2);
+    final removalBounds =
+        lastModification.oldLayerElement.paddedBoundary(r * 2);
     final parentOrMatchingRBushElement = search(removalBounds).firstWhere(
         (element) =>
             element.data.uuid == lastModification.oldLayerElement.uuid ||
@@ -237,7 +261,7 @@ class MutableLayer<T> {
       final updatedClusterData = removedElement.clusterData == null
           ? null
           : lastModification.layer
-              .search(parentOrMatchingRBushElement.expandBy(searchRadius * 2))
+              .search(parentOrMatchingRBushElement.expandBy(r * 2))
               .where(
                   (element) => element.data.parentUuid == removedElement.uuid)
               .map((e) => e.data.clusterData)

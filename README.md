@@ -85,7 +85,7 @@ void main() {
   print(clustersAndPoints.join(', '));
   // prints: cluster (2 points), point "third" (45.0, 19.0)
 
-  supercluster.insert(MapPoint(name: 'fourth', lat: 45.1, lon: 18));
+  supercluster.add(MapPoint(name: 'fourth', lat: 45.1, lon: 18));
   supercluster.remove(points[1]);
 
   clustersAndPoints = supercluster.search(0.0, 40, 20, 50, 5).map(

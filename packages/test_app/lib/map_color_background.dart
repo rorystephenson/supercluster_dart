@@ -8,18 +8,19 @@ class MapColorBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TileLayerWidget(
-      options: TileLayerOptions(
-        urlTemplate: '',
-        tileProvider: ColorTileProvider(),
-      ),
+    return TileLayer(
+      urlTemplate: '',
+      tileProvider: ColorTileProvider(),
     );
   }
 }
 
 class ColorTileProvider extends TileProvider {
   @override
-  ImageProvider<Object> getImage(Coords<num> coords, TileLayerOptions options) {
+  ImageProvider<Object> getImage(
+    TileCoordinates coordinates,
+    TileLayer options,
+  ) {
     String base64Image =
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdjePv27X8ACVkDx01U27cAAAAASUVORK5CYII=';
 

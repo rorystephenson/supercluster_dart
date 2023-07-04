@@ -1,6 +1,6 @@
 name: supercluster
 description: A port of MapBox's javascript supercluster library for fast clustering, with added mutable clustering support.
-version: 2.4.0
+version: 3.0.0-dev.1
 homepage: https://github.com/rorystephenson/supercluster_dart
 
 environment:
@@ -18,4 +18,5 @@ dev_dependencies:
   freezed: ^2.3.4
   lints: ^2.1.0
   test: ^1.24.3
-  timing: ^1.0.1
+  quiver: ^3.2.1
+

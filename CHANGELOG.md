@@ -1,3 +1,15 @@
+## 3.0.0-dev.1
+
+- BREAKING: SuperclusterMutable.insert() has changed behaviour and name. It is now add() in
+  following with dart collection conventions. The implementation has changed to ensure that clusters
+  are appropriately formed, previously after many insertions now enough clusters were being formed.
+  There is a performance cost but if you need to add many points you can use the new addAll() method
+  which is fast for multiple points.
+- BREAKING: The remove() method has also changed implementation to ensure that clusters are reformed
+  correctly, previously not enough clusters were being reformed after certain removals.
+- FEATURE: Added addAll() method for efficiently adding many points.
+- FEATURE: Added removeAll() method for efficiently removing many points.
+
 ## 2.4.0
 
 Requires dart 3.
@@ -12,10 +24,10 @@ Requires dart 3.
 - BREAKING: Supercluster.contains has been renamed to Supercluster.containsPoint
 - BREAKING: SuperclusterImmutable.childrenOf has been renamed to
   SuperclusterImmutable.childrenOfById.
-- BREAKING: MutableLayerPoint's weighted x/y (wX/wY) have been removed. They are equivalent x/y. 
+- BREAKING: MutableLayerPoint's weighted x/y (wX/wY) have been removed. They are equivalent x/y.
 - BREAKING: MutableLayerCluster's x/y is now originX/originY and the wX/wY is now x/y. This brings
-            MutableLayerCluster in line with ImmutableLayerCluster and means that the x/y of a
-            LayerElement is always the coordinate with which it is stored in the index.
+  MutableLayerCluster in line with ImmutableLayerCluster and means that the x/y of a
+  LayerElement is always the coordinate with which it is stored in the index.
 
 ## 2.2.0
 
@@ -40,8 +52,8 @@ Requires dart 3.
   set by calling load() as is done with SuperclusterMutable.
 - BREAKING: onClusterDataChange callback has been removed. If you want to react to cluster data
   changes you can do so after:
-  - `load` is called. - `remove` is called and returns true. - `modifyPointData` is called and
-    returns true.
+    - `load` is called. - `remove` is called and returns true. - `modifyPointData` is called and
+      returns true.
 
 ## 1.0.0
 

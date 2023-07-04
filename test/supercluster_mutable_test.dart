@@ -1,11 +1,15 @@
 import 'dart:convert';
 
 import 'package:compute/compute.dart';
+import 'package:quiver/iterables.dart';
+import 'package:supercluster/src/uuid_stub.dart';
 import 'package:supercluster/supercluster.dart';
 import 'package:test/test.dart';
 
 import 'fixtures/fixtures.dart';
+import 'fixtures/osm_dense_data.dart';
 import 'test_point.dart';
+import 'validate_mutable_supercluster.dart';
 
 void main() {
   int compareFeatures(
@@ -127,6 +131,8 @@ void main() {
     final index = supercluster(Fixtures.features);
     index.load([]);
     expect(numPointsAtZoom(index, index.maxZoom), 0);
+
+    validateMutableSupercluster(index);
   });
 
   test('replacePoints', () async {
@@ -149,6 +155,7 @@ void main() {
       expect(pointsAtZoom.any((e) => !testPoints.contains(e.originalPoint)),
           isFalse);
     }
+    validateMutableSupercluster(index);
   });
 
   test('clusters points with a minimum cluster size', () {
@@ -173,13 +180,14 @@ void main() {
       162,
       162
     ]);
+    validateMutableSupercluster(index);
   });
 
   test('removal', () {
     final index = supercluster(Fixtures.features);
     index.remove(Fixtures.features[10]);
     expect(pointCountsAtZooms(index), [
-      32,
+      34,
       61,
       99,
       136,
@@ -207,58 +215,67 @@ void main() {
         reason: 'Zoom $i contains $numPoints/161 points',
       );
     }
+
+    validateMutableSupercluster(index);
   });
 
   test('add and remove point near a cluster', () {
     final points = [
-      [53.3498, -6.2603], // lat, lon
-      [53.3488, -6.2613], // lat, lon
+      (53.3498, -6.2603),
+      (53.3488, -6.2613),
     ];
 
-    final index = SuperclusterMutable<List<double>>(
+    final index = SuperclusterMutable<(double, double)>(
       extractClusterData: (point) => TestClusterData(1),
       radius: 80,
-      getX: (coords) => coords[1],
-      getY: (coords) => coords[0],
+      getX: (point) => point.$1,
+      getY: (point) => point.$2,
     )..load(points);
 
-    final thirdPoint = [53.347312, -6.24508]; // lat, lon
+    final thirdPoint = (53.347312, -6.24508);
 
-    expect(layerElementsAtZoom(index, 15).length, 2);
+    expect(numPointsAtZooms(index).toSet().single, 2);
+    expect(layerElementsAtZoom(index, 15).length, 1);
     expect(layerElementsAtZoom(index, 14).length, 1);
     final originalCluster =
         layerElementsAtZoom(index, 14).single as MutableLayerCluster;
     expect(originalCluster.lowestZoom, 0);
-    expect(originalCluster.highestZoom, 14);
+    expect(originalCluster.highestZoom, 15);
 
-    index.insert(thirdPoint);
-    expect(layerElementsAtZoom(index, 15).length, 3);
+    index.add(thirdPoint);
+    expect(numPointsAtZooms(index).toSet().single, 3);
+    expect(layerElementsAtZoom(index, 16).length, 3);
+    expect(layerElementsAtZoom(index, 15).length, 2);
     expect(layerElementsAtZoom(index, 14).length, 2);
     expect(layerElementsAtZoom(index, 13).length, 2);
     expect(layerElementsAtZoom(index, 12).length, 2);
     expect(layerElementsAtZoom(index, 11).length, 1);
     final originalClusterB =
         layerElementsAtZoom(index, 14).whereType<MutableLayerCluster>().single;
-    expect(originalClusterB.highestZoom, 14);
+    expect(originalClusterB.highestZoom, 15);
     expect(originalClusterB.lowestZoom, 12);
 
     index.remove(thirdPoint);
-    expect(layerElementsAtZoom(index, 15).length, 2);
+    expect(numPointsAtZooms(index).toSet().single, 2);
+    expect(layerElementsAtZoom(index, 16).length, 2);
+    expect(layerElementsAtZoom(index, 15).length, 1);
     expect(layerElementsAtZoom(index, 14).length, 1);
     final newCluster =
         layerElementsAtZoom(index, 14).single as MutableLayerCluster;
     expect(newCluster.lowestZoom, 0);
-    expect(newCluster.highestZoom, 14);
+    expect(newCluster.highestZoom, 15);
+
+    validateMutableSupercluster(index);
   });
 
-  test('insertion', () {
+  test('addition', () {
     final index = supercluster(Fixtures.features);
 
     index.remove(Fixtures.features[10]);
     var pointsPerZoom = numPointsAtZooms(index);
     expect(Set.from(pointsPerZoom).single, 161);
 
-    index.insert(Fixtures.features[10]);
+    index.add(Fixtures.features[10]);
     pointsPerZoom = numPointsAtZooms(index);
     expect(Set.from(pointsPerZoom).single, 162);
 
@@ -282,9 +299,11 @@ void main() {
       featuresSorted,
       reason: 'Points should match the original points',
     );
+
+    validateMutableSupercluster(index);
   });
 
-  test('nearby insertions', () {
+  test('nearby additions', () {
     final index = supercluster2([
       TestPoint(longitude: 9.203368, latitude: 45.460982), // Milano
       TestPoint(longitude: 9.218777, latitude: 45.466276), // Milano east
@@ -293,98 +312,39 @@ void main() {
       TestPoint(longitude: 10.419535, latitude: 45.511298), // Bedizzole
     ]);
 
-    index.insert(TestPoint(latitude: 46.805213, longitude: 9.448094));
-    index.insert(TestPoint(latitude: 46.775243, longitude: 9.711766));
-    index.insert(TestPoint(latitude: 46.75637, longitude: 9.942479));
+    index.add(TestPoint(latitude: 46.805213, longitude: 9.448094));
+    validateMutableSupercluster(index);
+    index.add(TestPoint(latitude: 46.775243, longitude: 9.711766));
+    validateMutableSupercluster(index);
+    index.add(TestPoint(latitude: 46.75637, longitude: 9.942479));
+    validateMutableSupercluster(index);
 
     final pointsPerZoom = numPointsAtZooms(index).toSet();
     expect(pointsPerZoom.single, 8);
   });
 
   test('adds to existing cluster only, even if other points are nearby', () {
-    final index = supercluster2([
-      TestPoint(longitude: 9.203368, latitude: 45.460982), // Milano
-      TestPoint(longitude: 9.218777, latitude: 45.466276), // Milano east
-      TestPoint(longitude: 9.507878, latitude: 45.303647), // Lodi
-      TestPoint(longitude: 10.222456, latitude: 45.534990), // Brescia
-      TestPoint(longitude: 10.419535, latitude: 45.511298), // Bedizzole
-    ]);
+    final index = SuperclusterMutable<(double, double)>(
+      getX: (point) => point.$2,
+      getY: (point) => point.$1,
+    );
 
-    index.insert(TestPoint(latitude: 45.00324, longitude: 9.753136));
-    index.insert(TestPoint(latitude: 44.997413, longitude: 9.934411));
-    index.insert(TestPoint(latitude: 44.884685, longitude: 9.753136));
-    index.insert(TestPoint(latitude: 44.863244, longitude: 9.942651));
-    index.insert(TestPoint(latitude: 44.943066, longitude: 9.845233));
-    index.insert(TestPoint(latitude: 44.945982, longitude: 9.761462));
-    index.insert(TestPoint(latitude: 44.999401, longitude: 9.847979));
+    final additions = [
+      (45.00324, 9.753136),
+      (44.997413, 9.934411),
+      (44.884685, 9.753136),
+      (44.863244, 9.942651),
+      (44.943066, 9.845233),
+      (44.945982, 9.761462),
+      (44.999401, 9.847979),
+    ];
 
-    expect(numPointsAtZooms(index).toSet().single, 12);
-  });
-
-  test('multiple removals and insertions (with cluster data)', () {
-    final index = supercluster(Fixtures.features,
-        extractClusterData: (point) => TestClusterData(1));
-
-    final start = Fixtures.features.length ~/ 3;
-    final removalTotal = Fixtures.features.length ~/ 2;
-
-    for (int i = start; i < start + removalTotal; i++) {
-      index.remove(Fixtures.features[i]);
-      expect(
-        numPointsAtZooms(index).toSet().single,
-        Fixtures.features.length - (i - start + 1),
-      );
-    }
-    for (int i = start; i < start + removalTotal; i++) {
-      index.insert(Fixtures.features[i]);
-      expect(numPointsAtZooms(index).toSet().single,
-          Fixtures.features.length - removalTotal + (i - start + 1));
-    }
-    index.remove(Fixtures.features[10]);
-    expect(pointCountsAtZooms(index), [
-      42,
-      67,
-      100,
-      138,
-      148,
-      158,
-      161,
-      161,
-      161,
-      161,
-      161,
-      161,
-      161,
-      161,
-      161,
-      161,
-      161,
-      161
-    ]);
-
-    for (int i = index.minZoom; i <= index.maxZoom + 1; i++) {
-      final numPoints = numPointsAtZoom(index, i);
-      expect(
-        numPoints,
-        161,
-        reason: 'Zoom $i contains $numPoints/162 points',
-      );
+    for (final addition in additions) {
+      index.add(addition);
+      validateMutableSupercluster(index);
     }
 
-    final featuresInIndex = index.points..sort(compareFeatures);
-    final expectation = List<Map<String, dynamic>>.from(Fixtures.features)
-      ..remove(Fixtures.features[10])
-      ..sort(compareFeatures);
-    expect(featuresInIndex, equals(expectation));
-
-    for (int i = index.minZoom; i <= index.maxZoom + 1; i++) {
-      for (final layerElement in layerElementsAtZoom(index, i)) {
-        expect(
-          layerElement.numPoints,
-          (layerElement.clusterData as TestClusterData).sum,
-        );
-      }
-    }
+    expect(numPointsAtZooms(index).toSet().single, 7);
   });
 
   test('modify point data', () {
@@ -479,6 +439,342 @@ void main() {
         feature['geometry']['coordinates'][0] + 1;
     expect(index.containsPoint(feature), isFalse);
   });
+
+  test('one-by-one additions', () {
+    final points = <(double, double)>[
+      (45.44088, 12.328761),
+      (45.440444, 12.337212),
+      (45.440539, 12.337038),
+      (45.438299, 12.323898),
+      (45.437132, 12.32746),
+    ];
+
+    final index = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      minZoom: 0,
+      maxZoom: 20,
+      radius: 120,
+      extent: 512,
+      nodeSize: 64,
+      generateUuid: UuidStub.v4,
+    );
+    for (final point in points) {
+      index.add(point);
+      validateMutableSupercluster(index);
+    }
+  });
+
+  test('one-by-one additions with minimum 3 points in cluster ', () {
+    final points = <(double, double)>[
+      (45.44088, 12.328761),
+      (45.440444, 12.337212),
+      (45.440539, 12.337038),
+      (45.438299, 12.323898),
+      (45.437132, 12.32746),
+    ];
+
+    final index = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      minPoints: 3,
+      minZoom: 0,
+      maxZoom: 20,
+      radius: 120,
+      extent: 512,
+      nodeSize: 64,
+      generateUuid: UuidStub.v4,
+    );
+    for (final point in points) {
+      index.add(point);
+      validateMutableSupercluster(index);
+    }
+  });
+
+  test('one-by-one additions, addition causes cluster split', () {
+    final points = [
+      (45.4369075, 12.3374054),
+      (45.4368017, 12.3362103),
+      (45.436185, 12.3375696),
+      (45.436155, 12.3376235),
+      (45.4361239, 12.3376788),
+      (45.4368294, 12.3357726),
+    ];
+
+    final index = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      minZoom: 0,
+      maxZoom: 20,
+      radius: 120,
+      extent: 512,
+      nodeSize: 64,
+      generateUuid: UuidStub.v4,
+    );
+    for (int i = 0; i < points.length; i++) {
+      final point = points[i];
+      index.add(point);
+      validateMutableSupercluster(index);
+    }
+  });
+
+  test('addition forms cluster at lowest zoom', () {
+    final points = [
+      (-43.5404025683706, 146.03379804609568),
+      (-22.702080987505923, 150.81116783945873),
+      (-14.163506768755923, 144.50660240977123),
+    ];
+    final supercluster = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      generateUuid: UuidStub.v4,
+    );
+
+    for (final point in points) {
+      supercluster.add(point);
+      validateMutableSupercluster(supercluster);
+    }
+  });
+
+  test('addition causes ancestor to cluster at a lower zoom', () {
+    final points = <(double, double)>[
+      (45.4408672, 12.3305263),
+      (45.4402445, 12.3319059),
+      (45.4409002, 12.3278475),
+      (45.4405388, 12.327191),
+    ];
+
+    final index = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      generateUuid: UuidStub.v4,
+    );
+    for (final point in points) {
+      index.add(point);
+      validateMutableSupercluster(index);
+    }
+  });
+
+  test('many one-by-one addition of dense points with addAll', () {
+    final supercluster = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      generateUuid: UuidStub.v4,
+    );
+
+    supercluster.addAll(osmDenseData);
+    validateMutableSupercluster(supercluster);
+  });
+
+  test('many one-by-one addition of dense points with grouped addAll', () {
+    final supercluster = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      generateUuid: UuidStub.v4,
+    );
+
+    final partitions = partition(osmDenseData, 100);
+
+    int added = 0;
+    for (final partition in partitions) {
+      supercluster.addAll(partition);
+      added += partition.length;
+      validateMutableSupercluster(supercluster, expectedPoints: added);
+    }
+  });
+
+  test('many one-by-one removals of dense points with grouped removeAll', () {
+    final supercluster = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      generateUuid: UuidStub.v4,
+    )..load(osmDenseData);
+
+    final partitions = partition(osmDenseData, 100);
+
+    int removed = 0;
+    for (final partition in partitions) {
+      supercluster.removeAll(partition);
+      removed += partition.length;
+      validateMutableSupercluster(
+        supercluster,
+        expectedPoints: osmDenseData.length - removed,
+      );
+    }
+  });
+
+  test('many one-by-one additions with dense points', () {
+    final supercluster = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      generateUuid: UuidStub.v4,
+    );
+
+    for (final point in osmDenseData) {
+      supercluster.add(point);
+      validateMutableSupercluster(supercluster);
+    }
+  }, tags: 'slow');
+
+  test('many one-by-one removals with dense points', () {
+    final supercluster = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      generateUuid: UuidStub.v4,
+    )..load(osmDenseData);
+
+    int removed = 0;
+    for (final point in osmDenseData) {
+      supercluster.remove(point);
+      removed += 1;
+      expect(
+        numPointsAtZooms(supercluster).toSet().single,
+        osmDenseData.length - removed,
+      );
+      validateMutableSupercluster(supercluster);
+    }
+  }, tags: 'slow');
+
+  test(
+      'dense points have a similar number of clusters if loaded or added one by one',
+      () {
+    final superclusterLoaded = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      generateUuid: UuidStub.v4,
+    )..load(osmDenseData);
+
+    final superclusterAdded = SuperclusterMutable<(double, double)>(
+      getX: (p) => p.$2,
+      getY: (p) => p.$1,
+      generateUuid: UuidStub.v4,
+    );
+
+    for (final point in osmDenseData) {
+      superclusterAdded.add(point);
+    }
+
+    for (int z = superclusterLoaded.maxZoom;
+        z >= superclusterLoaded.minZoom;
+        z--) {}
+    expect(
+      layerElementsAtZooms(superclusterLoaded).map((e) => e.length),
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        7,
+        22,
+        82,
+        272,
+        1481,
+      ],
+    );
+    expect(
+      layerElementsAtZooms(superclusterAdded).map((e) => e.length),
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        7,
+        26,
+        91,
+        282,
+        1481,
+      ],
+    );
+  }, tags: 'slow');
+
+  test('multiple removals and additions (with cluster data)', () {
+    final index = supercluster(
+      Fixtures.features,
+      extractClusterData: (point) => TestClusterData(1),
+    );
+
+    final start = Fixtures.features.length ~/ 3;
+    final removalTotal = Fixtures.features.length ~/ 2;
+
+    for (int i = start; i < start + removalTotal; i++) {
+      index.remove(Fixtures.features[i]);
+      expect(
+        numPointsAtZooms(index).toSet().single,
+        Fixtures.features.length - (i - start + 1),
+      );
+      validateMutableSupercluster(index);
+    }
+    for (int i = start; i < start + removalTotal; i++) {
+      index.add(Fixtures.features[i]);
+      expect(numPointsAtZooms(index).toSet().single,
+          Fixtures.features.length - removalTotal + (i - start + 1));
+      validateMutableSupercluster(index);
+    }
+    index.remove(Fixtures.features[10]);
+    expect(pointCountsAtZooms(index), [
+      31,
+      59,
+      98,
+      136,
+      148,
+      158,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+      161,
+    ]);
+    validateMutableSupercluster(index);
+
+    for (int i = index.minZoom; i <= index.maxZoom + 1; i++) {
+      final numPoints = numPointsAtZoom(index, i);
+      expect(
+        numPoints,
+        161,
+        reason: 'Zoom $i contains $numPoints/162 points',
+      );
+    }
+
+    final featuresInIndex = index.points..sort(compareFeatures);
+    final expectation = List<Map<String, dynamic>>.from(Fixtures.features)
+      ..remove(Fixtures.features[10])
+      ..sort(compareFeatures);
+    expect(featuresInIndex, equals(expectation));
+
+    for (int i = index.minZoom; i <= index.maxZoom + 1; i++) {
+      for (final layerElement in layerElementsAtZoom(index, i)) {
+        expect(
+          layerElement.numPoints,
+          (layerElement.clusterData as TestClusterData).sum,
+        );
+      }
+    }
+  }, tags: 'slow');
 }
 
 class SuperclusterArgs {

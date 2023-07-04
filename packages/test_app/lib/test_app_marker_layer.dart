@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -6,13 +7,15 @@ import 'package:flutter_map/plugin_api.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:supercluster/supercluster.dart';
 
-import 'test_point.dart';
-
 class TestAppMarkerLayer extends StatefulWidget {
   final void Function(double currentZoom) onZoomChange;
-  final List<TestPoint> initialPoints;
+  final List<(double, double)> initialPoints;
   final int maxZoom;
   final int minZoom;
+  final int minPoints;
+  final int radius;
+  final int extent;
+  final int nodeSize;
 
   const TestAppMarkerLayer({
     Key? key,
@@ -20,6 +23,10 @@ class TestAppMarkerLayer extends StatefulWidget {
     required this.onZoomChange,
     required this.maxZoom,
     required this.minZoom,
+    required this.minPoints,
+    required this.radius,
+    required this.extent,
+    required this.nodeSize,
   }) : super(key: key);
 
   @override
@@ -27,8 +34,7 @@ class TestAppMarkerLayer extends StatefulWidget {
 }
 
 class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
-  static const markerSize = 30.0;
-  static const clusterSize = 50.0;
+  static const clusterSize = 35.0;
 
   double? _currentZoom;
 
@@ -37,7 +43,7 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
     clusterSize / 2,
   );
 
-  late final SuperclusterMutable<TestPoint> supercluster;
+  late final SuperclusterMutable<(double, double)> supercluster;
 
   late StreamSubscription<void> _onMoveListener;
 
@@ -46,8 +52,11 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
     super.initState();
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      _onMoveListener = MapState.maybeOf(context)!.onMoved.listen((event) {
-        final newZoom = MapState.maybeOf(context)!.zoom;
+      _onMoveListener = FlutterMapState.maybeOf(context)!
+          .mapController
+          .mapEventStream
+          .listen((event) {
+        final newZoom = FlutterMapState.maybeOf(context)!.zoom;
         if (newZoom != _currentZoom) {
           _currentZoom = newZoom;
           widget.onZoomChange(newZoom);
@@ -55,11 +64,16 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
       });
     });
 
-    supercluster = SuperclusterMutable<TestPoint>(
-      getX: TestPoint.getX,
-      getY: TestPoint.getY,
+    supercluster = SuperclusterMutable<(double, double)>(
+      generateUuid: UuidStub.v4,
+      getX: (point) => point.$2,
+      getY: (point) => point.$1,
       maxZoom: widget.maxZoom,
       minZoom: widget.minZoom,
+      minPoints: widget.minPoints,
+      radius: widget.radius,
+      extent: widget.extent,
+      nodeSize: widget.nodeSize,
     )..load(widget.initialPoints);
   }
 
@@ -71,7 +85,7 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
 
   @override
   Widget build(BuildContext context) {
-    final mapState = MapState.maybeOf(context)!;
+    final mapState = FlutterMapState.maybeOf(context)!;
     final bounds = mapState.pixelBounds;
     final paddedBounds = LatLngBounds(
       mapState.unproject(bounds.topLeft - _boundsPixelPadding),
@@ -79,7 +93,7 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
     );
 
     return StreamBuilder<void>(
-      stream: mapState.onMoved,
+      stream: mapState.mapController.mapEventStream,
       builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
         final points = supercluster.search(
           paddedBounds.west,
@@ -91,77 +105,112 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
 
         List<Widget> markers = [];
 
+        final center = mapState.center;
+        final clusterZoom = mapState.zoom.ceil();
+        final searchSize =
+            (widget.radius) / ((widget.extent) * pow(2, clusterZoom));
+        final centerX = center.longitude / 360 + 0.5;
+        final offsetX = centerX - searchSize;
+        final offsetLat = (offsetX - 0.5) * 360;
+        final offsetLatLng = LatLng(center.latitude, offsetLat);
+        final centerPoint = mapState.project(center);
+        final offsetPoint = mapState.project(offsetLatLng);
+        final pointSize = 2 * (centerPoint.x - offsetPoint.x);
+
         for (final point in points) {
           final pointPosition = mapState.project(
             point.map(
               cluster: (cluster) => LatLng(cluster.latitude, cluster.longitude),
               point: (point) => LatLng(
-                point.originalPoint.latitude,
-                point.originalPoint.longitude,
+                point.originalPoint.$1,
+                point.originalPoint.$2,
               ),
             ),
           );
-          final position = pointPosition - mapState.getPixelOrigin();
-          final pointSize = point.map(
-              cluster: (cluster) => clusterSize, point: (point) => markerSize);
+          final position = pointPosition - mapState.pixelOrigin;
 
           markers.add(
             Positioned(
-              width: clusterSize,
+              width: pointSize,
               height: pointSize,
               left: position.x - (pointSize / 2),
               top: position.y - (pointSize / 2),
-              child: point.map(
-                cluster: (cluster) => Container(
-                  decoration: BoxDecoration(
-                    color: Colors.blueAccent,
-                    borderRadius: BorderRadius.circular(pointSize / 2),
-                  ),
-                  width: pointSize,
-                  height: pointSize,
-                  child: Center(
-                    child: GestureDetector(
-                      child: Text(
-                        "${cluster.numPoints}\n${cluster.uuid} ${cluster.parentUuid}",
-                        style: const TextStyle(
-                          fontSize: 12,
-                          decoration: TextDecoration.none,
-                          color: Colors.black,
+              child: Container(
+                width: pointSize,
+                height: pointSize,
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: point.map(
+                  cluster: (cluster) => Center(
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.blueAccent.withOpacity(0.5),
+                              shape: BoxShape.circle,
+                            ),
+                            width: clusterSize,
+                            height: clusterSize,
+                          ),
                         ),
-                      ),
+                        Center(
+                          child: Text(
+                            "${cluster.uuid}<${cluster.parentUuid}\n"
+                            "${cluster.numPoints}\n"
+                            "${cluster.highestZoom}-${cluster.lowestZoom}",
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              decoration: TextDecoration.none,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                point: (point) => GestureDetector(
-                  onTap: () {
-                    final latLng = LatLng(point.originalPoint.latitude,
-                        point.originalPoint.longitude);
-                    debugPrint('Removing point at $latLng');
-                    setState(() {
-                      supercluster.remove(point.originalPoint);
-                    });
-                  },
-                  child: Stack(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        size: pointSize,
-                      ),
-                      Positioned(
-                          bottom: 0,
-                          left: 0,
+                  point: (point) => GestureDetector(
+                    onTap: () {
+                      final latLng = LatLng(
+                        point.originalPoint.$1,
+                        point.originalPoint.$2,
+                      );
+                      debugPrint('Removing point at $latLng');
+                      setState(() {
+                        supercluster.remove(point.originalPoint);
+                      });
+                    },
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 4,
+                            height: 3,
+                            decoration: const BoxDecoration(
+                              color: Colors.black,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                        Center(
                           child: Text(
-                            '${point.uuid}\n${point.parentUuid}',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.purple.shade400,
+                            '${point.uuid}<${point.parentUuid}\n${point.highestZoom}-${point.lowestZoom}',
+                            style: const TextStyle(
+                                color: Colors.black,
                                 decoration: TextDecoration.none,
-                                fontSize: 14,
-                                shadows: const [
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                shadows: [
                                   Shadow(blurRadius: 10, color: Colors.white)
                                 ]),
-                          )),
-                    ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -174,26 +223,31 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
     );
   }
 
-  void insertAt(LatLng latLng) {
+  void addAt(LatLng latLng) {
     setState(() {
-      supercluster.insert(
-        TestPoint(
-          longitude: latLng.longitude,
-          latitude: latLng.latitude,
-        ),
-      );
+      supercluster.add((latLng.latitude, latLng.longitude));
     });
   }
 
-  void remove(TestPoint point) {
+  void remove((double, double) point) {
     setState(() {
       supercluster.remove(point);
     });
   }
 
   void zoomTo(int zoom) {
-    final mapState = MapState.maybeOf(context)!;
+    final mapState = FlutterMapState.maybeOf(context)!;
     mapState.move(mapState.center, zoom.toDouble(),
         source: MapEventSource.custom);
+  }
+}
+
+class UuidStub {
+  static int _sequence = 0;
+
+  static String v4() {
+    final result = _sequence.toString();
+    _sequence++;
+    return result;
   }
 }

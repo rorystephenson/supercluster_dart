@@ -30,7 +30,7 @@ class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
   factory MutableLayerElement.point({
     required String uuid,
     required T originalPoint,
-    required final int index, // Only useful for replacePoints
+    required final int index, // Zero-based index of point addition.
     required double x,
     required double y,
     ClusterDataBase? clusterData,
@@ -100,7 +100,7 @@ class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
 
   // This point is the one with which this element is stored in the index.
   RBushPoint<MutableLayerElement<T>> indexRBushPoint() =>
-      RBushPoint(x: x, y: y, data: this);
+      RBushPoint(uuid: uuid, x: x, y: y, data: this);
 
   @override
   TResult handle<TResult extends Object?>({
@@ -110,15 +110,5 @@ class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
       map(cluster: cluster, point: point);
 
   String get summary =>
-      '${map(cluster: (cluster) => 'cluster', point: (point) => 'point')} ($uuid - $parentUuid)';
-}
-
-extension MutableLayerClusterExtension<T> on MutableLayerCluster<T> {
-  // This point corresponds to the search center point which was used when
-  // creating this cluster.
-  RBushPoint<MutableLayerElement<T>> originRBushPoint() => RBushPoint(
-        x: originX,
-        y: originY,
-        data: this,
-      );
+      '${map(cluster: (cluster) => 'cluster', point: (point) => 'point')}($uuid < $parentUuid, $highestZoom - $lowestZoom)';
 }

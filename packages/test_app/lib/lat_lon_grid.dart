@@ -13,13 +13,13 @@ class LatLonGrid extends StatelessWidget {
         // the child empty Container ensures that CustomPainter gets a size
         // (not w=0 and h=0)
         painter: _LatLonPainter(
-            options: MapPluginLatLonGridOptions(
+            options: LatLonGridLayerOptions(
               lineWidth: 0.5,
               // apply alpha for grid lines
-              lineColor: const Color.fromARGB(150, 0, 0, 0),
-              labelStyle: const TextStyle(
+              lineColor: Colors.black.withOpacity(0.1),
+              labelStyle: TextStyle(
                 color: Colors.white,
-                backgroundColor: Colors.black,
+                backgroundColor: Colors.black.withOpacity(0.1),
                 fontSize: 12.0,
               ),
               showCardinalDirections: true,
@@ -30,7 +30,7 @@ class LatLonGrid extends StatelessWidget {
               offsetLonLabelsBottom: 20.0,
               offsetLatLabelsLeft: 20.0,
             ),
-            mapState: MapState.maybeOf(context)!),
+            mapState: FlutterMapState.maybeOf(context)!),
         // the child empty Container ensures that CustomPainter gets a size
         // (not w=0 and h=0)
         child: Container(),
@@ -55,8 +55,8 @@ class _GridLabel {
 class _LatLonPainter extends CustomPainter {
   double w = 0.0;
   double h = 0.0;
-  MapPluginLatLonGridOptions options;
-  MapState mapState;
+  LatLonGridLayerOptions options;
+  FlutterMapState mapState;
   final Paint mPaint = Paint();
 
   // list of grid labels for latitude and longitude

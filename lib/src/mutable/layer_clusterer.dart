@@ -1,4 +1,5 @@
 import 'package:rbush/rbush.dart';
+import 'package:supercluster/src/mutable/boundary_extensions.dart';
 
 import '../cluster_data_base.dart';
 import '../util.dart' as util;
@@ -20,78 +21,94 @@ class LayerClusterer<T> {
     this.extractClusterData,
   });
 
-  List<MutableLayerElement<T>> cluster(
-      List<RBushElement<MutableLayerElement<T>>> points,
-      int zoom,
-      MutableLayer<T> previousLayer) {
-    final clusters = <MutableLayerElement<T>>[];
+  List<RBushElement<MutableLayerElement<T>>> newClusterElements(
+    RBushElement<MutableLayerElement<T>> layerPoint,
+    MutableLayer<T> layer,
+    MutableLayer<T> childLayer,
+  ) {
+    final r2 = layer.r2;
+    final potentialClusterElements = childLayer
+        .search(layerPoint.expandBy(layer.r))
+        .where((element) =>
+            _closeEnoughToCluster(layerPoint.data, element.data, r2))
+        .toList();
 
-    final r = util.searchRadius(radius, extent, zoom);
+    if (potentialClusterElements.fold(
+            0, (acc, el) => acc + el.data.numPoints) >=
+        minPoints) {
+      return potentialClusterElements;
+    }
+    return [];
+  }
 
-    // loop through each point
-    for (var i = 0; i < points.length; i++) {
-      var p = points[i].data;
-      // if we've already visited the point at this zoom level, skip it
-      if (p.visitedAtZoom <= zoom) continue;
-      p.visitedAtZoom = zoom;
+  List<RBushElement<MutableLayerElement<T>>> cluster(
+    Iterable<RBushElement<MutableLayerElement<T>>> points,
+    int zoom,
+    MutableLayer<T> layer,
+    MutableLayer<T> previousLayer,
+  ) {
+    final clusters = <RBushElement<MutableLayerElement<T>>>[];
 
-      final neighbors = previousLayer.search(RBushBox(
-        minX: p.x - r,
-        minY: p.y - r,
-        maxX: p.x + r,
-        maxY: p.y + r,
-      ));
+    for (final point in points) {
+      final data = point.data;
+      // If we've already visited the point at this zoom level, skip it.
+      if (data.visitedAtZoom <= zoom) continue;
+      data.visitedAtZoom = zoom;
+
+      final neighbors = previousLayer.search(data.paddedBoundary(layer.r));
 
       final clusterableNeighbors = <MutableLayerElement<T>>[];
 
-      var numPoints = p.numPoints;
-      var wx = p.x * p.numPoints;
-      var wy = p.y * p.numPoints;
-      final potentialClusterUuid = generateUuid();
+      var numPoints = data.numPoints;
+      var wx = data.x * data.numPoints;
+      var wy = data.y * data.numPoints;
 
       for (final neighbor in neighbors) {
         var b = neighbor.data;
         // Filter out neighbors that are too far or already processed
-        if (zoom < b.visitedAtZoom && util.distSq(p, b) <= r * r) {
+        if (zoom < b.visitedAtZoom &&
+            _closeEnoughToCluster(data, b, layer.r2)) {
           clusterableNeighbors.add(b);
           numPoints += b.numPoints;
         }
       }
 
-      if (numPoints == p.numPoints || numPoints < minPoints) {
+      if (numPoints == data.numPoints || numPoints < minPoints) {
         // No neighbors, add a single point as cluster
-        p.lowestZoom = zoom;
-        clusters.add(p);
+        data.lowestZoom = zoom;
+        data.parentUuid = null;
+        clusters.add(point);
       } else {
+        final clusterId = generateUuid();
         ClusterDataBase? clusterData;
         for (final clusterableNeighbor in clusterableNeighbors) {
-          clusterableNeighbor.parentUuid = potentialClusterUuid;
+          clusterableNeighbor.parentUuid = clusterId;
           clusterableNeighbor.visitedAtZoom =
               zoom; // save the zoom (so it doesn't get processed twice)
           wx += clusterableNeighbor.x * clusterableNeighbor.numPoints;
           wy += clusterableNeighbor.y * clusterableNeighbor.numPoints;
 
           if (extractClusterData != null) {
-            clusterData ??= _extractClusterData(p);
+            clusterData ??= _extractClusterData(data);
             clusterData =
                 clusterData.combine(_extractClusterData(clusterableNeighbor));
           }
         }
 
         // form a cluster with neighbors
-        p.parentUuid = potentialClusterUuid;
+        data.parentUuid = clusterId;
         final cluster = MutableLayerElement.initializeCluster<T>(
-          uuid: potentialClusterUuid,
+          uuid: clusterId,
           x: wx / numPoints,
           y: wy / numPoints,
-          originX: p.x,
-          originY: p.y,
+          originX: data.x,
+          originY: data.y,
           childPointCount: numPoints,
           zoom: zoom,
           clusterData: clusterData,
         );
 
-        clusters.add(cluster);
+        clusters.add(cluster.indexRBushPoint());
       }
     }
 
@@ -103,4 +120,11 @@ class LayerClusterer<T> {
         cluster: (cluster) => cluster.clusterData!,
         point: (mapPoint) => extractClusterData!(mapPoint.originalPoint));
   }
+
+  bool _closeEnoughToCluster(
+    MutableLayerElement<T> a,
+    MutableLayerElement<T> b,
+    double r2,
+  ) =>
+      util.distSq(a, b) <= r2;
 }
