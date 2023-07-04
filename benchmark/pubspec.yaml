@@ -1,11 +1,11 @@
-name: supercluster_benchmarks
+name: benchmarks
 publish_to: none
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
+  quiver: ^3.2.1
   supercluster:
     path: ../
   timing: ^1.0.1
-  quiver: ^3.2.1
