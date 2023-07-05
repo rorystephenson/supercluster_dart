@@ -5,7 +5,6 @@ import 'package:rbush/rbush.dart';
 import 'package:supercluster/src/mutable/layer_clusterer.dart';
 import 'package:supercluster/src/mutable/mutable_layer.dart';
 import 'package:supercluster/src/mutable/rbush_element_set.dart';
-import 'package:supercluster/src/mutable/rbush_point.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../supercluster.dart';
@@ -325,6 +324,19 @@ class SuperclusterMutable<T> extends Supercluster<T> {
         .containsPoint(_initializePointForMatching(point));
   }
 
+  bool containsElement(LayerElement<T> element) {
+    if (element is! MutableLayerElement<T>) return false;
+
+    final potentialMatches = _trees[element.lowestZoom].search(
+      element.indexRBushPoint(),
+    );
+    for (final potentialMatch in potentialMatches) {
+      if (element.uuid == potentialMatch.data.uuid) return true;
+    }
+
+    return false;
+  }
+
   @override
   MutableLayerCluster<T>? parentOf(LayerElement<T> element) {
     element as MutableLayerElement<T>;
@@ -418,17 +430,4 @@ class SuperclusterMutable<T> extends Supercluster<T> {
 
   @visibleForTesting
   MutableLayer<T> treeAt(int zoom) => _trees[zoom];
-}
-
-class ImmutableLayerRemoval {
-  final bool isCluster;
-  final String uuid;
-  final String? parentUuid;
-  final RBushPoint indexRBushPoint;
-
-  ImmutableLayerRemoval.from(MutableLayerElement element)
-      : isCluster = element is MutableLayerCluster,
-        uuid = element.uuid,
-        parentUuid = element.parentUuid,
-        indexRBushPoint = element.indexRBushPoint();
 }

@@ -9,6 +9,7 @@
   correctly, previously not enough clusters were being reformed after certain removals.
 - FEATURE: Added addAll() method for efficiently adding many points.
 - FEATURE: Added removeAll() method for efficiently removing many points.
+- FEATURE: Added containsElement() method for SuperclusterImmutable.
 
 ## 2.4.0
 
