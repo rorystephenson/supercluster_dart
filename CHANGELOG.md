@@ -1,4 +1,4 @@
-## 3.0.0-dev.1
+## 3.0.0
 
 - BREAKING: SuperclusterMutable.insert() has changed behaviour and name. It is now add() in
   following with dart collection conventions. The implementation has changed to ensure that clusters
