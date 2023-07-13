@@ -1,3 +1,7 @@
+## 3.0.1
+
+- CHORE: Bump dependencies.
+
 ## 3.0.0
 
 - BREAKING: SuperclusterMutable.insert() has changed behaviour and name. It is now add() in

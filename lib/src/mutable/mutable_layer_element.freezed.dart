@@ -666,7 +666,7 @@ class _$MutableLayerPoint<T> extends MutableLayerPoint<T> with LayerPoint<T> {
   T originalPoint;
   @override
   final int index;
-// Only useful for replacePoints
+// Zero-based index of point addition.
   @override
   double x;
   @override
@@ -850,8 +850,8 @@ abstract class MutableLayerPoint<T> extends MutableLayerElement<T>
   T get originalPoint;
   set originalPoint(T value);
   int get index;
-  @override // Only useful for replacePoints
-  double get x; // Only useful for replacePoints
+  @override // Zero-based index of point addition.
+  double get x; // Zero-based index of point addition.
   set x(double value);
   @override
   double get y;
