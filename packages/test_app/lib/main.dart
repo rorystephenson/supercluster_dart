@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/plugin_api.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:test_app/lat_lon_grid.dart';
 
@@ -11,7 +11,7 @@ void main() {
 }
 
 class TestApp extends StatelessWidget {
-  const TestApp({Key? key}) : super(key: key);
+  const TestApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +37,7 @@ class TestAppMap extends StatefulWidget {
     ...removalPoints.map((e) => TestPointEvent.removal(e))
   ];
 
-  const TestAppMap({Key? key}) : super(key: key);
+  const TestAppMap({super.key});
 
   @override
   State<TestAppMap> createState() => _TestAppMapState();
@@ -106,8 +106,8 @@ class _TestAppMapState extends State<TestAppMap> {
                       Flexible(
                         child: TextButton(
                           style: ButtonStyle(
-                            padding: MaterialStateProperty.all(EdgeInsets.zero),
-                            backgroundColor: MaterialStateProperty.all(
+                            padding: WidgetStateProperty.all(EdgeInsets.zero),
+                            backgroundColor: WidgetStateProperty.all(
                                 _currentZoom.floor() == i
                                     ? Colors.blue.shade200
                                     : Colors.white),
@@ -132,10 +132,11 @@ class _TestAppMapState extends State<TestAppMap> {
                     options: MapOptions(
                       minZoom: minZoom.toDouble(),
                       maxZoom: maxZoom.toDouble(),
-                      center: LatLng(initialCenter.$1, initialCenter.$2),
-                      interactiveFlags:
-                          InteractiveFlag.all - InteractiveFlag.rotate,
-                      zoom: initialZoom.toDouble(),
+                      initialCenter: LatLng(initialCenter.$1, initialCenter.$2),
+                      initialZoom: initialZoom.toDouble(),
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.all - InteractiveFlag.rotate,
+                      ),
                       onTap: (_, latLng) {
                         debugPrint('Add marker at $latLng');
                         setState(() {
@@ -143,15 +144,35 @@ class _TestAppMapState extends State<TestAppMap> {
                         });
                       },
                     ),
-                    nonRotatedChildren: [
+                    children: [
+                      const MapColorBackground(),
+                      const MobileLayerTransformer(child: LatLonGrid()),
+                      MobileLayerTransformer(
+                        child: TestAppMarkerLayer(
+                          key: _markerLayerKey,
+                          initialPoints: TestAppMap.initialPoints,
+                          maxZoom: maxZoom,
+                          minZoom: minZoom,
+                          minPoints: minPoints,
+                          radius: radius,
+                          extent: extent,
+                          nodeSize: nodeSize,
+                          onZoomChange: (newZoom) {
+                            final newRoundedZoom = newZoom.ceil();
+                            if (_currentZoom != newRoundedZoom) {
+                              setState(() {
+                                _currentZoom = newRoundedZoom;
+                              });
+                            }
+                          },
+                        ),
+                      ),
                       Builder(
                         builder: (context) => SafeArea(
                           child: Padding(
                             padding: const EdgeInsets.all(8),
                             child: Text(
-                              FlutterMapState.maybeOf(context)!
-                                  .zoom
-                                  .toStringAsFixed(3),
+                              MapCamera.of(context).zoom.toStringAsFixed(3),
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -160,28 +181,6 @@ class _TestAppMapState extends State<TestAppMap> {
                           ),
                         ),
                       )
-                    ],
-                    children: [
-                      const MapColorBackground(),
-                      const LatLonGrid(),
-                      TestAppMarkerLayer(
-                        key: _markerLayerKey,
-                        initialPoints: TestAppMap.initialPoints,
-                        maxZoom: maxZoom,
-                        minZoom: minZoom,
-                        minPoints: minPoints,
-                        radius: radius,
-                        extent: extent,
-                        nodeSize: nodeSize,
-                        onZoomChange: (newZoom) {
-                          final newRoundedZoom = newZoom.ceil();
-                          if (_currentZoom != newRoundedZoom) {
-                            setState(() {
-                              _currentZoom = newRoundedZoom;
-                            });
-                          }
-                        },
-                      ),
                     ],
                   ),
                 ),
@@ -209,7 +208,7 @@ class _TestAppMapState extends State<TestAppMap> {
                               },
                         style: ButtonStyle(
                           backgroundColor:
-                              MaterialStateProperty.all(Colors.white),
+                              WidgetStateProperty.all(Colors.white),
                         ),
                         child: const Text('step'),
                       ),

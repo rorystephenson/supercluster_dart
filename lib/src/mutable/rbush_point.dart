@@ -14,13 +14,12 @@ class RBushPoint<T> extends RBushElement<T> {
     required this.uuid,
     required double x,
     required double y,
-    required T data,
+    required super.data,
   }) : super(
           minX: x,
           minY: y,
           maxX: x,
           maxY: y,
-          data: data,
         );
 
   double get x => minX;

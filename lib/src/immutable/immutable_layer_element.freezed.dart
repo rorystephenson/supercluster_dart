@@ -12,7 +12,7 @@ part of 'immutable_layer_element.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
 mixin _$ImmutableLayerElement<T> {
@@ -204,11 +204,12 @@ class _$ImmutableLayerElementCopyWithImpl<T, $Res,
 }
 
 /// @nodoc
-abstract class _$$ImmutableLayerClusterCopyWith<T, $Res>
+abstract class _$$ImmutableLayerClusterImplCopyWith<T, $Res>
     implements $ImmutableLayerElementCopyWith<T, $Res> {
-  factory _$$ImmutableLayerClusterCopyWith(_$ImmutableLayerCluster<T> value,
-          $Res Function(_$ImmutableLayerCluster<T>) then) =
-      __$$ImmutableLayerClusterCopyWithImpl<T, $Res>;
+  factory _$$ImmutableLayerClusterImplCopyWith(
+          _$ImmutableLayerClusterImpl<T> value,
+          $Res Function(_$ImmutableLayerClusterImpl<T>) then) =
+      __$$ImmutableLayerClusterImplCopyWithImpl<T, $Res>;
   @override
   @useResult
   $Res call(
@@ -224,12 +225,13 @@ abstract class _$$ImmutableLayerClusterCopyWith<T, $Res>
 }
 
 /// @nodoc
-class __$$ImmutableLayerClusterCopyWithImpl<T, $Res>
+class __$$ImmutableLayerClusterImplCopyWithImpl<T, $Res>
     extends _$ImmutableLayerElementCopyWithImpl<T, $Res,
-        _$ImmutableLayerCluster<T>>
-    implements _$$ImmutableLayerClusterCopyWith<T, $Res> {
-  __$$ImmutableLayerClusterCopyWithImpl(_$ImmutableLayerCluster<T> _value,
-      $Res Function(_$ImmutableLayerCluster<T>) _then)
+        _$ImmutableLayerClusterImpl<T>>
+    implements _$$ImmutableLayerClusterImplCopyWith<T, $Res> {
+  __$$ImmutableLayerClusterImplCopyWithImpl(
+      _$ImmutableLayerClusterImpl<T> _value,
+      $Res Function(_$ImmutableLayerClusterImpl<T>) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -245,7 +247,7 @@ class __$$ImmutableLayerClusterCopyWithImpl<T, $Res>
     Object? highestZoom = null,
     Object? parentId = null,
   }) {
-    return _then(_$ImmutableLayerCluster<T>(
+    return _then(_$ImmutableLayerClusterImpl<T>(
       x: null == x
           ? _value.x
           : x // ignore: cast_nullable_to_non_nullable
@@ -288,9 +290,9 @@ class __$$ImmutableLayerClusterCopyWithImpl<T, $Res>
 
 /// @nodoc
 
-class _$ImmutableLayerCluster<T> extends ImmutableLayerCluster<T>
+class _$ImmutableLayerClusterImpl<T> extends ImmutableLayerCluster<T>
     with LayerCluster<T> {
-  _$ImmutableLayerCluster(
+  _$ImmutableLayerClusterImpl(
       {required this.x,
       required this.y,
       required this.childPointCount,
@@ -330,10 +332,9 @@ class _$ImmutableLayerCluster<T> extends ImmutableLayerCluster<T>
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ImmutableLayerClusterCopyWith<T, _$ImmutableLayerCluster<T>>
-      get copyWith =>
-          __$$ImmutableLayerClusterCopyWithImpl<T, _$ImmutableLayerCluster<T>>(
-              this, _$identity);
+  _$$ImmutableLayerClusterImplCopyWith<T, _$ImmutableLayerClusterImpl<T>>
+      get copyWith => __$$ImmutableLayerClusterImplCopyWithImpl<T,
+          _$ImmutableLayerClusterImpl<T>>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -472,7 +473,7 @@ abstract class ImmutableLayerCluster<T> extends ImmutableLayerElement<T>
       required int visitedAtZoom,
       required int lowestZoom,
       required int highestZoom,
-      int parentId}) = _$ImmutableLayerCluster<T>;
+      int parentId}) = _$ImmutableLayerClusterImpl<T>;
   ImmutableLayerCluster._() : super._();
 
   @override
@@ -498,16 +499,16 @@ abstract class ImmutableLayerCluster<T> extends ImmutableLayerElement<T>
   set parentId(int value);
   @override
   @JsonKey(ignore: true)
-  _$$ImmutableLayerClusterCopyWith<T, _$ImmutableLayerCluster<T>>
+  _$$ImmutableLayerClusterImplCopyWith<T, _$ImmutableLayerClusterImpl<T>>
       get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$ImmutableLayerPointCopyWith<T, $Res>
+abstract class _$$ImmutableLayerPointImplCopyWith<T, $Res>
     implements $ImmutableLayerElementCopyWith<T, $Res> {
-  factory _$$ImmutableLayerPointCopyWith(_$ImmutableLayerPoint<T> value,
-          $Res Function(_$ImmutableLayerPoint<T>) then) =
-      __$$ImmutableLayerPointCopyWithImpl<T, $Res>;
+  factory _$$ImmutableLayerPointImplCopyWith(_$ImmutableLayerPointImpl<T> value,
+          $Res Function(_$ImmutableLayerPointImpl<T>) then) =
+      __$$ImmutableLayerPointImplCopyWithImpl<T, $Res>;
   @override
   @useResult
   $Res call(
@@ -523,12 +524,12 @@ abstract class _$$ImmutableLayerPointCopyWith<T, $Res>
 }
 
 /// @nodoc
-class __$$ImmutableLayerPointCopyWithImpl<T, $Res>
+class __$$ImmutableLayerPointImplCopyWithImpl<T, $Res>
     extends _$ImmutableLayerElementCopyWithImpl<T, $Res,
-        _$ImmutableLayerPoint<T>>
-    implements _$$ImmutableLayerPointCopyWith<T, $Res> {
-  __$$ImmutableLayerPointCopyWithImpl(_$ImmutableLayerPoint<T> _value,
-      $Res Function(_$ImmutableLayerPoint<T>) _then)
+        _$ImmutableLayerPointImpl<T>>
+    implements _$$ImmutableLayerPointImplCopyWith<T, $Res> {
+  __$$ImmutableLayerPointImplCopyWithImpl(_$ImmutableLayerPointImpl<T> _value,
+      $Res Function(_$ImmutableLayerPointImpl<T>) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -544,7 +545,7 @@ class __$$ImmutableLayerPointCopyWithImpl<T, $Res>
     Object? lowestZoom = null,
     Object? highestZoom = null,
   }) {
-    return _then(_$ImmutableLayerPoint<T>(
+    return _then(_$ImmutableLayerPointImpl<T>(
       originalPoint: freezed == originalPoint
           ? _value.originalPoint
           : originalPoint // ignore: cast_nullable_to_non_nullable
@@ -587,9 +588,9 @@ class __$$ImmutableLayerPointCopyWithImpl<T, $Res>
 
 /// @nodoc
 
-class _$ImmutableLayerPoint<T> extends ImmutableLayerPoint<T>
+class _$ImmutableLayerPointImpl<T> extends ImmutableLayerPoint<T>
     with LayerPoint<T> {
-  _$ImmutableLayerPoint(
+  _$ImmutableLayerPointImpl(
       {required this.originalPoint,
       required this.x,
       required this.y,
@@ -629,9 +630,9 @@ class _$ImmutableLayerPoint<T> extends ImmutableLayerPoint<T>
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ImmutableLayerPointCopyWith<T, _$ImmutableLayerPoint<T>> get copyWith =>
-      __$$ImmutableLayerPointCopyWithImpl<T, _$ImmutableLayerPoint<T>>(
-          this, _$identity);
+  _$$ImmutableLayerPointImplCopyWith<T, _$ImmutableLayerPointImpl<T>>
+      get copyWith => __$$ImmutableLayerPointImplCopyWithImpl<T,
+          _$ImmutableLayerPointImpl<T>>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -770,7 +771,7 @@ abstract class ImmutableLayerPoint<T> extends ImmutableLayerElement<T>
       int parentId,
       required int visitedAtZoom,
       required int lowestZoom,
-      required int highestZoom}) = _$ImmutableLayerPoint<T>;
+      required int highestZoom}) = _$ImmutableLayerPointImpl<T>;
   ImmutableLayerPoint._() : super._();
 
   T get originalPoint;
@@ -797,6 +798,6 @@ abstract class ImmutableLayerPoint<T> extends ImmutableLayerElement<T>
   set highestZoom(int value);
   @override
   @JsonKey(ignore: true)
-  _$$ImmutableLayerPointCopyWith<T, _$ImmutableLayerPoint<T>> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$ImmutableLayerPointImplCopyWith<T, _$ImmutableLayerPointImpl<T>>
+      get copyWith => throw _privateConstructorUsedError;
 }

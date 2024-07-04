@@ -1,3 +1,7 @@
+## 3.1.0
+
+- CHORE: Bump dependencies.
+
 ## 3.0.1
 
 - CHORE: Bump dependencies.

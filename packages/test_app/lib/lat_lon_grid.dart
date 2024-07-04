@@ -1,10 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_map/plugin_api.dart';
-import 'package:lat_lon_grid_plugin/lat_lon_grid_plugin.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 class LatLonGrid extends StatelessWidget {
-  const LatLonGrid({Key? key}) : super(key: key);
+  const LatLonGrid({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,7 @@ class LatLonGrid extends StatelessWidget {
               offsetLonLabelsBottom: 20.0,
               offsetLatLabelsLeft: 20.0,
             ),
-            mapState: FlutterMapState.maybeOf(context)!),
+            mapCamera: MapCamera.of(context)),
         // the child empty Container ensures that CustomPainter gets a size
         // (not w=0 and h=0)
         child: Container(),
@@ -56,14 +57,14 @@ class _LatLonPainter extends CustomPainter {
   double w = 0.0;
   double h = 0.0;
   LatLonGridLayerOptions options;
-  FlutterMapState mapState;
+  MapCamera mapCamera;
   final Paint mPaint = Paint();
 
   // list of grid labels for latitude and longitude
   List<_GridLabel> lonGridLabels = [];
   List<_GridLabel> latGridLabels = [];
 
-  _LatLonPainter({required this.options, required this.mapState}) {
+  _LatLonPainter({required this.options, required this.mapCamera}) {
     mPaint.color = options.lineColor;
     mPaint.strokeWidth = options.lineWidth;
     mPaint.isAntiAlias = true; // default anyway
@@ -74,17 +75,20 @@ class _LatLonPainter extends CustomPainter {
     w = size.width;
     h = size.height;
 
-    List<double> inc = getIncrementor(mapState.zoom.round());
+    List<double> inc = getIncrementor(mapCamera.zoom.round());
 
     // store bounds
     // mapState.bounds cannot actually be null
-    double north = mapState.bounds.north;
-    double west = mapState.bounds.west;
-    double south = mapState.bounds.south;
-    double east = mapState.bounds.east;
 
-    Bounds b = mapState.getPixelBounds(mapState.zoom);
-    CustomPoint topLeftPixel = b.topLeft;
+    final visibleBounds = mapCamera.visibleBounds;
+
+    double north = visibleBounds.north;
+    double west = visibleBounds.west;
+    double south = visibleBounds.south;
+    double east = visibleBounds.east;
+
+    Bounds b = mapCamera.pixelBounds;
+    Point topLeftPixel = b.topLeft;
 
     // getting the dimensions for a maximal sized text label
     TextPainter textPainterMax = getTextPaint('180W');
@@ -99,8 +103,8 @@ class _LatLonPainter extends CustomPainter {
     lonGridLabels.clear();
     for (int i = 0; i < lonPos.length; i++) {
       // convert point to pixels
-      CustomPoint projected =
-          mapState.project(LatLng(north, lonPos[i]), mapState.zoom);
+      Point projected =
+          mapCamera.project(LatLng(north, lonPos[i]), mapCamera.zoom);
       double pixelPos = projected.x - (topLeftPixel.x as double);
 
       // draw line
@@ -128,8 +132,8 @@ class _LatLonPainter extends CustomPainter {
     latGridLabels.clear();
     for (int i = 0; i < latPos.length; i++) {
       // convert back to pixels
-      CustomPoint projected =
-          mapState.project(LatLng(latPos[i], east), mapState.zoom);
+      Point projected =
+          mapCamera.project(LatLng(latPos[i], east), mapCamera.zoom);
       double pixelPos = projected.y - (topLeftPixel.y as double);
 
       // draw line
@@ -403,4 +407,53 @@ class _LatLonPainter extends CustomPainter {
 
     return ret;
   }
+}
+
+class LatLonGridLayerOptions {
+  /// color of grid lines
+  final Color lineColor;
+
+  /// width of grid lines
+  /// can be adjusted even down to 0.1 on high res displays for a light grid
+  final double lineWidth;
+
+  /// style of labels
+  final TextStyle labelStyle;
+
+  /// show cardinal directions instead of numbers only
+  // prevents negative numbers, e.g. 45.5W instead of -45.5
+  final bool showCardinalDirections;
+
+  /// show cardinal direction as prefix, e.g. W45.5 instead of 45.5W
+  final bool showCardinalDirectionsAsPrefix;
+
+  /// enable labels
+  final bool showLabels;
+
+  /// rotate longitude labels 90 degrees
+  /// mainly to prevent overlapping on high zoom levels
+  final bool rotateLonLabels;
+
+  /// center labels on lines instead of top edge alignment
+  final bool placeLabelsOnLines;
+
+  /// offset for longitude labels from the 'bottom' (north up)
+  final double offsetLonLabelsBottom;
+
+  /// offset for latitude labels from the 'left' (north up)
+  final double offsetLatLabelsLeft;
+
+  /// LatLonGridLayerOptions
+  LatLonGridLayerOptions({
+    required this.labelStyle,
+    this.lineWidth = 0.5,
+    this.lineColor = Colors.black,
+    this.showCardinalDirections = true,
+    this.showCardinalDirectionsAsPrefix = false,
+    this.showLabels = true,
+    this.rotateLonLabels = true,
+    this.placeLabelsOnLines = true,
+    this.offsetLonLabelsBottom = 50.0,
+    this.offsetLatLabelsLeft = 75.0,
+  });
 }

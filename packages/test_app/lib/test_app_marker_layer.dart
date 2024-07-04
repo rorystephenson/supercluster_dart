@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_map/plugin_api.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:supercluster/supercluster.dart';
 
@@ -18,7 +18,7 @@ class TestAppMarkerLayer extends StatefulWidget {
   final int nodeSize;
 
   const TestAppMarkerLayer({
-    Key? key,
+    super.key,
     required this.initialPoints,
     required this.onZoomChange,
     required this.maxZoom,
@@ -27,7 +27,7 @@ class TestAppMarkerLayer extends StatefulWidget {
     required this.radius,
     required this.extent,
     required this.nodeSize,
-  }) : super(key: key);
+  });
 
   @override
   State<TestAppMarkerLayer> createState() => TestAppMarkerLayerState();
@@ -38,7 +38,7 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
 
   double? _currentZoom;
 
-  final _boundsPixelPadding = const CustomPoint(
+  final _boundsPixelPadding = const Point(
     clusterSize / 2,
     clusterSize / 2,
   );
@@ -52,11 +52,9 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
     super.initState();
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      _onMoveListener = FlutterMapState.maybeOf(context)!
-          .mapController
-          .mapEventStream
-          .listen((event) {
-        final newZoom = FlutterMapState.maybeOf(context)!.zoom;
+      _onMoveListener =
+          MapController.of(context).mapEventStream.listen((event) {
+        final newZoom = MapCamera.of(context).zoom;
         if (newZoom != _currentZoom) {
           _currentZoom = newZoom;
           widget.onZoomChange(newZoom);
@@ -85,40 +83,41 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
 
   @override
   Widget build(BuildContext context) {
-    final mapState = FlutterMapState.maybeOf(context)!;
-    final bounds = mapState.pixelBounds;
+    final mapCamera = MapCamera.of(context);
+    final mapController = MapController.of(context);
+    final bounds = mapCamera.pixelBounds;
     final paddedBounds = LatLngBounds(
-      mapState.unproject(bounds.topLeft - _boundsPixelPadding),
-      mapState.unproject(bounds.bottomRight + _boundsPixelPadding),
+      mapCamera.unproject(bounds.topLeft - _boundsPixelPadding),
+      mapCamera.unproject(bounds.bottomRight + _boundsPixelPadding),
     );
 
     return StreamBuilder<void>(
-      stream: mapState.mapController.mapEventStream,
+      stream: mapController.mapEventStream,
       builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
         final points = supercluster.search(
           paddedBounds.west,
           paddedBounds.south,
           paddedBounds.east,
           paddedBounds.north,
-          mapState.zoom.ceil(),
+          mapCamera.zoom.ceil(),
         );
 
         List<Widget> markers = [];
 
-        final center = mapState.center;
-        final clusterZoom = mapState.zoom.ceil();
+        final center = mapCamera.center;
+        final clusterZoom = mapCamera.zoom.ceil();
         final searchSize =
             (widget.radius) / ((widget.extent) * pow(2, clusterZoom));
         final centerX = center.longitude / 360 + 0.5;
         final offsetX = centerX - searchSize;
         final offsetLat = (offsetX - 0.5) * 360;
         final offsetLatLng = LatLng(center.latitude, offsetLat);
-        final centerPoint = mapState.project(center);
-        final offsetPoint = mapState.project(offsetLatLng);
+        final centerPoint = mapCamera.project(center);
+        final offsetPoint = mapCamera.project(offsetLatLng);
         final pointSize = 2 * (centerPoint.x - offsetPoint.x);
 
         for (final point in points) {
-          final pointPosition = mapState.project(
+          final pointPosition = mapCamera.project(
             point.map(
               cluster: (cluster) => LatLng(cluster.latitude, cluster.longitude),
               point: (point) => LatLng(
@@ -127,7 +126,7 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
               ),
             ),
           );
-          final position = pointPosition - mapState.pixelOrigin;
+          final position = pointPosition - mapCamera.pixelOrigin;
 
           markers.add(
             Positioned(
@@ -236,9 +235,9 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
   }
 
   void zoomTo(int zoom) {
-    final mapState = FlutterMapState.maybeOf(context)!;
-    mapState.move(mapState.center, zoom.toDouble(),
-        source: MapEventSource.custom);
+    final mapController = MapController.of(context);
+    final mapCamera = MapCamera.of(context);
+    mapController.move(mapCamera.center, zoom.toDouble());
   }
 }
 
