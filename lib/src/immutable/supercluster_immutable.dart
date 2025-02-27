@@ -267,11 +267,13 @@ class SuperclusterImmutable<T> extends Supercluster<T> {
   }
 
   ClusterDataBase _extractClusterData(
-      ImmutableLayerElement<T> clusterOrMapPoint) {
-    return clusterOrMapPoint.map(
-        cluster: (cluster) => cluster.clusterData!,
-        point: (mapPoint) => extractClusterData!(mapPoint.originalPoint));
-  }
+          ImmutableLayerElement<T> clusterOrMapPoint) =>
+      switch (clusterOrMapPoint) {
+        ImmutableLayerCluster<T> cluster => cluster.clusterData!,
+        ImmutableLayerPoint<T> mapPoint =>
+          extractClusterData!(mapPoint.originalPoint),
+        ImmutableLayerElement<T>() => throw UnimplementedError(),
+      };
 
   // get index of the point from which the cluster originated
   int _getOriginId(int clusterId) {

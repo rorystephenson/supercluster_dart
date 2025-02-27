@@ -7,7 +7,7 @@ import '../layer_element.dart';
 part 'immutable_layer_element.freezed.dart';
 
 @unfreezed
-class ImmutableLayerElement<T>
+abstract class ImmutableLayerElement<T>
     with _$ImmutableLayerElement<T>, LayerElement<T> {
   ImmutableLayerElement._();
 
@@ -75,8 +75,11 @@ class ImmutableLayerElement<T>
         highestZoom: zoom,
       );
 
-  int get numPoints => map(
-      cluster: (cluster) => cluster.childPointCount, point: (mapPoint) => 1);
+  int get numPoints => switch (this) {
+        ImmutableLayerCluster(childPointCount: var count) => count,
+        ImmutableLayerPoint() => 1,
+        ImmutableLayerElement<T>() => throw UnimplementedError(),
+      };
 
   static double getX(ImmutableLayerElement clusterOrMapPoint) =>
       clusterOrMapPoint.x;
@@ -85,16 +88,23 @@ class ImmutableLayerElement<T>
       clusterOrMapPoint.y;
 
   @override
-  String get uuid => map(
-      cluster: (cluster) => cluster.id.toString(),
-      point: (point) => "${point.highestZoom}-${point.index}");
+  String get uuid => switch (this) {
+        ImmutableLayerCluster(:var id) => id.toString(),
+        ImmutableLayerPoint(:var highestZoom, index: var index) =>
+          "$highestZoom-$index",
+        ImmutableLayerElement<T>() => throw UnimplementedError(),
+      };
 
   @override
   TResult handle<TResult extends Object?>({
     required TResult Function(LayerCluster<T> cluster) cluster,
     required TResult Function(LayerPoint<T> point) point,
   }) =>
-      map(cluster: cluster, point: point);
+      switch (this) {
+        ImmutableLayerCluster<T> clusterInstance => cluster(clusterInstance),
+        ImmutableLayerPoint<T> pointInstance => point(pointInstance),
+        _ => throw UnimplementedError(),
+      };
 }
 
 extension ClusterLatLngExtension<T> on ImmutableLayerCluster<T> {

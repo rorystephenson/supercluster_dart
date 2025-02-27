@@ -17,12 +17,13 @@ void main() {
   )..load(points);
 
   var clustersAndPoints = supercluster.search(0.0, 40, 20, 50, 5).map(
-        (e) => e.map(
-          cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
-          point: (point) => 'point ${point.originalPoint}',
-        ),
+        (e) => switch (e) {
+          MutableLayerCluster<MapPoint> cluster =>
+            'cluster (${cluster.numPoints} points)',
+          MutableLayerPoint<MapPoint> point => 'point ${point.originalPoint}',
+          MutableLayerElement<MapPoint>() => throw UnimplementedError(),
+        },
       );
-
   print(clustersAndPoints.join(', '));
   // prints: cluster (2 points), point "third" (45.0, 19.0)
 
@@ -30,9 +31,12 @@ void main() {
   supercluster.remove(points[1]);
 
   clustersAndPoints = supercluster.search(0.0, 40, 20, 50, 5).map(
-        (e) => e.map(
-            cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
-            point: (point) => 'point ${point.originalPoint}'),
+        (e) => switch (e) {
+          MutableLayerCluster<MapPoint> cluster =>
+            'cluster (${cluster.numPoints} points)',
+          MutableLayerPoint<MapPoint> point => 'point ${point.originalPoint}',
+          MutableLayerElement<MapPoint>() => throw UnimplementedError(),
+        },
       );
 
   print(clustersAndPoints.join(', '));

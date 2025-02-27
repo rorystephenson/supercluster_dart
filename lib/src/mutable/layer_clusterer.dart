@@ -115,11 +115,13 @@ class LayerClusterer<T> {
     return clusters;
   }
 
-  ClusterDataBase _extractClusterData(MutableLayerElement<T> clusterOrPoint) {
-    return clusterOrPoint.map(
-        cluster: (cluster) => cluster.clusterData!,
-        point: (mapPoint) => extractClusterData!(mapPoint.originalPoint));
-  }
+  ClusterDataBase _extractClusterData(MutableLayerElement<T> clusterOrPoint) =>
+      switch (clusterOrPoint) {
+        MutableLayerCluster<T> cluster => cluster.clusterData!,
+        MutableLayerPoint<T> mapPoint =>
+          extractClusterData!(mapPoint.originalPoint),
+        MutableLayerElement<T>() => throw UnimplementedError(),
+      };
 
   bool _closeEnoughToCluster(
     MutableLayerElement<T> a,

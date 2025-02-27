@@ -33,12 +33,12 @@ abstract class Supercluster<T> {
     int? radius,
     int? extent,
     this.extractClusterData,
-  })  : assert(minPoints == null || minPoints > 1),
-        minZoom = minZoom ?? 0,
-        maxZoom = maxZoom ?? 16,
-        minPoints = minPoints ?? 2,
-        radius = radius ?? 40,
-        extent = extent ?? 512;
+  }) : assert(minPoints == null || minPoints > 1),
+       minZoom = minZoom ?? 0,
+       maxZoom = maxZoom ?? 16,
+       minPoints = minPoints ?? 2,
+       radius = radius ?? 40,
+       extent = extent ?? 512;
 
   /// Remove any existing points and replace them with [points]. This will
   /// recreate the index completely and may take some time. If you want to
