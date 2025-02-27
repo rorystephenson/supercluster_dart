@@ -8,7 +8,8 @@ import 'rbush_point.dart';
 part 'mutable_layer_element.freezed.dart';
 
 @unfreezed
-class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
+abstract class MutableLayerElement<T>
+    with _$MutableLayerElement<T>, LayerElement<T> {
   MutableLayerElement._();
 
   @With.fromString("LayerCluster<T>")
@@ -89,8 +90,11 @@ class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
     );
   }
 
-  int get numPoints =>
-      map(cluster: (cluster) => cluster.childPointCount, point: (point) => 1);
+  int get numPoints => switch (this) {
+        MutableLayerCluster(childPointCount: var count) => count,
+        MutableLayerPoint() => 1,
+        MutableLayerElement<T>() => throw UnimplementedError(),
+      };
 
   static double getX(MutableLayerElement clusterOrMapPoint) =>
       clusterOrMapPoint.x;
@@ -107,8 +111,15 @@ class MutableLayerElement<T> with _$MutableLayerElement<T>, LayerElement<T> {
     required TResult Function(LayerCluster<T> cluster) cluster,
     required TResult Function(LayerPoint<T> point) point,
   }) =>
-      map(cluster: cluster, point: point);
+      switch (this) {
+        MutableLayerCluster<T> clusterInstance => cluster(clusterInstance),
+        MutableLayerPoint<T> pointInstance => point(pointInstance),
+        _ => throw UnimplementedError(),
+      };
 
-  String get summary =>
-      '${map(cluster: (cluster) => 'cluster', point: (point) => 'point')}($uuid < $parentUuid, $highestZoom - $lowestZoom)';
+  String get summary => '${switch (this) {
+        MutableLayerCluster<T> _ => 'cluster',
+        MutableLayerPoint<T> _ => 'point',
+        _ => throw UnimplementedError(),
+      }}($uuid < $parentUuid, $highestZoom - $lowestZoom)';
 }

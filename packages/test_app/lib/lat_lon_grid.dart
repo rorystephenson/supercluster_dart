@@ -17,10 +17,10 @@ class LatLonGrid extends StatelessWidget {
             options: LatLonGridLayerOptions(
               lineWidth: 0.5,
               // apply alpha for grid lines
-              lineColor: Colors.black.withOpacity(0.1),
+              lineColor: Colors.black.withAlpha((0.1 * 255).toInt()),
               labelStyle: TextStyle(
                 color: Colors.white,
-                backgroundColor: Colors.black.withOpacity(0.1),
+                backgroundColor: Colors.black.withAlpha((0.1 * 255).toInt()),
                 fontSize: 12.0,
               ),
               showCardinalDirections: true,

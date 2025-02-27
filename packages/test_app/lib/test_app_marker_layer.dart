@@ -54,6 +54,7 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       _onMoveListener =
           MapController.of(context).mapEventStream.listen((event) {
+        if (!mounted) return; // Context guard.
         final newZoom = MapCamera.of(context).zoom;
         if (newZoom != _currentZoom) {
           _currentZoom = newZoom;
@@ -118,13 +119,14 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
 
         for (final point in points) {
           final pointPosition = mapCamera.project(
-            point.map(
-              cluster: (cluster) => LatLng(cluster.latitude, cluster.longitude),
-              point: (point) => LatLng(
-                point.originalPoint.$1,
-                point.originalPoint.$2,
-              ),
-            ),
+            switch (point) {
+              MutableLayerCluster<(double, double)> cluster =>
+                LatLng(cluster.latitude, cluster.longitude),
+              MutableLayerPoint<(double, double)> point =>
+                LatLng(point.originalPoint.$1, point.originalPoint.$2),
+              MutableLayerElement<(double, double)>() =>
+                throw UnimplementedError(),
+            },
           );
           final position = pointPosition - mapCamera.pixelOrigin;
 
@@ -138,80 +140,83 @@ class TestAppMarkerLayerState extends State<TestAppMarkerLayer> {
                 width: pointSize,
                 height: pointSize,
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.2),
+                  color: Colors.blue.withAlpha((0.2 * 255).toInt()),
                   shape: BoxShape.circle,
                 ),
-                child: point.map(
-                  cluster: (cluster) => Center(
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.blueAccent.withOpacity(0.5),
-                              shape: BoxShape.circle,
-                            ),
-                            width: clusterSize,
-                            height: clusterSize,
-                          ),
-                        ),
-                        Center(
-                          child: Text(
-                            "${cluster.uuid}<${cluster.parentUuid}\n"
-                            "${cluster.numPoints}\n"
-                            "${cluster.highestZoom}-${cluster.lowestZoom}",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              decoration: TextDecoration.none,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w500,
+                child: switch (point) {
+                  MutableLayerCluster<(double, double)> cluster => Center(
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.blueAccent
+                                    .withAlpha((0.2 * 255).toInt()),
+                                shape: BoxShape.circle,
+                              ),
+                              width: clusterSize,
+                              height: clusterSize,
                             ),
                           ),
-                        ),
-                      ],
+                          Center(
+                            child: Text(
+                              "${cluster.uuid}<${cluster.parentUuid}\n"
+                              "${cluster.numPoints}\n"
+                              "${cluster.highestZoom}-${cluster.lowestZoom}",
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                decoration: TextDecoration.none,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  point: (point) => GestureDetector(
-                    onTap: () {
-                      final latLng = LatLng(
-                        point.originalPoint.$1,
-                        point.originalPoint.$2,
-                      );
-                      debugPrint('Removing point at $latLng');
-                      setState(() {
-                        supercluster.remove(point.originalPoint);
-                      });
-                    },
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: Container(
-                            width: 4,
-                            height: 3,
-                            decoration: const BoxDecoration(
-                              color: Colors.black,
-                              shape: BoxShape.circle,
+                  MutableLayerPoint<(double, double)> point => GestureDetector(
+                      onTap: () {
+                        final latLng = LatLng(
+                          point.originalPoint.$1,
+                          point.originalPoint.$2,
+                        );
+                        debugPrint('Removing point at $latLng');
+                        setState(() {
+                          supercluster.remove(point.originalPoint);
+                        });
+                      },
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 4,
+                              height: 3,
+                              decoration: const BoxDecoration(
+                                color: Colors.black,
+                                shape: BoxShape.circle,
+                              ),
                             ),
                           ),
-                        ),
-                        Center(
-                          child: Text(
-                            '${point.uuid}<${point.parentUuid}\n${point.highestZoom}-${point.lowestZoom}',
-                            style: const TextStyle(
+                          Center(
+                            child: Text(
+                              '${point.uuid}<${point.parentUuid}\n${point.highestZoom}-${point.lowestZoom}',
+                              style: const TextStyle(
                                 color: Colors.black,
                                 decoration: TextDecoration.none,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                                 shadows: [
                                   Shadow(blurRadius: 10, color: Colors.white)
-                                ]),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  _ => throw UnimplementedError(),
+                },
               ),
             ),
           );

@@ -14,10 +14,12 @@ void main() {
   )..load(points);
 
   final clustersAndPoints = supercluster.search(0, 40, 20, 50, 5).map(
-        (e) => e.map(
-          cluster: (cluster) => 'cluster (${cluster.numPoints} points)',
-          point: (point) => 'point ${point.originalPoint}',
-        ),
+        (e) => switch (e) {
+          ImmutableLayerCluster<MapPoint> cluster =>
+            'cluster (${cluster.numPoints} points)',
+          ImmutableLayerPoint<MapPoint> point => 'point ${point.originalPoint}',
+          ImmutableLayerElement<MapPoint>() => throw UnimplementedError(),
+        },
       );
 
   print(clustersAndPoints.join(', '));
