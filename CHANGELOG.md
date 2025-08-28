@@ -1,3 +1,7 @@
+## 3.2.0
+
+ - CHORE: Bump dependencies (thanks @l1qu1d)
+
 ## 3.1.0
 
 - CHORE: Bump dependencies.
